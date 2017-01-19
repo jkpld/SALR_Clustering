@@ -19,10 +19,10 @@ function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,option
 %           used to compute the curvatures. Use integer values. Perhaps try
 %           2 too see how it works first.
 %
-%           Max_Radius - This value will set a threshold for what is
-%           considered positive curvature (regions of positive curvature
+%           Curvature_Max_Radius - This value will set a threshold for what
+%           is considered positive curvature (regions of positive curvature
 %           are concave regions of the boundary). The threshold will be set
-%           as 1/(2*maximumRadius).
+%           as 1/(2*Curvature_Max_Radius).
 %
 %           Use_Parallel - logical. If true, then a parallel loop will be
 %           used to calculate the curvature information.
@@ -69,7 +69,7 @@ function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,option
 
 % USE_PARALLEL = options.Use_Parallel;
 KAPPA_SMOOTHING_SIGMA = options.Curvature_Smoothing_Size;
-MAX_RADIUS = options.Max_Radius;
+MAX_RADIUS = options.Curvature_Max_Radius;
 
 % if USE_PARALLEL
 %     [B,n,curvature,curvatureCenters] = computeBoundaryInformation__parallel(BW,KAPPA_SMOOTHING_SIGMA,MAX_RADIUS);

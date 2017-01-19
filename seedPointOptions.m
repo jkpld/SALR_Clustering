@@ -27,7 +27,7 @@ classdef seedPointOptions
 % Potential_Padding_Size - The size of the padding to apply to an object
 %   mask. This is important so that the potential is defined some distance
 %   away from the object when running the simulation.
-%   (1, Info) , [pixels]
+%   (1, Inf) & integer, [pixels]
 %
 % Maximum_Initial_Potential - The maximum confining potential value that a
 %   particle can have at its initial position. Any possible initial
@@ -59,6 +59,12 @@ classdef seedPointOptions
 % Curvature_Smoothing_Size - The standard deviation of the gaussians used
 %   for smoothing the boundary and calculating the curvature.
 %   [0, Inf) & integer , [pixels]
+%
+% Curvature_Max_Radius - Loosely the maximum object radius. The value will
+%   be used set a threshold for what is considered positive curvature
+%   (regions of positive curvature are concave regions of the boundary).
+%   The threshold will be set as 1/(2*Curvature_Max_Radius).
+%   [0, Inf) , [pixels]
 %
 % Use_GPU - Determines if a GPU will be used to speed up calculation.
 %   logical
@@ -95,6 +101,7 @@ classdef seedPointOptions
         Minimum_Hole_Size            = 50;
         
         Curvature_Smoothing_Size     = 2;
+        Curvature_Max_Radius         = 35;
         
         Use_GPU                      = false;
         Use_Parallel                 = false;
@@ -241,6 +248,11 @@ classdef seedPointOptions
         function obj = set.Curvature_Smoothing_Size(obj,value)
             validateattributes(value,{'double'},{'scalar','nonnegative','integer','real','finite'})
             obj.Curvature_Smoothing_Size = value;
+        end
+        
+        function obj = set.Curvature_Max_Radius(obj,value)
+            validateattributes(value,{'double'},{'scalar','positive','real','finite'})
+            obj.Curvature_Max_Radius = value;
         end
         
         function obj = set.Use_GPU(obj,value)
