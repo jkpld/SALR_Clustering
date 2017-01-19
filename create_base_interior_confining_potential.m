@@ -32,4 +32,7 @@ V = double(bwdist(~BW_pad));
 V = imfilter(V,fspecial('gaussian',7,1));
 V = 1./V;
 
+% Remove padding
+V = V(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
+
 end
