@@ -4,11 +4,13 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 %
 % [r0,Info] = computeInitialPoints(method, BW, options)
 %
-% Create a set of initial positions r0, using METHOD, from the binary mask
-% BW. OPTIONS should be a structure that gives additional information.
-% Each option should be a field with the required value. There is one
-% required option for all methods, and some methods have additional
-% required options.
+% Create a set of initial positions r0, using METHOD, from a binary mask BW
+% or a set of initial possible positions (see below). OPTIONS should be a
+% structure that gives additional information. Each option should be a
+% field with the required value. There is one required option for all
+% methods, and some methods have additional required options. 
+%
+% All initial points returned will be located inside of the binary mask.
 %
 % Input parameters:
 % method - The method used to compute the initial points (see below).
@@ -33,21 +35,17 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 %                   lattice constant of 2*rs. In each hexagon, choose one
 %                   random point from the mask.
 %
-% 'curvatureRandom' - Use the curvature of the boundary to find the radius
-%                     at each boundary element and, thus, the center of the
-%                     circle at each boundary element. From these centers,
-%                     choose N random points, where N is the area of the
-%                     mask divided by the effective particle area
-%                     (pi*rs^2).
+% 'r0set_random' - From the set of possible initial positions, choose N
+%                  random points, where N is the area of the mask divided
+%                  by the effective particle area (pi*rs^2).
 %                       
-% 'curvatureUniformRandom' - Calculate the centers as in 'curvatureRandom'.
-%                            Generate a hexagonal grid with lattice
-%                            constant 2*rs. In each hexagon, choose one
-%                            random center.
+% 'r0set_uniformRandom' - Generate a hexagonal grid with lattice constant
+%                         2*rs. In each hexagon, choose one random position
+%                         from the set of possible initial positions
 %
 % Additional requierd options for each method:
 % There are no additional required options for 'random' or 'uniform'. For
-% both 'curvatureRandom' and 'curvatureUniformRandom' there is one
+% both 'r0set_random' and 'r0set_uniformRandom' there is one
 % additional required options
 %
 % r0set - An array of possible initial positions.
@@ -62,24 +60,18 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 %           failed to produce a single particle position. (See notes below
 %           for more information about this.)
 %
-%           curvatureHexData - A structure with fields X, Y, Z with the
+%           r0setHexData - A structure with fields X, Y, Z with the
 %           data returned from using decimateData on the curvature centers
 %           returned by getCurvatureAndShapeMarkers. This field is only
-%           returned if the method is 'curvatureUniformRandom'.
+%           returned if the method is 'r0set_uniformRandom'.
 %
 % Notes:
 %
-% * It is recomended that computeBoundaryInformation is used before this
-% function to compute the boundaries and curvature centers. Note, that
-% computeBoundaryInformation() can be called on an entire image with many
-% objects; however, this function should only be called with a single
-% object. Thus, a binary mask of the single object will need to be
-% produced, and the boundaries and curvature centers of this object from
-% computBoundaryInformation() will need to have their origin adjusted to
-% match the new binary mask of the single object.
+% * This function is run for a single object, not an image with many
+% objects.
 %
-% * If the methods 'uniform', 'curvatureRandom', or
-% 'curvatureUniformRandom' fail to produce a single particle location, then
+% * If the methods 'uniform', 'r0set_random', or
+% 'r0set_uniformRandom' fail to produce a single particle location, then
 % the 'random' method will be used.
 %
 % * If the binary mask area is smaller than the effective particle area,
@@ -89,6 +81,7 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 
 % JamesKapaldo
 % 2016-10-10
+
 
 % There must be an option giving the Wigner-Seitz radius of each particle
 if ~isfield(options,'rs')
@@ -101,21 +94,8 @@ rs = options.rs;
 % Compute effective area of particle.
 A = pi*rs^2;
 
-% % Get size of image.
-% imSize = size(BW);
-% 
-% % Get eroded image to compare against curvature centers.
-% % Pad mask with zeros so that erode will work from all side.
-% BW_e = padarray(BW,[1 1],0);
-% 
-% se = ones(5); % this is the same as strel('disk',3)
-% BW_e = imerode(BW_e,se);
-% 
-% % Remove padding.
-% BW_e(:,[1,end]) = [];
-% BW_e([1,end],:) = [];
-% 
-% BW_e = BW_e & (V<1/3);
+% Get size of image.
+imSize = size(BW);
 
 % Initialize givenMethodFailed if Info is requested.
 if nargout > 1
@@ -124,38 +104,38 @@ end
 
 % Get initial information for the methods and test to make sure a valid
 % method was given
-if ~any(strcmp(method,{'random','uniform','uniformRandom','curvatureRandom','curvatureUniformRandom'}))
-    error('getInitialPoints:unknownMethod','Unknown method. Allowed methods are ''random'', ''uniform'', ''uniformRandom'', ''curvatureRandom'', ''curvatureUniformRandom''.')
+if ~any(strcmp(method,{'random','uniform','uniformRandom','r0set_random','r0set_uniformRandom'}))
+    error('getInitialPoints:unknownMethod','Unknown method. Allowed methods are ''random'', ''uniform'', ''uniformRandom'', ''r0set_random'', ''r0set_uniformRandom''.')
 end
 
-if any(strcmp(method,{'random','curvatureRandom'}))
+if any(strcmp(method,{'random','r0set_random'}))
     % The number of particles N is given by the area of the mask
     % divided by the area of a particle
 
     N = max(round(sum(BW(:))/A),1);
 end
 
-if any(strcmp(method,{'uniform','curvatureUniformRandom','uniformRandom'}))
+if any(strcmp(method,{'uniform','r0set_uniformRandom','uniformRandom'}))
     % Hexagonal grid lattice constant
     a = 2*rs;
 end
 
-if any(strcmp(method,{'curvatureRandom','curvatureUniformRandom'}))
-    % There must be an option giving the kappaSmoothingSigma
+if any(strcmp(method,{'r0set_random','r0set_uniformRandom'}))
+    % There must be an option giving the set of initial possible positions
     if ~isfield(options,'r0set')
         error('getInitialPoints:missingInput','You must have a field named "r0set" in OPTIONS that curvature centers.')
     end
 
     markers = options.r0set;
     markers(markers(:,1) < 1 | markers(:,1) > imSize(1) | markers(:,2) < 1 | markers(:,2) > imSize(2),:) = [];
-    % Remove outside of the eroded mask.
+    % Remove markers outside the mask.
     markers_lin = markers(:,1) + (markers(:,2)-1)*imSize(1);
-    markers(~BW_e(markers_lin),:) = [];
+    markers(~BW(markers_lin),:) = [];
     
 end
 
 
-% Create the initial points.
+% Create the initial points
 switch method
     case 'random'
         % Select N random points from the BW mask.
@@ -164,7 +144,7 @@ switch method
         % mask is first eroded because we do not want any start point close
         % to the boundary (where the particle would start with high
         % potential energy).
-        [i,j] = find(BW_e);
+        [i,j] = find(BW);
         validInds = [i,j];
         
         if size(validInds,1) < N
@@ -193,7 +173,7 @@ switch method
         
         % Get the indices of the starting points that are inside of the
         % mask.
-        good = BW_e( r0(:,1) + (r0(:,2)-1)*imSize(1) );
+        good = BW( r0(:,1) + (r0(:,2)-1)*imSize(1) );
         
         % Remove all starting points not inside the mask.
         r0 = r0(good,:);
@@ -215,7 +195,7 @@ switch method
         % error when we are creating a hexagonal grid with having only one
         % bin edges (when two bin edges are required)
         try
-            [i,j] = find(BW_e);
+            [i,j] = find(BW);
             markers = [i,j];
             mu = mean(markers,1) - rs/2;
             markers = markers-mu;
@@ -240,7 +220,7 @@ switch method
             if nargout > 1
                 dcmt.X = dcmt.X + mu(1);
                 dcmt.Y = dcmt.Y + mu(2);
-                Info.CurvatureHexData = dcmt;
+                Info.r0setHexData = dcmt;
             end
         catch ME
             if strcmp(ME.identifier,'MATLAB:discretize:EmptyOrScalarEdges')
@@ -252,7 +232,7 @@ switch method
                 rethrow(ME)
             end
         end
-    case 'curvatureRandom'
+    case 'r0set_random'
         % From the curvature, get the radius and the center of the circle.
         % Use a random N of the centers as the initial points.
                 
@@ -274,7 +254,7 @@ switch method
             end
         end
         
-    case 'curvatureUniformRandom'
+    case 'r0set_uniformRandom'
         % From the curvature, get the radius and the center of the circle.
         % Overlay a hexagonal grid with lattice constant 2*rs and then
         % select one curvature center from each hexagon.
@@ -308,7 +288,7 @@ switch method
             if nargout > 1
                 dcmt.X = dcmt.X + mu(1);
                 dcmt.Y = dcmt.Y + mu(2);
-                Info.CurvatureHexData = dcmt;
+                Info.r0setHexData = dcmt;
             end
         catch ME
             if strcmp(ME.identifier,'MATLAB:discretize:EmptyOrScalarEdges')
@@ -321,7 +301,7 @@ switch method
             end
         end
     otherwise
-        error('getInitialPoints:unknownMethod','Unknown method. Allowed methods are ''random'', ''uniform'', ''curvatureRandom'', ''curvatureUniformRandom''. (In switch case.)')
+        error('getInitialPoints:unknownMethod','Unknown method. Allowed methods are ''random'', ''uniform'', ''r0set_random'', ''r0set_uniformRandom''. (In switch case.)')
 end % switch
 
 if nargout > 1
@@ -331,3 +311,5 @@ end
 end
 % computeInitialPoints : changeLog
 % 2016-11-2 : added in uniformRandom method
+% 2017-01-20 : renamed options and removed the eroding and potential limit
+% of the mask

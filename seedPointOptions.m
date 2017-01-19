@@ -51,7 +51,7 @@ classdef seedPointOptions
 %
 % Point_Selection_Method - The method used to initialize the particle
 %   locations.
-%   {'random','uniform','uniformRandom','curvatureRandom','curvatureUniformRandom'}
+%   {'random','uniform','uniformRandom','r0set_random','r0set_uniformRandom'}
 %
 % Minimum_Hole_Size - The minimum hole size allowed in the mask.
 %   [0, Inf) , [pixels^2]
@@ -90,7 +90,7 @@ classdef seedPointOptions
         Particle_Damping_Rate        = 5e-4;
         Charge_Normalization_Beta    = 1/3;
         Solver_Time_Range            = 0:10:1500;
-        Point_Selection_Method       = 'curvatureUniformRandom';
+        Point_Selection_Method       = 'r0set_uniformRandom';
         
         Minimum_Hole_Size            = 50;
         
@@ -160,7 +160,7 @@ classdef seedPointOptions
         end
         
         function obj = set.Point_Selection_Method(obj,value)
-            value = validatestring(value,{'random','uniform','uniformRandom','curvatureRandom','curvatureUniformRandom'});
+            value = validatestring(value,{'random','uniform','uniformRandom','r0set_random','r0set_uniformRandom'});
             obj.Point_Selection_Method = value;
         end
         
