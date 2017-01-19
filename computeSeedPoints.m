@@ -34,27 +34,27 @@ INITIAL_SPEED               = options.Initial_Speed;
 PARTICLE_DAMPING_RATE       = options.Particle_Damping_Rate;
 SOLVER_TIME_RANGE           = options.Solver_Time_Range;
 CHARGE_NORMALIZATION_BETA   = options.Charge_Normalization_Beta;
-PAD_SIZE                    = options.Potential_Pad_Size;
+PAD_SIZE                    = options.Potential_Padding_Size;
 DEBUG                       = options.Debug;
 InteractionOptions          = options.InteractionOptions;
 
 % Number of particles
 N = size(r0,1);
 
+% Object image size
+maskSize = size(V) - 2*PAD_SIZE;
 
 % Compute gradient of confining potential --------------------------------
 [dVx,dVy] = gradient(V); 
-
-
-% Create interpolating functions for confining force and potential -------
-
-dVx = @(r) interp2mex(dVx,r(:,2),r(:,1)); 
-dVy = @(r) interp2mex(dVy,r(:,2),r(:,1));
 
 if DEBUG
     Info.dVx = dVx(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
     Info.dVy = dVy(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
 end
+
+% Create interpolating functions for confining force and potential -------
+dVx = @(r) interp2mex(dVx,r(:,2),r(:,1)); 
+dVy = @(r) interp2mex(dVy,r(:,2),r(:,1));
 
 % These mex interpolation functions assume the input is from an image (x
 % and y spacing of 1) and it uses nearest neighbor extrapolation.

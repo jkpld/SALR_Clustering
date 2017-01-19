@@ -1,7 +1,7 @@
 function setup
 
 if verLessThan('matlab','9.1')
-    error('ceclumpNuclei:setup','The declumpNuclei code requires at least Matlab 2016b because implicit expansion is heavily used.')
+    error('ceclumpNuclei:setup','The seed_point_detection code requires at least Matlab 2016b because implicit expansion is heavily used.')
 end
 
 fprintf('\nStarting setup...\n')
@@ -30,7 +30,7 @@ try
     fprintf('...compiled nakeinterp1.c\n')
 catch ME
 %     rethrow(ME)
-    error('declumpNuclei:setup','There was an error compiling the required C functions ''interp2mex.c'' and ''nakeinterp1.c''. Make sure that the function ''mex'' is coorectly setup to compile C code.')
+    error('seed_point_detection:setup','There was an error compiling the required C functions ''interp2mex.c'' and ''nakeinterp1.c''. Make sure that the function ''mex'' is coorectly setup to compile C code.')
 end
 
 % Copy histcountsmex into the utilities folder ---------------------------
@@ -44,7 +44,7 @@ if ~any(strncmp('DN_histcountsmex',names,16))
     nameIdx = strncmp('histcountsmex',names,13);
 
     if ~any(nameIdx)
-        error('declumpNuclei:setup','File ''histcountsmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''DN_histcountsmex.(extension)''.',folder)
+        error('seed_point_detection:setup','File ''histcountsmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''DN_histcountsmex.(extension)''.',folder)
     end
 
     copyfile(fullfile(folder,names{nameIdx}),fullfile(path,'utilities',['DN_' names{nameIdx}]))
@@ -62,7 +62,7 @@ if ~any(strncmp('DN_pdistmex',names,11))
     nameIdx = strncmp('pdistmex',names,8);
 
     if ~any(nameIdx)
-        error('declumpNuclei:setup','File ''pdistmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''DN_pdistmex.(extension)''.',folder)
+        error('seed_point_detection:setup','File ''pdistmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''DN_pdistmex.(extension)''.',folder)
     end
 
     copyfile(fullfile(folder,names{nameIdx}),fullfile(path,'utilities',['DN_' names{nameIdx}]))

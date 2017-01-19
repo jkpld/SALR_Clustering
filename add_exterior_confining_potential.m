@@ -23,7 +23,7 @@ function V = add_exterior_confining_potential(BW,V_interior,options)
 
 % James Kapaldo
 
-PAD_SIZE = options.Potential_Pad_Size;
+PAD_SIZE = options.Potential_Padding_Size;
 
 % Process the mask -------------------------------------------------------
 

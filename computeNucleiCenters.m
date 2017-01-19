@@ -54,10 +54,10 @@ end
 % curvature)
 area = cellfun(@numel,pixelList);
 isConvex = cellfun(@(x) ~any(x>0),K);
-useCentroid = isConvex || (area < pi*options.Wigner_Seitz_Radius.^2);
+useCentroid = isConvex | (area < pi*options.Wigner_Seitz_Radius.^2);
 
 % Get object offset
-objOffset = cellfun(@(x) min(B,[],1,'omitnan') - 1, B,'UniformOutput',false);
+objOffset = cellfun(@(x) min(x,[],1,'omitnan') - 1, B,'UniformOutput',false);
 
 % Offset the r0set points to coorespond to object origin and not image
 % origin.
@@ -82,7 +82,7 @@ if options.Use_Parallel
     parfor obj = 1:numel(B)
 
         % Create mask and interior potential images for the object
-        [objBW,V] = createObjectImages(pixelList{obj}, numImRows, true(numel(pixList),1), V_interior{obj});
+        [objBW,V] = createObjectImages(pixelList{obj}, numImRows, true(numel(pixelList{obj}),1), V_interior{obj});
             
         if useCentroid(obj)
             [i,j] = find(objBW);
@@ -117,7 +117,7 @@ if options.Use_Parallel
                 Info{obj}.r_end = Info{obj}.r_end + objOffset{obj};
             end
             if ~isempty(seedPoints{obj})
-                seedPoints{obj} = [seedPoints{obj} + objOffset{obj}, obj*size(seedPoints{obj},1)];
+                seedPoints{obj} = [seedPoints{obj} + objOffset{obj}, obj*ones(size(seedPoints{obj},1),1)];
             end
         end % if useCentroid
     end % parfor
@@ -130,11 +130,11 @@ else
         procTime = tic;
 
         % Create mask and interior potential images for the object
-        [objBW,V] = createObjectImages(pixelList{obj}, numImRows, true(numel(pixList),1), V_interior{obj});
+        [objBW,V] = createObjectImages(pixelList{obj}, numImRows, true(numel(pixelList{obj}),1), V_interior{obj});
             
         if useCentroid(obj)
             [i,j] = find(objBW);
-            seedPoints{obj} = mean([i,j]);
+            seedPoints{obj} = [mean([i,j]) + objOffset{obj}, obj];
             Info{obj}.r0 = [];
             Info{obj}.r_end = [];
             Info{obj}.solverTime = NaN;
@@ -165,7 +165,7 @@ else
                 Info{obj}.r_end = Info{obj}.r_end + objOffset{obj};
             end
             if ~isempty(seedPoints{obj})
-                seedPoints{obj} = [seedPoints{obj} + objOffset{obj}, obj*size(seedPoints{obj},1)];
+                seedPoints{obj} = [seedPoints{obj} + objOffset{obj}, obj*ones(size(seedPoints{obj},1),1)];
             end
         end % if useCentroid
 
@@ -181,7 +181,7 @@ if options.Use_GPU
 end
 
 % Produce output
-seedPoints = cat(1,seedPoints{:});
+% seedPoints = cat(1,seedPoints{:});
 
 if all(cellfun(@isempty, Info))
     Info = [];
@@ -194,7 +194,6 @@ end
 function [seedPoints, Info] = copmuteObjectSeedPoints(BW,V,r0set,options)
 
 try
-
     % Initialize values
     seedPoints = [];
 
@@ -206,8 +205,8 @@ try
 
     % TODO: Add both of these parameters fo the declumpOptions (and rename
     % declumpOptions to seedPointOptions)
-    PAD_SIZE = options.Potential_Pad_Size;
-    R0_MAXV = options.Maximum_r0_Potential;
+    PAD_SIZE = options.Potential_Padding_Size;
+    R0_MAXV = options.Maximum_Initial_Potential;
     
     % Create full confining potential ---------------------------------------
     V = add_exterior_confining_potential(BW,V,options); % Remember that this output V has been padded
@@ -220,19 +219,33 @@ try
     allowed_r0_mask = BW & ( V(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV );
 
 
+    % Compute initial points
     if options.Debug
         [r0, ComputeInitialPointsInfo] = computeInitialPoints(options.Point_Selection_Method, allowed_r0_mask, initPointOptions); % Note the points r0 do not consider the mask padding.
-        [seedPoints, Info] = computeSeedPoints(V, r0, options);
-
-        Info.r0 = r0;
-        Info.ComputeInitialPoints = ComputeInitialPointsInfo;
-        Info.error = [];
     else
         r0 = computeInitialPoints(options.Point_Selection_Method, allowed_r0_mask, initPointOptions); % Note the points r0 do not consider the mask padding.
-        seedPoints = computeSeedPoints(V, r0, options);
     end
 
-
+    % Compute seed points.
+    if size(r0,1) < 2
+        % If there was only one initial particle, then we do not symulate
+        % it, we will just return the centroid of the object
+        [i,j] = find(BW);
+        seedPoints = mean([i,j]);
+        Info.r0 = r0;
+        Info.r_end = [nan,nan];
+        Info.ComputeInitialPoints = ComputeInitialPointsInfo;
+    else
+        if options.Debug
+            [seedPoints, Info] = computeSeedPoints(V, r0, options);
+            
+            Info.r0 = r0;
+            Info.ComputeInitialPoints = ComputeInitialPointsInfo;
+            Info.error = [];
+        else
+            seedPoints = computeSeedPoints(V, r0, options);
+        end
+    end
 
 catch ME
     Info.error = ME;
