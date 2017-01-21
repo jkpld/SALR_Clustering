@@ -42,7 +42,7 @@ V_interior = cellfun(@(x) V_interior(x), pixelList,'UniformOutput',false); % Sli
 % Use the object centroid as the seed point for any object that is convex
 % or smaller than the particle area
 area = cellfun(@numel,pixelList); % object areas
-isConvex = cellfun(@(x) ~any(x>0),K); % object convex?
+isConvex = cellfun(@(x) ~any(x > (0.5/options.Curvature_Max_Radius)),K); % object convex?
 useCentroid = isConvex | (area < pi*options.Wigner_Seitz_Radius.^2);
 
 % Offset the r0set points to coorespond to object origin
