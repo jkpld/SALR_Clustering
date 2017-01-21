@@ -15,7 +15,7 @@ function [seedPoints, Info] = computeNucleiCenters_distTransform(I,BW,options)
 % James Kapaldo
 
 
-tic
+
 % Get number of rows in image
 nRows = size(I,1);
 
@@ -48,7 +48,6 @@ useCentroid = isConvex | (area < pi*options.Wigner_Seitz_Radius.^2);
 % Offset the r0set points to coorespond to object origin
 objOffset = cellfun(@(x) min(x,[],1,'omitnan') - 1, B,'UniformOutput',false);
 r0set = cellfun(@(x,y) x - y, r0set, objOffset,'UniformOutput',false);
-toc
 
 % Compute the seed points.
 % Note, if you want to also use the seed points to segment the objects, then it would be a good choice to insert the segmentation code in this function "processObjects" and add in any additional input/outputs you need.
