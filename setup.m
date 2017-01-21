@@ -33,24 +33,6 @@ catch ME
     error('seed_point_detection:setup','There was an error compiling the required C functions ''interp2mex.c'' and ''nakeinterp1.c''. Make sure that the function ''mex'' is coorectly setup to compile C code.')
 end
 
-% Copy histcountsmex into the utilities folder ---------------------------
-folder = fullfile(path,'utilities');
-d = dir(folder);
-names = {d.name};
-if ~any(strncmp('DN_histcountsmex',names,16))
-    folder = fullfile(matlabroot,'toolbox','matlab','datafun','private');
-    d = dir(folder);
-    names = {d.name};
-    nameIdx = strncmp('histcountsmex',names,13);
-
-    if ~any(nameIdx)
-        error('seed_point_detection:setup','File ''histcountsmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''DN_histcountsmex.(extension)''.',folder)
-    end
-
-    copyfile(fullfile(folder,names{nameIdx}),fullfile(path,'utilities',['DN_' names{nameIdx}]))
-end
-fprintf('...added histcountsmex\n')
-
 % Copy pdistmex into the utilities folder --------------------------------
 folder = fullfile(path,'utilities');
 d = dir(folder);
