@@ -85,10 +85,10 @@ useConvexHull = true;
 imSize = size(BW);
 
 % Initialize cell arrays
-B = cell(1,numObjs);
-n = cell(1,numObjs);
-curvatureCenters = cell(1,numObjs);
-curvature = cell(1,numObjs);
+B = cell(numObjs,1);
+n = cell(numObjs,1);
+curvatureCenters = cell(numObjs,1);
+curvature = cell(numObjs,1);
 
 % Iterate over each object finding the curatures, normals, and curvature
 % centers of the object and its children (if any).
@@ -200,10 +200,10 @@ parfor contour = 1:N
 end
 
 % Initialize cell arrays
-B = cell(1,numObjs);
-n = cell(1,numObjs);
-curvatureCenters = cell(1,numObjs);
-curvature = cell(1,numObjs);
+B = cell(numObjs,1);
+n = cell(numObjs,1);
+curvatureCenters = cell(numObjs,1);
+curvature = cell(numObjs,1);
 
 % Iterate over each object finding the curatures, normals, and curvature
 % centers of the object and its children (if any).

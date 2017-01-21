@@ -1,8 +1,9 @@
-function [seedPoints, varargout] = computeSeedPoints(V,r0,options)
-% COMPUTESEEDPOINTS Model particle dynamics and compute cluster locations
-% 
-% seedPoints = computeSeedPoints(V,r0,options)
-% [seedPoints, Info] = computeSeedPoints(V,r0,options)
+function [r, varargout] = modelParticleDynamics(V,r0,options)
+% MODELPARTICLEDYNAMICS Model particles confined in potential V with
+% initial positions r0 and return their approximate equilibrium positions.
+%
+% r = modelParticleDynamics(V,r0,options)
+% [r, Info] = modelParticleDynamics(V,r0,options)
 %
 % Input parameters:
 %
@@ -13,20 +14,18 @@ function [seedPoints, varargout] = computeSeedPoints(V,r0,options)
 %
 % Output parameters:
 %
-% seedPoints    -   Calculated seed points (particle cluster locations).
-%                     Each row is a seed point and each column a dimension.
-% Info          -   If options.Debug is true, then Info will be a structure
-%                     with the following fields.
+% r    -   Final particle positions
+% Info -   If options.Debug is true, then Info will be a structure
+%          with the following fields.
 %
-%                     dVx - x derivative of V
-%                     dVy - y derivative of V
-%                     r_end - Particle locations after simulation
-%                     ode_solution - ode solution strucutre returned by
-%                                    ode23
-%                     converged - logical flag, if true, then the solution
-%                                 converged before stopping at maximum time
+%             dVx - x derivative of V
+%             dVy - y derivative of V
+%             ode_solution - ode solution strucutre returned by
+%                            ode23
+%             converged - logical flag, if true, then the solution
+%                         converged before stopping at maximum time
 %
-% See also COPMUTEBASECONFININGPOTENTIAL
+% See also EXTRACTCLUSTERCENTERS COMPUTEOBJECTSEEDPOINTS PROCESSOBJECTS
 
 % James Kapaldo
 
@@ -45,7 +44,7 @@ N = size(r0,1);
 maskSize = size(V) - 2*PAD_SIZE;
 
 % Compute gradient of confining potential --------------------------------
-[dVx,dVy] = gradient(V); 
+[dVx,dVy] = gradient(V);
 
 if DEBUG
     Info.dVx = dVx(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
@@ -53,7 +52,7 @@ if DEBUG
 end
 
 % Create interpolating functions for confining force and potential -------
-dVx = @(r) interp2mex(dVx,r(:,2),r(:,1)); 
+dVx = @(r) interp2mex(dVx,r(:,2),r(:,1));
 dVy = @(r) interp2mex(dVy,r(:,2),r(:,1));
 
 % These mex interpolation functions assume the input is from an image (x
@@ -82,7 +81,7 @@ switch InteractionOptions.type
         A = InteractionOptions.params(1);
         mu = InteractionOptions.params(2);
         sig = InteractionOptions.params(3);
-        
+
         % Vint  = @(D)  1./D - A * exp(-(D-mu).^2/(2*sig^2));
         dVint = @(D) -1./(D+0.2).^2 + (A*(D-mu)/(sig^2)) .* exp(-(D-mu).^2/(2*sig^2));
 end
@@ -181,7 +180,7 @@ else
 end
 
 
-% Extract final solution and find centers of clusters --------------------
+% Extract final solution -------------------------------------------------
 
 % Final solution
 y_end = sol.y(:,end);
@@ -193,37 +192,11 @@ r = round(y_end(rInds)) - PAD_SIZE; % Subtract the PAD_SIZE
 % positions outside of the image. Remove all of these values.
 r(r(:,1) < 1 | r(:,1) > maskSize(1) | r(:,2) < 1 | r(:,2) > maskSize(2),:) = [];
 
-% Linear indices of particle locations
-rInd = r(:,1) + (r(:,2)-1) * maskSize(1);
-
-rInd(~isfinite(rInd)) = [];
-
-% Search for the clusters by creating an image with the particles as 1's,
-% then dilate and find the centroids of the connected components.
-
-mask = false(maskSize);
-mask(rInd) = 1;
-mask = imdilate(mask,strel('disk',ceil(options.Potential_Minimum_Location)));
-
-CC = bwconncomp(mask);
-props = regionprops(CC,'Centroid'); % Perhaps should replace this with faster code for getting centroids.
-
-% Combine all of the centroids into one array and flip the xy components as
-% regionprops changes the order.
-seedPoints = fliplr(cat(1,props.Centroid));
-
-% Add the top left corner of the boundary back in
-% centers = centers + minB; 
-
 if DEBUG
-    Info.r_end = r;
     sol.y(rInds,:) = sol.y(rInds,:) - PAD_SIZE; % Offset all solution positions by PAD_SIZE, to help preventing confusion later on.
     Info.solverTime = solverTime;
     Info.ode_solution = sol;
     varargout{1} = Info;
 end
 
-
 end
-
-

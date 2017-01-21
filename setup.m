@@ -70,7 +70,10 @@ end
 fprintf('...added pdistmex\n')
 
 % Add subfolders of current location to path -----------------------------
-addpath(genpath(path));
+% (but do not include any .git repositories
+pths = split(genpath(path),';');
+pths = pths(~pths.contains('.git')).join(';');
+addpath(pths.char());
 fprintf('...added subfolders to path\n')
 
 fprintf('Setup finished!\n')

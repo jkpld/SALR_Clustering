@@ -5,19 +5,13 @@ function varargout = createObjectImages(pixelList,N,varargin)
 
 % James Kapaldo
 
-if nargin < 3
-    varargout{1} = [];
-    return;
-end
-
 if nargout > (nargin - 2)
     error('createObjectImages:badInput','More outputs requested than input pixel lists given.')
 end
 
-
 % Get linear indices of object
-j = rem(pixelList-1, N) + 1; 
-k = (pixelList - j)/N + 1; 
+j = rem(pixelList-1, N) + 1;
+k = (pixelList - j)/N + 1;
 
 r = [j,k];
 
@@ -43,7 +37,7 @@ end
 
 end
 % createObjectImages changes log
-% 2016-10-17 
+% 2016-10-17
 % 2016-10-18/28 : undocumented changes
 % 2016-10-29 : changed name to createObjectImages, renamed some inputs.
 % 2017-01-19 : rewrote to include arbitrary number of pixel value lists
