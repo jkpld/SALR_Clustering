@@ -221,6 +221,7 @@ switch method
                 dcmt.X = dcmt.X + mu(1);
                 dcmt.Y = dcmt.Y + mu(2);
                 Info.r0setHexData = dcmt;
+                Info.r0set = markers + mu;
             end
         catch ME
             if strcmp(ME.identifier,'MATLAB:discretize:EmptyOrScalarEdges')
@@ -251,6 +252,7 @@ switch method
             r0 = computeInitialPoints('random',BW,B,options);
             if nargout > 1
                 Info.givenMethodFailed = true;
+                Info.r0set = markers;
             end
         end
         
@@ -289,6 +291,7 @@ switch method
                 dcmt.X = dcmt.X + mu(1);
                 dcmt.Y = dcmt.Y + mu(2);
                 Info.r0setHexData = dcmt;
+                Info.r0set = markers + mu;
             end
         catch ME
             if strcmp(ME.identifier,'MATLAB:discretize:EmptyOrScalarEdges')
