@@ -5,7 +5,7 @@ function [seedPoints, Info] = computeObjectSeedPoints(BW, V, r0set, useCentroid,
 % ADD_EXTERIOR_CONFINING_POTENTIAL PROCESSOBJECTS
 
 % Get the error count
-if nargin == 7
+if nargin == 6
     errorCount = 0;
 end
 
@@ -67,6 +67,7 @@ catch ME
     if errorCount < 1
         [seedPoints, Info] = computeObjectSeedPoints(BW, V, r0set, useCentroid, options, objNumber, errorCount+1);
     else
+        seedPoints = [NaN, NaN];
         Info.error = ME;
         if DEBUG
             Info.r0 = [NaN, NaN];
