@@ -134,7 +134,6 @@ if any(strcmp(method,{'r0set_random','r0set_uniformRandom'}))
     
 end
 
-
 % Create the initial points
 switch method
     case 'random'
@@ -181,7 +180,7 @@ switch method
         % Ensure that if there were not centers inside the mask we still
         % get some results
         if isempty(r0)
-            r0 = computeInitialPoints('random',BW,B,options);
+            r0 = computeInitialPoints('random',BW,options);
             if nargout > 1
                 Info.givenMethodFailed = true;
             end
@@ -211,7 +210,7 @@ switch method
             % Ensure that if there were not centers inside the mask we still
             % get some results
             if isempty(r0)
-                r0 = computeInitialPoints('random',BW,B,options);
+                r0 = computeInitialPoints('random',BW,options);
                 if nargout > 1
                     Info.givenMethodFailed = true;
                 end
@@ -225,7 +224,7 @@ switch method
             end
         catch ME
             if strcmp(ME.identifier,'MATLAB:discretize:EmptyOrScalarEdges')
-                r0 = computeInitialPoints('random',BW,B,options);
+                r0 = computeInitialPoints('random',BW,options);
                 if nargout > 1
                     Info.givenMethodFailed = true;
                 end
@@ -249,7 +248,7 @@ switch method
         % Ensure that if there were not centers inside the mask we still
         % get some results
         if isempty(r0)
-            r0 = computeInitialPoints('random',BW,B,options);
+            r0 = computeInitialPoints('random',BW,options);
             if nargout > 1
                 Info.givenMethodFailed = true;
                 Info.r0set = markers;
@@ -281,7 +280,7 @@ switch method
             % Ensure that if there were not centers inside the mask we still
             % get some results
             if isempty(r0)
-                r0 = computeInitialPoints('random',BW,B,options);
+                r0 = computeInitialPoints('random',BW,options);
                 if nargout > 1
                     Info.givenMethodFailed = true;
                 end
@@ -295,7 +294,7 @@ switch method
             end
         catch ME
             if strcmp(ME.identifier,'MATLAB:discretize:EmptyOrScalarEdges')
-                r0 = computeInitialPoints('random',BW,B,options);
+                r0 = computeInitialPoints('random',BW,options);
                 if nargout > 1
                     Info.givenMethodFailed = true;
                 end
