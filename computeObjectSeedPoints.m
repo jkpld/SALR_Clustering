@@ -23,14 +23,19 @@ try
     POINT_SELECTION_METHOD = options.Point_Selection_Method;
     
     % Create full confining potential ---------------------------------------
-    V = add_exterior_confining_potential(BW,V,options); % Remember that this output V has been padded
+    V_full = add_exterior_confining_potential(BW,V,options); % Remember that this output V has been padded
     
     % Get initial particle locations ----------------------------------------
     initPointOptions.rs = options.Wigner_Seitz_Radius;
     initPointOptions.r0set = r0set;
     
     % Don't let the particles start with too high a potential energy.
-    allowed_r0_mask = BW & ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV );
+    allowed_r0_mask = BW & ( V_full(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV );
+    
+    if ~any(allowed_r0_mask(:))
+        warning('computeObjectSeedPoints:noValidPositions','There are no valid positions to put a particle. Try increasing the Maximum_Initial_Potential.\n Switching to use binary mask without potential requirement.')
+        allowed_r0_mask = BW;
+    end
     
     % Compute initial points
     if DEBUG
@@ -50,14 +55,14 @@ try
     end % if
     
     if DEBUG
-        [r_final, Info] = modelParticleDynamics(V, r0, options);
+        [r_final, Info] = modelParticleDynamics(V_full, r0, options);
         
         Info.r0 = r0;
         Info.r_final = r_final;
         Info.ComputeInitialPoints = ComputeInitialPointsInfo;
         Info.message = 0;%'';
     else
-        r_final = modelParticleDynamics(V, r0, options);
+        r_final = modelParticleDynamics(V_full, r0, options);
     end % if
     
     seedPoints = extractClusterCenters(r_final, size(BW), options);
