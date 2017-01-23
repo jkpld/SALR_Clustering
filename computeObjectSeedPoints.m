@@ -33,8 +33,12 @@ try
     allowed_r0_mask = BW & ( V_full(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV );
     
     if ~any(allowed_r0_mask(:))
-        warning('computeObjectSeedPoints:noValidPositions','There are no valid positions to put a particle. Try increasing the Maximum_Initial_Potential.\n Switching to use binary mask without potential requirement.')
-        allowed_r0_mask = BW;
+        if ~any(BW)
+            error('computeObjectSeedPoints:zeroMask','The object mask is all 0''s! I don''t know how this could happen.')
+        else
+            warning('computeObjectSeedPoints:noValidPositions','There are no valid positions to put a particle. Try increasing the Maximum_Initial_Potential.\n Switching to use binary mask without potential requirement.')
+            allowed_r0_mask = BW;
+        end
     end
     
     % Compute initial points
@@ -91,7 +95,7 @@ end % function
 
 function [seedPoint, Info] = computeCentroid(BW,DEBUG,reason)
 [i,j] = find(BW);
-seedPoint = mean([i,j]);
+seedPoint = mean([i,j],1);
 Info = [];
 if DEBUG
     Info.r0 = [NaN, NaN];
