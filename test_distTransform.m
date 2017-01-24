@@ -20,11 +20,10 @@ options.Point_Selection_Method      = 'r0set_uniformRandom';
 options.Debug                       = true;
 
 % Set up test parameters ------------------------------------------------
-names = {'2','3','4','5','67'};
-dr = 3:10;
-
+names = {'67'};%{'2','3','4','5','67'};
 n = numel(names);
-N = 20;
+dr = 3:10;
+N = 1;
 
 % Initialize variables for storing resuts -------------------------------
 TP = zeros(n,N,numel(dr));
@@ -90,7 +89,7 @@ for ind = 1:n
     end
 end
 
-save([pth 'resultsInfo_distTransform_standard_N20_v20170120-reStructured_' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'Info','options')
+% save([pth 'resultsInfo_distTransform_standard_N20_v20170120-reStructured_' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'Info','options')
 
 % Analyze and save results ----------------------------------------------
 % Results for each individual image
@@ -126,4 +125,13 @@ dims.dN = -3:3;
 dims.image = {'LD2P24','LD3P24','LD4P24','LD5P24','LD67P24'};
 results.dims = dims;
 
-save([pth 'results_distTransform_standard_N20_v20170120-reStructured' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'results')
+% save([pth 'results_distTransform_standard_N20_v20170120-reStructured' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'results')
+
+squeeze(results.F1)'
+squeeze(results.dN)'/484
+
+figure(1)
+clf
+imshow(I)
+hold on
+plot(seedPoints(:,1),seedPoints(:,2),'.r')
