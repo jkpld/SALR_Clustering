@@ -18,6 +18,7 @@ function dcmt = decimateData(x,y,z,varargin)
 % described below.
 %
 % Optional parameters:
+%
 % binSize - Size of the spatial bin to bin x and y data. Default is 0.25.
 %
 % gridType - The type of the grid uesed. Available grids are 'rectangular'
@@ -36,7 +37,7 @@ function dcmt = decimateData(x,y,z,varargin)
 % the data is first rounded to the nearest MAD/50, where MAD ('mad') is the
 % median abosolute deviation. If percentile is selected then,
 % prctile(z,PRCNT), will be used. You can set PRCNT with the optional
-% parameter percentValue. If density is selected then the z array is not
+% parameter 'percentValue'. If density is selected then the z array is not
 % used and the density of the x, y data is computed. Default is median.
 %
 % cleanHexagonData - boolian, only applicable if 'gridType' is 'hexagonal'.
