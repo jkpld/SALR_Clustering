@@ -36,6 +36,12 @@ CHARGE_NORMALIZATION_BETA   = options.Charge_Normalization_Beta;
 PAD_SIZE                    = options.Potential_Padding_Size;
 DEBUG                       = options.Debug;
 InteractionOptions          = options.InteractionOptions;
+MASS_CHARGE_MULTIPLIER      = options.Mass_Charge_Multiplier;
+
+MAX_FAILS = 5;
+RESTART_UNDER = 5;
+ON_FAIL_BACKTRACK = 2;
+HISTORY_SIZE = 5;
 
 % Number of particles
 N = size(r0,1);
@@ -46,10 +52,10 @@ maskSize = size(V) - 2*PAD_SIZE;
 % Compute gradient of confining potential --------------------------------
 [dVx,dVy] = gradient(V);
 
-if DEBUG
-    Info.dVx = dVx(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
-    Info.dVy = dVy(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
-end
+% if DEBUG
+%     Info.dVx = dVx(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
+%     Info.dVy = dVy(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
+% end
 
 % Create interpolating functions for confining force and potential -------
 dVx = @(r) interp2mex(dVx,r(:,2),r(:,1));
@@ -94,8 +100,8 @@ v0 = rand(N,2);
 v0 = INITIAL_SPEED * v0 ./ sqrt(sum(v0.^2,2));
 
 % Particle charge and mass
-q = N^(-CHARGE_NORMALIZATION_BETA);
-m = 1;
+q = sqrt(MASS_CHARGE_MULTIPLIER) * N^(-CHARGE_NORMALIZATION_BETA);
+m = 1/MASS_CHARGE_MULTIPLIER;
 
 % Particle damping
 alpha = @(t) zeros(N,1) + t * PARTICLE_DAMPING_RATE;
@@ -133,6 +139,7 @@ N_to_NtNm1o2 = S1 - S2;
 % https://www.mathworks.com/matlabcentral/newsreader/view_thread/274779
 
 % Set up inputs to interactingParticleSystem()
+% SystemInputs.d = size(r0,2);
 SystemInputs.q = q;
 SystemInputs.m = m;
 SystemInputs.alpha = alpha;
@@ -152,27 +159,82 @@ y0 = zeros(N,1);
 y0(rInds) = r0;
 y0(vInds) = v0;
 
-% Create the funciton to solve
+% Create the function to solve
 odeFun = @(t,y) interactingParticleSystem(t,y,SystemInputs);
 
+% Initialize ode history
+hstry = ode_history(SOLVER_TIME_RANGE(1), y0, HISTORY_SIZE);
+
 % Set up the solver options.
-ode_options = odeset('Events',@interactingParticleSystem_convergeEvent,...
+ode_options = odeset('Events',@(t,y) interactingParticleSystem_convergeEvent(t,y,m,hstry),...
     'Vectorized','on',...
     'RelTol',1e-4,...
     'AbsTol',1e-6,...
-    'NormControl','on');
+    'NormControl','on');%,...
+%     'InitialStep',InitialStep);
 
 
 % Solve the system -------------------------------------------------------
-
 % Record the time it takes to solve.
 startClock = tic;
 
-sol = ode23(odeFun,SOLVER_TIME_RANGE,y0,ode_options);
+quitIterations = 0;
+timeRange = SOLVER_TIME_RANGE;
+
+sol_hist.y = [];
+sol_hist.x = [];
+
+while 1
+
+    sol = ode23(odeFun,timeRange,y0,ode_options);
+
+    if sol.ie == 2
+        % Error do to particle position or momentum being NaN. Usually
+        % caused by taking a time step that is too big.
+        if quitIterations > MAX_FAILS
+            break;
+        end
+
+        failIdx = find(any(isnan(sol.y),1),1);
+
+        if failIdx < RESTART_UNDER
+%             fprintf('start fail %d\n',quitIterations+1)
+            ode_options.InitialStep = (sol.x(2)-sol.x(1))/2;
+            hstry.hardreset(SOLVER_TIME_RANGE(1), y0);
+        else
+%             fprintf('large jump fail\n')
+            returnTo = failIdx - ON_FAIL_BACKTRACK;
+            startTime = sol.x(returnTo);
+
+            ode_options.InitialStep = (sol.x(returnTo+1) - startTime)/2;
+
+            sol_hist.y = [sol_hist.y, sol.y(:,1:returnTo-1)];
+            sol_hist.x = [sol_hist.x, sol.x(1:returnTo-1)];
+
+            hstry.rewrite(sol.x(returnTo-(HISTORY_SIZE):returnTo-1), sol.y(:,returnTo-(HISTORY_SIZE):returnTo-1), ON_FAIL_BACKTRACK)
+
+            y0 = sol.y(:,returnTo);
+
+            timeRange = [startTime, 1500];
+        end
+
+        quitIterations = quitIterations + 1;
+    else
+        break;
+    end
+end
+
+if quitIterations > 0
+    sol.y = [sol_hist.y, sol.y];
+    sol.x = [sol_hist.x, sol.x];
+end
 
 solverTime = toc(startClock);
 
-if isempty(sol.xe) || sol.xe == SOLVER_TIME_RANGE(end)
+if quitIterations > MAX_FAILS
+    Info.converged = 0;
+    warning('ComputeObjectCenters:solverFailed','The ODE solver failed to converge MAX_FAILS times, %d.', MAX_FAILS)
+elseif isempty(sol.xe) || sol.xe == SOLVER_TIME_RANGE(end)
     Info.converged = 0;
     warning('ComputeObjectCenters:noConverge','The ODE solver did not converge in the time range given.')
 else
@@ -192,10 +254,11 @@ r = round(y_end(rInds)) - PAD_SIZE; % Subtract the PAD_SIZE
 % positions outside of the image. Remove all of these values.
 r(r(:,1) < 1 | r(:,1) > maskSize(1) | r(:,2) < 1 | r(:,2) > maskSize(2),:) = [];
 
+
 if DEBUG
-    sol.y(rInds,:) = sol.y(rInds,:) - PAD_SIZE; % Offset all solution positions by PAD_SIZE, to help preventing confusion later on.
     Info.solverTime = solverTime;
     Info.ode_solution = sol;
+    Info.SystemInputs = SystemInputs;
     varargout{1} = Info;
 end
 
