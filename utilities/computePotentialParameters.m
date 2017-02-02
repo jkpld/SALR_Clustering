@@ -1,4 +1,4 @@
-function computePotentialParameters(depths,minimum_Locations,extents,file)
+function parameterStruct = computePotentialParameters(depths,minimum_Locations,extents,file)
 % COMPUTEPOTENTIALPARAMETERS  Solve for the potential parameters that give
 % all combinations of the DEPTHS, MINIMUM_LOCATIONS, and EXTENTS given.
 % Save the paramters in FILE
@@ -13,29 +13,44 @@ function computePotentialParameters(depths,minimum_Locations,extents,file)
 
 centers = minimum_Locations;
 
-potentialParameters = zeros(numel(depths),numel(centers),numel(extents),3);
+Dn = numel(depths);
+Cn = numel(centers);
+En = numel(extents);
+
+potentialParameters = zeros(Dn*Cn*En,3);
+potentialParametersIdx = zeros(Dn*Cn*En,1,'uint32');
 
 options = optimset('display','none','TolX',1e-7,'TolFun',1e-7,'MaxFunEvals',500);
 
+counter = 1;
 for i1 = 1:numel(depths)
     for i2 = 1:numel(centers)
         for i3 = 1:numel(extents)
             r = centers(i2)/2:0.01:(extents(i3) + centers(i2));
             f = @(x) potentialParametersFun(x,[depths(i1),centers(i2),extents(i3)],r);
-            potentialParameters(i1,i2,i3,:) = fminsearch(f,[-depths(i1),centers(i2),(extents(i3)-centers(i2))/3],options); % 
+            
+            potentialParameters(counter,:) = fminsearch(f,[-depths(i1),centers(i2),(extents(i3)-centers(i2))/3],options); % 
+            potentialParametersIdx(counter) = i1 + bitshift(i2,8) + bitshift(i3,16);
+            
+            counter = counter + 1;
         end
     end
-    fprintf('%d/%d...\n',i1,numel(depths))
+%     fprintf('%d/%d...\n',i1,numel(depths))
 end
 
 PotentialParameters.depth = depths;
 PotentialParameters.center = centers;
 PotentialParameters.extent = extents;
-PotentialParameters.parameters = potentialParameters; %#ok<STRNU>
+PotentialParameters.parameters = potentialParameters; 
+PotentialParameters.parametersIdx = potentialParametersIdx; 
 
-% potParams = PotentialParameters.parameters;
+if nargout > 0
+    parameterStruct = PotentialParameters;
+end
 
-save(file,'-struct','PotentialParameters')
+if nargin > 3
+    save(file,'-struct','PotentialParameters')
+end
 
 end
 

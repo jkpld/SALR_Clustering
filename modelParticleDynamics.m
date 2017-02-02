@@ -37,6 +37,8 @@ PAD_SIZE                    = options.Potential_Padding_Size;
 DEBUG                       = options.Debug;
 InteractionOptions          = options.InteractionOptions;
 MASS_CHARGE_MULTIPLIER      = options.Mass_Charge_Multiplier;
+SCALE_FACTOR                = options.Scale_Factor;
+
 
 MAX_FAILS = 5;
 RESTART_UNDER = 5;
@@ -87,9 +89,9 @@ switch InteractionOptions.type
         A = InteractionOptions.params(1);
         mu = InteractionOptions.params(2);
         sig = InteractionOptions.params(3);
-
+        
         % Vint  = @(D)  1./D - A * exp(-(D-mu).^2/(2*sig^2));
-        dVint = @(D) -1./(D+0.2).^2 + (A*(D-mu)/(sig^2)) .* exp(-(D-mu).^2/(2*sig^2));
+        dVint = @(D) -1./(D*SCALE_FACTOR + 0.2).^2 + (A*(D*SCALE_FACTOR-mu)/(sig^2)) .* exp(-(D*SCALE_FACTOR-mu).^2/(2*sig^2));
 end
 
 % Add in the padding to the initial locations.

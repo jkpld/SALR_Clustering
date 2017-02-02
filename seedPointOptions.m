@@ -11,7 +11,7 @@ classdef seedPointOptions
 % Wigner_Seitz_Radius - The effective size of each particle in the
 %   simulation. This sets the density of the particles used. The
 %   approximate number of particles used in a particular object will be
-%   area(object)/(pi* r_s^2), where r_s is the Wigner_Seitz_Radius. 
+%   area(object)/(pi* r_s^2), where r_s is the Wigner_Seitz_Radius.
 %   (0, Inf) , [pixels]
 %
 % Potential_Depth - The depth of the potential.
@@ -32,10 +32,14 @@ classdef seedPointOptions
 % Maximum_Initial_Potential - The maximum confining potential value that a
 %   particle can have at its initial position. Any possible initial
 %   position with a confining potential larger than this value will not be
-%   used as an initial particle position. 
+%   used as an initial particle position.
 %   (-Inf, Inf] , [arb. units]
 %
-% Initial_Speed - The initial speed of the particles in the simulation.  
+% Potential_Scale - Value used to set the depth of the confining potential
+%   well.
+%   (0, Inf) , [arb. units]
+%
+% Initial_Speed - The initial speed of the particles in the simulation.
 %   (-Inf, Inf) , [pixels/time]
 %
 % Particle_Damping_Rate - The rate at which the damping of the particles
@@ -83,7 +87,7 @@ classdef seedPointOptions
 %   and set Debug to true. Plots showing intermediate steps of the
 %   calculation will be shown that should help you debug the problem. Leave
 %   this property empty for normal use.
-    
+
     properties
 
         Wigner_Seitz_Radius          = 10;
@@ -91,52 +95,68 @@ classdef seedPointOptions
         Potential_Minimum_Location
         Potential_Extent
         Potential_Padding_Size       = 5;
-        Maximum_Initial_Potential    = 1/3;
+        Maximum_Initial_Potential    = Inf;
+
+        Potential_Scale              = NaN;
+
         Initial_Speed                = 0.01;
         Particle_Damping_Rate        = 5e-4;
         Charge_Normalization_Beta    = 1/3;
         Solver_Time_Range            = 0:10:1500;
         Point_Selection_Method       = 'r0set_uniformRandom';
-        
+
         Minimum_Hole_Size            = 50;
-        
+
         Curvature_Smoothing_Size     = 2;
         Curvature_Max_Radius         = 35;
-        
+
         Use_GPU                      = false;
         Use_Parallel                 = false;
-        
+
         Debug                        = false;
-        
+
         Object_Of_Interest           = [];
     end
-    
+
     properties (SetAccess = private)
         potentialParameters
     end
-    
+
     properties (SetAccess = private, Hidden)
         potentialParameterIdx = [1 1 1];
         InteractionOptions = struct('type','SRALRR','params',[]);
     end
-    
+
+    properties (Hidden)
+        Scale_Factor = 1;
+        Object_Scale = 1;
+
+        Potential_PreMultiplier = 1; % Not used
+        Mass_Charge_Multiplier = 1; % Not used
+    end
+
     methods
         function options = seedPointOptions(varargin)
-            
+
             % First get the potential paramters
             try
                 options.potentialParameters = load('potentialParameters.mat');
             catch
                 error('seedPointOptions:missingPotentialParamters','The file potentialParameters.mat is missing or not on the path. This file is required for setting the potentialParamters. It may be created with the function computePotentialParamters if you do not have it.')
             end
-            
+
+            depth_idx = 1;
+            center_idx = 1;
+            extent_idx = numel(options.potentialParameters.extent);
+
+            options.potentialParameterIdx = [depth_idx, center_idx, extent_idx];
+            idx = options.potentialParameters.parametersIdx == encodePotentialIdx(depth_idx, center_idx, extent_idx);
+            options.InteractionOptions.params = options.potentialParameters.parameters(idx,:);
+
             options.Potential_Depth = options.potentialParameters.depth(1);
             options.Potential_Minimum_Location = options.potentialParameters.center(1);
             options.Potential_Extent = options.potentialParameters.extent(end);
-            
-            options.InteractionOptions.params = permute(options.potentialParameters.parameters(1,1,end,:),[4,1,2,3]);
-            
-            
+
             % Now assign any properties given.
             if nargin > 0
                 if numel(varargin) == 1 && isstruct(varargin{1})
@@ -155,127 +175,115 @@ classdef seedPointOptions
                 end
             end
         end
-        
+
         function obj = set.Wigner_Seitz_Radius(obj,value)
             validateattributes(value,{'double'},{'positive','scalar','real','finite'})
             obj.Wigner_Seitz_Radius = value;
         end
-        
+
         function obj = set.Initial_Speed(obj,value)
             validateattributes(value,{'double'},{'scalar','real','finite'})
             obj.Initial_Speed = value;
         end
-        
+
         function obj = set.Point_Selection_Method(obj,value)
             value = validatestring(value,{'random','uniform','uniformRandom','r0set_random','r0set_uniformRandom'});
             obj.Point_Selection_Method = value;
         end
-        
+
         function obj = set.Potential_Depth(obj,value)
             validateattributes(-value,{'double'},{'scalar','nonnegative','real','finite'})
-            
-            idx = find(obj.potentialParameters.depth == value); %#ok<MCSUP>
-            
-            if isempty(idx)
-                badValue = value;
-                [~, idx] = min(abs(obj.potentialParameters.depth-value));  %#ok<MCSUP>
-                value = obj.potentialParameters.depth(idx);  %#ok<MCSUP>
-                warning('seedPointOptions:undefinedPotentialParameterValues', 'There are no potential parameters defined for the Depth %g. Using the closest defined value %g.\nUse the function computePotentialParameters to compute the potential paramters for additional values.',badValue,value)
+
+            if ~isempty(obj.Potential_Minimum_Location) && ~isempty(obj.Potential_Extent) %#ok<MCSUP>
+                obj = setPotentialParameter(obj, value, obj.Potential_Minimum_Location, obj.Potential_Extent); %#ok<MCSUP>
             end
-            
-            obj.potentialParameterIdx(1) = idx; %#ok<MCSUP>
-            obj.InteractionOptions.params = permute(obj.potentialParameters.parameters(obj.potentialParameterIdx(1),obj.potentialParameterIdx(2),obj.potentialParameterIdx(3),:),[4,1,2,3]); %#ok<MCSUP>
             obj.Potential_Depth = value;
         end
-        
+
         function obj = set.Potential_Minimum_Location(obj,value)
             validateattributes(value,{'double'},{'scalar','positive','real','finite'})
-            
-            idx = find(obj.potentialParameters.center == value); %#ok<MCSUP>
-            
-            if isempty(idx)
-                badValue = value;
-                [~, idx] = min(abs(obj.potentialParameters.center-value));  %#ok<MCSUP>
-                value = obj.potentialParameters.center(idx);  %#ok<MCSUP>
-                warning('seedPointOptions:undefinedPotentialParameterValues', 'There are no potential parameters defined for the Minimum_Location %g. Using the closest defined value %g.\nUse the function computePotentialParameters to compute the potential paramters for additional values.',badValue,value)
-            end
-            
+
             if value > obj.Potential_Extent %#ok<MCSUP>
                 error('seedPointOptions:badSet','Potential_Minimum_Location must be smaller than Potential_Extent.')
             end
-            
-            obj.potentialParameterIdx(2) = idx; %#ok<MCSUP>
-            obj.InteractionOptions.params = permute(obj.potentialParameters.parameters(obj.potentialParameterIdx(1),obj.potentialParameterIdx(2),obj.potentialParameterIdx(3),:),[4,1,2,3]); %#ok<MCSUP>
+
+            if ~isempty(obj.Potential_Depth) && ~isempty(obj.Potential_Extent) %#ok<MCSUP>
+                obj = setPotentialParameter(obj, obj.Potential_Depth, value, obj.Potential_Extent); %#ok<MCSUP>
+            end
             obj.Potential_Minimum_Location = value;
         end
-        
+
         function obj = set.Potential_Extent(obj,value)
             validateattributes(value,{'double'},{'scalar','positive','real','finite'})
-            
-            idx = find(obj.potentialParameters.extent == value); %#ok<MCSUP>
-            
-            if isempty(idx)
-                badValue = value;
-                [~, idx] = min(abs(obj.potentialParameters.extent-value));  %#ok<MCSUP>
-                value = obj.potentialParameters.extent(idx);  %#ok<MCSUP>
-                warning('seedPointOptions:undefinedPotentialParameterValues', 'There are no potential parameters defined for the Extent %g. Using the closest defined value %g.\nUse the function computePotentialParameters to compute the potential paramters for additional values.',badValue,value)
-            end
-            
+
             if value < obj.Potential_Minimum_Location %#ok<MCSUP>
                 error('seedPointOptions:badSet','Potential_Extent must be larger than Potential_Minimum_Location.')
             end
-            
-            obj.potentialParameterIdx(3) = idx; %#ok<MCSUP>
-            obj.InteractionOptions.params = permute(obj.potentialParameters.parameters(obj.potentialParameterIdx(1),obj.potentialParameterIdx(2),obj.potentialParameterIdx(3),:),[4,1,2,3]); %#ok<MCSUP>
+            if ~isempty(obj.Potential_Depth) && ~isempty(obj.Potential_Minimum_Location) %#ok<MCSUP>
+                obj = setPotentialParameter(obj, obj.Potential_Depth, obj.Potential_Minimum_Location, value); %#ok<MCSUP>
+            end
             obj.Potential_Extent = value;
         end
-        
+
         function obj = set.Potential_Padding_Size(obj,value)
             validateattributes(value,{'double'},{'integer','scalar','positive','nonzero','real','finite'})
             obj.Potential_Padding_Size = value;
         end
-        
+
         function obj = set.Maximum_Initial_Potential(obj,value)
             validateattributes(value,{'double'},{'scalar','real','>',-Inf,'<=',Inf})
             obj.Maximum_Initial_Potential = value;
         end
-        
+
+        function obj = set.Potential_Scale(obj,value)
+            validateattributes(value,{'double'},{'scalar','real','positive','nonzero'})
+            if isinf(value)
+                error('setPotentialScale:inf','Input must not be Inf.')
+            end
+            obj.Potential_Scale = value;
+        end
+
+        function obj = set.Mass_Charge_Multiplier(obj,value)
+            validateattributes(value,{'double'},{'scalar','real','positive','nonzero','finite'})
+            obj.Mass_Charge_Multiplier = value;
+        end
+
         function obj = set.Minimum_Hole_Size(obj,value)
             validateattributes(value,{'double'},{'scalar','nonnegative','real','finite'})
             obj.Minimum_Hole_Size = value;
         end
-        
+
         function obj = set.Curvature_Smoothing_Size(obj,value)
             validateattributes(value,{'double'},{'scalar','nonnegative','integer','real','finite'})
             obj.Curvature_Smoothing_Size = value;
         end
-        
+
         function obj = set.Curvature_Max_Radius(obj,value)
             validateattributes(value,{'double'},{'scalar','positive','real','finite'})
             obj.Curvature_Max_Radius = value;
         end
-        
+
         function obj = set.Use_GPU(obj,value)
             if (value ~= 0) && (value ~= 1)
                 error('seedPointOptions:badInput','Expected input to be logical.')
             end
             obj.Use_GPU = value;
         end
-        
+
         function obj = set.Use_Parallel(obj,value)
             if (value ~= 0) && (value ~= 1)
                 error('seedPointOptions:badInput','Expected input to be logical.')
             end
             obj.Use_Parallel = value;
         end
-        
+
         function obj = set.Debug(obj,value)
             if (value ~= 0) && (value ~= 1)
                 error('seedPointOptions:badInput','Expected input to be logical.')
             end
             obj.Debug = value;
         end
-        
+
         function obj = set.Object_Of_Interest(obj,value)
             if isempty(value)
                 obj.Object_Of_Interest = value;
@@ -284,59 +292,99 @@ classdef seedPointOptions
                 obj.Object_Of_Interest = value;
             end
         end
-        
+
         function obj = set.Solver_Time_Range(obj,value)
             validateattributes(value,{'double'},{'nonnegative','real','finite'})
             obj.Solver_Time_Range = value;
         end
-        
+
         function obj = set.Particle_Damping_Rate(obj,value)
             validateattributes(value,{'double'},{'scalar','nonnegative','real','finite'})
             obj.Particle_Damping_Rate = value;
         end
-        
+
         function obj = set.Charge_Normalization_Beta(obj,value)
             validateattributes(value,{'double'},{'scalar','real','finite'})
             obj.Charge_Normalization_Beta = value;
         end
-        
+
+        function obj = set.Scale_Factor(obj,value)
+            validateattributes(value,{'double'},{'scalar','real','finite','positive','nonzero'})
+            obj.Scale_Factor = value;
+        end
+
+        function plotPotential(obj)
+
+            x = obj.InteractionOptions.params;
+            r = 0:0.05:1.3*obj.Potential_Extent;
+            Vint = 1./(r+0.2) - x(1)*exp(-(r-x(2)).^2/(2*x(3)^2));
+
+            figure
+            plot(r,Vint,'b','linewidth',2)
+            title(sprintf('Interaction potential (%0.2f,%0.2f,%0.2f)', obj.Potential_Depth, obj.Potential_Minimum_Location, obj.Potential_Extent))
+        end
     end
-    
+
+    methods (Access = private)
+        function obj = setPotentialParameter(obj,depth,center,extent)
+
+            depth_idx = find(obj.potentialParameters.depth == depth);
+            center_idx = find(obj.potentialParameters.center == center);
+            extent_idx = find(obj.potentialParameters.extent == extent);
+
+            if isempty(depth_idx) || isempty(center_idx) || isempty(extent_idx)
+                % Need to compute a new set of parameters
+
+                parameterStruct = computePotentialParameters(depth,center,extent);
+
+                if isempty(depth_idx)
+                    obj.potentialParameters.depth = [obj.potentialParameters.depth, depth];
+                    depth_idx = numel(obj.potentialParameters.depth);
+                end
+                if isempty(center_idx)
+                    obj.potentialParameters.center = [obj.potentialParameters.center, center];
+                    center_idx = numel(obj.potentialParameters.center);
+                end
+                if isempty(extent_idx)
+                    obj.potentialParameters.extent = [obj.potentialParameters.extent, extent];
+                    extent_idx = numel(obj.potentialParameters.extent);
+                end
+
+                obj.potentialParameters.parameters = [obj.potentialParameters.parameters; parameterStruct.parameters];
+                obj.potentialParameters.parametersIdx = [obj.potentialParameters.parametersIdx; encodePotentialIdx(depth_idx, center_idx, extent_idx)];
+                obj.InteractionOptions.params = parameterStruct.parameters;
+            else
+
+                idx = obj.potentialParameters.parametersIdx == encodePotentialIdx(depth_idx, center_idx, extent_idx);
+
+                if ~any(idx)
+                    % Do not have this combination of parameters, need to
+                    % compute them
+                    parameterStruct = computePotentialParameters(depth,center,extent);
+
+                    obj.potentialParameters.parameters = [obj.potentialParameters.parameters; parameterStruct.parameters];
+                    obj.potentialParameters.parametersIdx = [obj.potentialParameters.parametersIdx; encodePotentialIdx(depth_idx, center_idx, extent_idx)];
+                    obj.InteractionOptions.params = parameterStruct.parameters;
+                else
+                    % Already have the parameters, just need to set them
+                    obj.InteractionOptions.params = obj.potentialParameters.parameters(idx,:);
+                end
+            end
+
+%             obj.Potential_Depth = depth;
+%             obj.Potential_Minimum_Location = center;
+%             obj.Potential_Extent = extent;
+            obj.potentialParameterIdx = [depth_idx, center_idx, extent_idx];
+
+            % TODO: Add function that checks to see that the attractive
+            % extent, depth, and center actually are where we set them to
+            % be. Not all combinations of parameters are possible (small
+            % center and large extent for example)
+        end
+    end
+
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+function out = encodePotentialIdx(depth_idx,center_idx,extent_idx)
+    out = uint32(depth_idx + bitshift(center_idx,8) + bitshift(extent_idx,16));
+end
