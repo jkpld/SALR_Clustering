@@ -5,7 +5,6 @@ function clusterCenters = extractClusterCenters(r_final,objSize,options)
 % Input parameters:
 % r_final - The final locations of the particles, as returned by
 %           modelParticleDynamics
-% objSize - The size of the object mask image
 % options - Element of class seedPointOptions
 %
 % Output parameters:
@@ -17,23 +16,30 @@ function clusterCenters = extractClusterCenters(r_final,objSize,options)
 % James Kapaldo
 % 2017-01-20
 
-% Linear indices of particle locations
-rInd = r_final(:,1) + (r_final(:,2)-1) * objSize(1);
+% Number of particles
+N = size(r_final,1);
 
-rInd(~isfinite(rInd)) = [];
+% Distance between each pair of particles 
+D = pdist(r_final);
 
-% Search for the clusters by creating an image with the particles as 1's,
-% then dilate and find the centroids of the connected components.
+% Particle pairs that are connected to each other
+cluster = D < 0.7*options.Potential_Minimum_Location + 0.3*options.Potential_Extent;
+pdistInds = getPdistInds(N);
+linIdx = pdistInds(cluster,1) + (pdistInds(cluster,2)-1)*N;
 
-mask = false(objSize);
-mask(rInd) = 1;
-mask = imdilate(mask,strel('disk',ceil(options.Potential_Minimum_Location)));
+% Symmetric particle adjacency matrix
+A = eye(N,'logical');
+A(linIdx) = true;
+A = A | A';
 
-CC = bwconncomp(mask);
-props = regionprops(CC,'Centroid'); % Perhaps should replace this with faster code for getting centroids.
+% Permute to block diagonal form and extract the size of each block
+[p,~,r] = dmperm(A);
 
-% Combine all of the centroids into one array and flip the xy components as
-% regionprops changes the order.
-clusterCenters = fliplr(cat(1,props.Centroid));
+% Compute the center of each cluster.
+clusterCenters = zeros(numel(r)-1,2);
+for i = 1:numel(r)-1
+    idx = r(i):r(i+1)-1;
+    clusterCenters(i,:) = mean( r_final( p(idx) ,:), 1);
+end
 
 end
