@@ -52,7 +52,7 @@ N = size(r0,1);
 maskSize = size(V) - 2*PAD_SIZE;
 
 % Compute gradient of confining potential --------------------------------
-[dVx,dVy] = gradient(V);
+[dVx,dVy] = gradient(V, SCALE_FACTOR, SCALE_FACTOR);
 
 % if DEBUG
 %     Info.dVx = dVx(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
@@ -60,8 +60,8 @@ maskSize = size(V) - 2*PAD_SIZE;
 % end
 
 % Create interpolating functions for confining force and potential -------
-dVx = @(r) interp2mex(dVx,r(:,2),r(:,1));
-dVy = @(r) interp2mex(dVy,r(:,2),r(:,1));
+dVx = @(r) interp2mex(dVx,r(:,2)/SCALE_FACTOR,r(:,1)/SCALE_FACTOR);
+dVy = @(r) interp2mex(dVy,r(:,2)/SCALE_FACTOR,r(:,1)/SCALE_FACTOR);
 
 % These mex interpolation functions assume the input is from an image (x
 % and y spacing of 1) and it uses nearest neighbor extrapolation.
@@ -79,6 +79,7 @@ dVy = @(r) interp2mex(dVy,r(:,2),r(:,1));
 % .......................................................................
 
 
+
 % Create particle interaction potential and force ------------------------
 switch InteractionOptions.type
     case 'Coulomb'
@@ -89,13 +90,14 @@ switch InteractionOptions.type
         A = InteractionOptions.params(1);
         mu = InteractionOptions.params(2);
         sig = InteractionOptions.params(3);
-        
+
         % Vint  = @(D)  1./D - A * exp(-(D-mu).^2/(2*sig^2));
-        dVint = @(D) -1./(D*SCALE_FACTOR + 0.2).^2 + (A*(D*SCALE_FACTOR-mu)/(sig^2)) .* exp(-(D*SCALE_FACTOR-mu).^2/(2*sig^2));
+%         dVint = @(D) -1./(D*SCALE_FACTOR + 0.2).^2 + (A*(D*SCALE_FACTOR-mu)/(sig^2)) .* exp(-(D*SCALE_FACTOR-mu).^2/(2*sig^2));
+        dVint = @(D) -1./(D + 0.2).^2 + (A*(D-mu)/(sig^2)) .* exp(-(D-mu).^2/(2*sig^2));
 end
 
 % Add in the padding to the initial locations.
-r0 = r0 + PAD_SIZE;
+r0 = (r0 + PAD_SIZE)*SCALE_FACTOR;
 
 % Particle initial velocities.
 v0 = rand(N,2);
@@ -103,6 +105,7 @@ v0 = INITIAL_SPEED * v0 ./ sqrt(sum(v0.^2,2));
 
 % Particle charge and mass
 q = sqrt(MASS_CHARGE_MULTIPLIER) * N^(-CHARGE_NORMALIZATION_BETA);
+% q = @(t) sqrt(1 - t * PARTICLE_DAMPING_RATE) * N^(-CHARGE_NORMALIZATION_BETA);
 m = 1/MASS_CHARGE_MULTIPLIER;
 
 % Particle damping
@@ -233,6 +236,8 @@ end
 
 solverTime = toc(startClock);
 
+sol.y = sol.y/SCALE_FACTOR;
+
 if quitIterations > MAX_FAILS
     Info.converged = 0;
     warning('ComputeObjectCenters:solverFailed','The ODE solver failed to converge MAX_FAILS times, %d.', MAX_FAILS)
@@ -250,7 +255,7 @@ end
 y_end = sol.y(:,end);
 
 % Particle pixel locations.
-r = round(y_end(rInds)) - PAD_SIZE; % Subtract the PAD_SIZE
+r = y_end(rInds) - PAD_SIZE; % Subtract the PAD_SIZE
 
 % It could be, if the solution did not converge, that there are particle
 % positions outside of the image. Remove all of these values.

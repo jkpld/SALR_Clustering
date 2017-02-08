@@ -55,7 +55,7 @@ if W > 0
         value(1) = 1;    
     else
         v = sum(mean(cat(3,p_hist,p),3).^2,2); % average speed of each particle over history
-        value(1) = mean(v(:))/m - 0.5e-3; % not sure what htis threshold hsould be at the time of writing this code
+        value(1) = mean(v(:))/m - 0.2e-3; % not sure what this threshold hsould be at the time of writing this code
     end
     isterminal(1) = 1;
     direction(1) = -1;

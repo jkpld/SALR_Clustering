@@ -1,7 +1,8 @@
-function [seedPoints, Info] = processObjects(pixels, V, r0set, useCentroid, nRows, options)
+function [seedPoints, Info] = processObjects(pixels, M, r0set, useCentroid, nRows, options)
 
 % See also COMPUTEOBJECTSEEDPOINTS CREATEOBJECTIMAGES MODELPARTICLEDYNAMICS
 
+    Info = [];
 
     % Number of input objects
     N = numel(pixels);
@@ -28,8 +29,8 @@ function [seedPoints, Info] = processObjects(pixels, V, r0set, useCentroid, nRow
         parfor obj = 1:N
 
             % Create mask and interior potential images for the object
-            [objBW,objV] = createObjectImages(pixels{obj}, nRows, true(numel(pixels{obj}),1), V{obj});
-            [seedPoints{obj}, Info{obj}] = computeObjectSeedPoints(objBW, objV, r0set{obj}, useCentroid(obj), options, obj)
+            [objBW,objM] = createObjectImages(pixels{obj}, nRows, true(numel(pixels{obj}),1), M{obj});
+            [seedPoints{obj}, Info{obj}] = computeObjectSeedPoints(objBW, objM, r0set{obj}, useCentroid(obj), options, obj)
 
             % Add object number as third column. (This is mostly just helpful when comparing against truth data, as the truth data is labeled by each object.)
             seedPoints{obj} = [seedPoints{obj}, obj*ones(size(seedPoints{obj},1),1)];
@@ -48,8 +49,8 @@ function [seedPoints, Info] = processObjects(pixels, V, r0set, useCentroid, nRow
             procTime = tic;
 
             % Create mask and interior potential images for the object
-            [objBW,objV] = createObjectImages(pixels{obj}, nRows, true(numel(pixels{obj}),1), V{obj});
-            [seedPoints{obj}, Info{obj}] = computeObjectSeedPoints(objBW, objV, r0set{obj}, useCentroid(obj), options, obj);
+            [objBW,objM] = createObjectImages(pixels{obj}, nRows, true(numel(pixels{obj}),1), M{obj});
+            [seedPoints{obj}, Info{obj}] = computeObjectSeedPoints(objBW, objM, r0set{obj}, useCentroid(obj), options, obj);
 
             % Add object number as third column. (This is mostly just helpful when comparing against truth data, as the truth data is labeled by each object.)
             seedPoints{obj} = [seedPoints{obj}, obj*ones(size(seedPoints{obj},1),1)];

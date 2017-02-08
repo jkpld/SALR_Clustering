@@ -30,9 +30,13 @@ varargout = cell(1,numel(varargin));
 
 % Assign output
 for i = 1:numel(varargin)
-    tmp = zeros(maxR);
-    tmp(inds) = varargin{i};
-    varargout{i} = tmp;
+    if isempty(varargin{i})
+        varargout{i} = [];
+    else
+        tmp = zeros(maxR);
+        tmp(inds) = varargin{i};
+        varargout{i} = tmp;
+    end
 end
 
 end

@@ -1,4 +1,4 @@
-function V = add_exterior_confining_potential(BW,V_interior,options)
+function [V,d] = add_exterior_confining_potential(BW,V_interior,options)
 % ADD_EXTERIOR_CONFINING_POTENTIAL
 % Take the binary mask of a single object and the interior confining
 % potential, pad them, and add in the exterior confining potential.
@@ -35,8 +35,26 @@ V = padarray(V_interior,PAD_SIZE*[1 1]);
 % Set potential outside well to be strongly increasing with distance. Don't
 % set to infinity because, when modeling, if a particle happened to go into
 % the Inf region during a time step, then the solution will break.
-V_out = (bwdist(BW_pad)+1);
-V_out = V_out.^(V_out+1);
+V_out = (bwdist(BW_pad).^2+1);
+% V_out = V_out.^(V_out+1);
 V(~BW_pad) = V_out(~BW_pad);
+
+V = imfilter(V,fspecial('gaussian',7,1));
+
+% d = double(bwdist(~BW_pad));
+% d = max(d(:));
+
+% d = prctile(1./V(logical(BW_pad)),95);
+d = [];
+% do = bwdist(BW_pad) - 1;
+% 
+% d = double(d);
+% do = double(do);
+% 
+% maxd = max(d(:));
+% d = maxd - d + do;
+% 
+% V = sqrt(d.^2)/maxd;
+
 
 end

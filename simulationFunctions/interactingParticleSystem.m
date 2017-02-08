@@ -186,8 +186,8 @@ dp = dp - (alpha./m) .* p;
 dr = p ./ m;%  - (alpha./m) .* p;
 
 % Limit the maximum particle speed for stability
-dr(dr<-1) = -1;
-dr(dr>1) = 1;
+% dr(dr<-1) = -1;
+% dr(dr>1) = 1;
 
 % Reshape dr and dp
 dr = reshape(permute(dr,[2,1,3]),2*N,M);

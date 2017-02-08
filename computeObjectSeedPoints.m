@@ -1,8 +1,13 @@
-function [seedPoints, Info] = computeObjectSeedPoints(BW, V, r0set, useCentroid, options, objNumber, errorCount)
+function [seedPoints, Info] = computeObjectSeedPoints(BW, M, r0set, useCentroid, options, objNumber, errorCount)
 
 
 % See also MODELPARTICLEDYNAMICS EXTRACTCLUSTERCENTERS COMPUTEINITIALPOINTS
 % ADD_EXTERIOR_CONFINING_POTENTIAL PROCESSOBJECTS
+
+% M : base potential modifier - should be 1 outside of nuclei.
+
+
+Info = [];
 
 % Get the error count
 if nargin == 6
@@ -23,14 +28,19 @@ try
     POINT_SELECTION_METHOD = options.Point_Selection_Method;
     
     % Create full confining potential ---------------------------------------
-    V_full = add_exterior_confining_potential(BW,V,options); % Remember that this output V has been padded
+    [V, scaleFactor] = create_scaleInvar_confining_potential(BW, options);
+    options.Scale_Factor = scaleFactor;
+    
+    if ~isempty(M)
+        V = V .* M; % Add in any modifier
+    end
     
     % Get initial particle locations ----------------------------------------
     initPointOptions.rs = options.Wigner_Seitz_Radius;
     initPointOptions.r0set = r0set;
     
     % Don't let the particles start with too high a potential energy.
-    allowed_r0_mask = BW & ( V_full(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV );
+    allowed_r0_mask = imerode(BW,strel('disk',3)) & ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV );
     
     if ~any(allowed_r0_mask(:))
         if ~any(BW)
@@ -59,28 +69,30 @@ try
     end % if
     
     if DEBUG
-        [r_final, Info] = modelParticleDynamics(V_full, r0, options);
+        [r_final, Info] = modelParticleDynamics(V, r0, options);
         
         Info.r0 = r0;
         Info.r_final = r_final;
+        Info.V = V;
         Info.ComputeInitialPoints = ComputeInitialPointsInfo;
         Info.message = 0;%'';
     else
-        r_final = modelParticleDynamics(V_full, r0, options);
+        r_final = modelParticleDynamics(V, r0, options);
     end % if
     
-    seedPoints = extractClusterCenters(r_final, size(BW), options);
+    seedPoints = extractClusterCenters(r_final, options);
     
 catch ME
     % It can be somtimes that there is an error due to a particle flying out of the image region, or something that rarely (hopefully) happens; therefore, we will try to run the function again. If there is an error a second time, then we issue a warning, save the error, and continue on to the next object.
     if errorCount < 1
-        [seedPoints, Info] = computeObjectSeedPoints(BW, V, r0set, useCentroid, options, objNumber, errorCount+1);
+        [seedPoints, Info] = computeObjectSeedPoints(BW, M, r0set, useCentroid, options, objNumber, errorCount+1);
     else
         seedPoints = [NaN, NaN];
         Info.error = ME;
         if DEBUG
             Info.r0 = [NaN, NaN];
             Info.r_final = [NaN, NaN];
+            Info.V = [];
             Info.solverTime = NaN;
             Info.message = 3;%'error';
         end
@@ -100,6 +112,7 @@ Info = [];
 if DEBUG
     Info.r0 = [NaN, NaN];
     Info.r_final = [NaN, NaN];
+    Info.V = [];
     Info.solverTime = NaN;
     Info.message = reason;
 end % if

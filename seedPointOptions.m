@@ -60,16 +60,6 @@ classdef seedPointOptions
 % Minimum_Hole_Size - The minimum hole size allowed in the mask.
 %   [0, Inf) , [pixels^2]
 %
-% Curvature_Smoothing_Size - The standard deviation of the gaussians used
-%   for smoothing the boundary and calculating the curvature.
-%   [0, Inf) & integer , [pixels]
-%
-% Curvature_Max_Radius - Loosely the maximum object radius. The value will
-%   be used set a threshold for what is considered positive curvature
-%   (regions of positive curvature are concave regions of the boundary).
-%   The threshold will be set as 1/(2*Curvature_Max_Radius).
-%   [0, Inf) , [pixels]
-%
 % Use_GPU - Determines if a GPU will be used to speed up calculation.
 %   logical
 %
@@ -87,6 +77,18 @@ classdef seedPointOptions
 %   and set Debug to true. Plots showing intermediate steps of the
 %   calculation will be shown that should help you debug the problem. Leave
 %   this property empty for normal use.
+
+
+% NOT USED ===============================================================
+% Curvature_Smoothing_Size - The standard deviation of the gaussians used
+%   for smoothing the boundary and calculating the curvature.
+%   [0, Inf) & integer , [pixels]
+%
+% Curvature_Max_Radius - Loosely the maximum object radius. The value will
+%   be used set a threshold for what is considered positive curvature
+%   (regions of positive curvature are concave regions of the boundary).
+%   The threshold will be set as 1/(2*Curvature_Max_Radius).
+%   [0, Inf) , [pixels]
 
     properties
 
@@ -106,9 +108,6 @@ classdef seedPointOptions
         Point_Selection_Method       = 'r0set_uniformRandom';
 
         Minimum_Hole_Size            = 50;
-
-        Curvature_Smoothing_Size     = 2;
-        Curvature_Max_Radius         = 35;
 
         Use_GPU                      = false;
         Use_Parallel                 = false;
@@ -131,6 +130,11 @@ classdef seedPointOptions
         Scale_Factor = 1;
         Object_Scale = 1;
 
+        % These next two parameters would make apearence in functions
+        % computing boundary curvature.
+        Curvature_Smoothing_Size     = 2; % Not used
+        Curvature_Max_Radius         = 35; % Not used 
+        
         Potential_PreMultiplier = 1; % Not used
         Mass_Charge_Multiplier = 1; % Not used
     end

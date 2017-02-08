@@ -12,15 +12,23 @@ options = seedPointOptions();
 options.Wigner_Seitz_Radius         = 5;
 options.Potential_Depth             = -1;
 options.Potential_Minimum_Location  = 2;
-options.Potential_Extent            = 15;
+options.Potential_Extent            = 14;
 options.Minimum_Hole_Size           = 15;
-options.Use_GPU                     = false;
-options.Use_Parallel                = true;
 options.Point_Selection_Method      = 'r0set_uniformRandom';
-options.Debug                       = true;
+options.Use_GPU                     = false;
+options.Use_Parallel                = false;
+options.Debug                       = false;
+
+options.Potential_Scale             = 19;
+% options.Mass_Charge_Multiplier      = 0.1;%19 / options.Potential_Scale;
+
+% options.Maximum_Initial_Potential   = 1/3;
+% options.Object_Of_Interest          = 152;
+
+% options.Particle_Damping_Rate = 5e-2;
 
 % Set up test parameters ------------------------------------------------
-names = {'67'};%{'2','3','4','5','67'};
+names = {'2','3','4','5','67'};
 n = numel(names);
 dr = 3:10;
 N = 1;
@@ -31,9 +39,9 @@ TPplusFP = zeros(n,N);
 TPplusFN = zeros(n,N);
 dN = zeros(n,N,7);
 
-Info = struct('centers',[],'solverTime',[],'totalComputationTime',NaN,'N',NaN,'message',[]);
-Info(n,N).totalComputationTime = NaN;
-    
+% Info = struct('centers',[],'solverTime',[],'totalComputationTime',NaN,'N',NaN,'message',[]);
+% Info(n,N).totalComputationTime = NaN;
+% Info = cell(484,1);
 
 % Compute results -------------------------------------------------------
 
@@ -58,16 +66,16 @@ for ind = 1:n
         if ~mod(ni,10)
             fprintf('  %s >> iteration %d/%d...\n', datestr(now,31),ni,N)
         end
-        
+%         profile on
         start = tic;
-        [seedPoints, runInfo] = computeNucleiCenters_distTransform(I,BW,options);
+        [seedPoints, Info] = computeNucleiCenters_distTransform(I,BW,options);
         totalTime = toc(start);
-        
-        Info(ind,ni).centers = seedPoints;
-        Info(ind,ni).solverTime = cellfun(@(x) x.solverTime, runInfo);
-        Info(ind,ni).totalComputationTime = totalTime;
-        Info(ind,ni).N = cellfun(@(x) size(x.r0,1), runInfo);
-        Info(ind,ni).message = cellfun(@(x) x.message, runInfo);
+%         profile off
+%         Info(ind,ni).centers = seedPoints;
+%         Info(ind,ni).solverTime = cellfun(@(x) x.solverTime, runInfo);
+%         Info(ind,ni).totalComputationTime = totalTime;
+%         Info(ind,ni).N = cellfun(@(x) size(x.r0,1), runInfo);
+%         Info(ind,ni).message = cellfun(@(x) x.message, runInfo);
         
         objNum = seedPoints(:,3);
         seedPoints = seedPoints(:,[2,1]);
@@ -88,7 +96,7 @@ for ind = 1:n
         dN(ind,ni,:) = accumarray(d,1,[7,1],[],0);
     end
 end
-
+% profile viewer
 % save([pth 'resultsInfo_distTransform_standard_N20_v20170120-reStructured_' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'Info','options')
 
 % Analyze and save results ----------------------------------------------
@@ -126,12 +134,12 @@ dims.image = {'LD2P24','LD3P24','LD4P24','LD5P24','LD67P24'};
 results.dims = dims;
 
 % save([pth 'results_distTransform_standard_N20_v20170120-reStructured' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'results')
+% fprintf('ra = 12, scale = 12\n')
+disp(squeeze(mean(results.F1,2))')
+disp(squeeze(mean(sum(results.dN,1),2))'/(numel(names)*484))
 
-squeeze(results.F1)'
-squeeze(results.dN)'/484
-
-figure(1)
-clf
-imshow(I)
-hold on
-plot(seedPoints(:,1),seedPoints(:,2),'.r')
+% figure(1)
+% clf
+% imshow(I)
+% hold on
+% plot(seedPoints(:,1),seedPoints(:,2),'.r')

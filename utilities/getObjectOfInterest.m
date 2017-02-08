@@ -16,7 +16,11 @@ end
 if ~isempty(options.Object_Of_Interest)
     varargout = cell(1,numel(varargin));
     for i = 1:numel(varargin)
-        varargout{i} = varargin{i}(options.Object_Of_Interest);
+        if isempty(varargin{i})
+            varargout{i} = [];
+        else
+            varargout{i} = varargin{i}(options.Object_Of_Interest);
+        end
     end
 else
     varargout = varargin;

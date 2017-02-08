@@ -1,4 +1,4 @@
-function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,options)
+function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,objectScale,options)
 % COMPUTEBOUNDARYINFORMATION  Compute the boundary contours, inward
 % pointing normal vectors, curvature, and curvature centers.
 %
@@ -14,6 +14,9 @@ function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,option
 %
 % Input parameters:
 % BW - binary mask from which the boundaries will be computed
+% objectScale - an array of size n x 1 where n is the number of connected
+%               components in BW. The value of each element should be the
+%               maximum distance transform value of that object.
 % options - must have the fields
 %           Curvature_Smoothing_Size - The size of the smoothing filter
 %           used to compute the curvatures. Use integer values. Perhaps try
@@ -67,9 +70,12 @@ function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,option
 %              declumpOptions)
 
 
+KAPPA_SMOOTHING_SIGMA = max( 1, round( (2/18) * objectScale) );
+MAX_RADIUS = round( 2* objectScale );
+
 % USE_PARALLEL = options.Use_Parallel;
-KAPPA_SMOOTHING_SIGMA = options.Curvature_Smoothing_Size;
-MAX_RADIUS = options.Curvature_Max_Radius;
+% KAPPA_SMOOTHING_SIGMA = options.Curvature_Smoothing_Size;
+% MAX_RADIUS = options.Curvature_Max_Radius;
 
 % if USE_PARALLEL
 %     [B,n,curvature,curvatureCenters] = computeBoundaryInformation__parallel(BW,KAPPA_SMOOTHING_SIGMA,MAX_RADIUS);
@@ -80,6 +86,11 @@ useConvexHull = true;
 
 % Get the boundaries and parant-child matrix
 [tmpB,~,numObjs,bndryTplgy] = bwboundaries(BW,8);
+
+if numel(objectScale) == 1
+    KAPPA_SMOOTHING_SIGMA = KAPPA_SMOOTHING_SIGMA * ones(numObjs, 1);
+    MAX_RADIUS = MAX_RADIUS * ones(numObjs, 1);
+end
 
 % Get the image size
 imSize = size(BW);
@@ -101,7 +112,7 @@ for i = 1:numObjs
     end
     
     % Get curvature, tangents, and markers
-    [kappaP,~,~,nP,markersP] = getCurvatureAndShapeMarkers(Prnt,imSize,KAPPA_SMOOTHING_SIGMA,MAX_RADIUS,useConvexHull);
+    [kappaP,~,~,nP,markersP] = getCurvatureAndShapeMarkers(Prnt,imSize,KAPPA_SMOOTHING_SIGMA(i),MAX_RADIUS(i),useConvexHull);
     Prnt(end,:) = [];%nan;
     
     % Find any children
@@ -125,7 +136,7 @@ for i = 1:numObjs
                 child{j} = flip(child{j});
             end
 
-            [kappa_child{j},~,~,n_child{j},markers_child{j}] = getCurvatureAndShapeMarkers(child{j},imSize,KAPPA_SMOOTHING_SIGMA,MAX_RADIUS,useConvexHull);
+            [kappa_child{j},~,~,n_child{j},markers_child{j}] = getCurvatureAndShapeMarkers(child{j},imSize,KAPPA_SMOOTHING_SIGMA(i),MAX_RADIUS(i),useConvexHull);
             child{j}(end,:) = nan;
 
         end
@@ -189,7 +200,7 @@ parfor contour = 1:N
         end
     end
     % Get curvature, tangents, and markers
-    [curvature_full{contour},~,~,normals_full{contour},curvatureCenters_full{contour}] = getCurvatureAndShapeMarkers(B_full{contour},imSize,KAPPA_SMOOTHING_SIGMA,MAX_RADIUS,useConvexHull);
+    [curvature_full{contour},~,~,normals_full{contour},curvatureCenters_full{contour}] = getCurvatureAndShapeMarkers(B_full{contour},imSize,KAPPA_SMOOTHING_SIGMA(contour),MAX_RADIUS(contour),useConvexHull);
 
     B_full{contour}(end,:) = [nan,nan]; 
     

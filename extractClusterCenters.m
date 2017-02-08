@@ -1,4 +1,4 @@
-function clusterCenters = extractClusterCenters(r_final,objSize,options)
+function clusterCenters = extractClusterCenters(r_final,options)
 % EXTRACTCLUSTERCENTERS Extract the center location of each cluster formed
 % by the particles.
 %
@@ -23,7 +23,7 @@ N = size(r_final,1);
 D = pdist(r_final);
 
 % Particle pairs that are connected to each other
-cluster = D < 0.7*options.Potential_Minimum_Location + 0.3*options.Potential_Extent;
+cluster = (D * options.Scale_Factor) < (0.7*options.Potential_Minimum_Location + 0.3*options.Potential_Extent);
 pdistInds = getPdistInds(N);
 linIdx = pdistInds(cluster,1) + (pdistInds(cluster,2)-1)*N;
 

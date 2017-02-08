@@ -9,7 +9,7 @@ im_pth      = @(n) [pth '\exampleImages\testImage_image_LD' n 'P24.tif'];
 bw_pth      = @(n) [pth '\exampleImages\testImage_mask_LD' n 'P24.tif'];
 results_pth = @(n) [pth '\exampleImages\markedCenters_LD' n 'P24'];
 
-names = {'2','3','4','5','67'};
+names = {'67'};%{'2','3','4','5','67'};
 n = numel(names);
 dr = 3:10;
 
@@ -92,4 +92,4 @@ results.note = 'bwdist -> imopen(disk,2) -> imregionalmax -> centroid';
 
 fprintf('Distance transform baseline, open(disk,2)\n')
 disp(squeeze(F1))
-disp(squeeze(sum(dN,1))'/(5*484))
+disp(squeeze(sum(dN,1))'/(numel(names)*484))

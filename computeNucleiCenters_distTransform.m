@@ -17,32 +17,33 @@ function [seedPoints, Info] = computeNucleiCenters_distTransform(I,BW,options)
 
 
 % Get number of rows in image
-nRows = size(I,1);
-
-% Smooth the image
-I = imfilter(I, fspecial('gaussian',7,1));
+nRows = size(BW,1);
 
 % Remove small holes from mask
 BW = ~bwareaopen(~BW, options.Minimum_Hole_Size,4);
 CC = bwconncomp(BW); % Get connected commponents
 pixelList = CC.PixelIdxList;
 
-% Create interior confining potential -----------------------------------
-V_interior = create_base_interior_confining_potential(BW); % Base potential
-H = homogenize_image(I, BW, CC, options); % Get homogenized image
-V_interior = V_interior ./ H; % confining potential
-V_interior = cellfun(@(x) V_interior(x), pixelList,'UniformOutput',false); % Slice potential
+% Get object scales
+objectScale = compute_objectScale(BW, pixelList);
+
+% Create confining potential modifier -----------------------------------
+% I = imfilter(I, fspecial('gaussian',7,1)); % Smooth the image
+% H = homogenize_image(I, BW, CC, options); % Get homogenized image
+% H = 1 ./ H; % confining potential
+% H = cellfun(@(x) H(x), pixelList,'UniformOutput',false); % Slice potential
+H = cell(numel(pixelList),1);
 
 % Compute boundary information
-[B,~,K,r0set] = computeBoundaryInformation(BW, options);
+[B,~,K,r0set] = computeBoundaryInformation(BW, objectScale, options);
 
 % If there is an object of interest, remove all the others.
-[pixelList, B, K, r0set, V_interior] = getObjectOfInterest(options, pixelList, B, K, r0set, V_interior);
+[pixelList, B, K, r0set, H] = getObjectOfInterest(options, pixelList, B, K, r0set, H);
 
 % Use the object centroid as the seed point for any object that is convex
 % or smaller than the particle area
 area = cellfun(@numel,pixelList); % object areas
-isConvex = cellfun(@(x) ~any(x > (0.5/options.Curvature_Max_Radius)),K); % object convex?
+isConvex = cellfun(@(x,y) ~any(x > (0.25./y)),K, num2cell(objectScale)); % object convex?
 useCentroid = isConvex | (area < pi*options.Wigner_Seitz_Radius.^2);
 
 % Offset the r0set points to coorespond to object origin
@@ -51,7 +52,7 @@ r0set = cellfun(@(x,y) x - y, r0set, objOffset,'UniformOutput',false);
 
 % Compute the seed points.
 % Note, if you want to also use the seed points to segment the objects, then it would be a good choice to insert the segmentation code in this function "processObjects" and add in any additional input/outputs you need.
-[seedPoints, Info] = processObjects(pixelList, V_interior, r0set, useCentroid, nRows, options);
+[seedPoints, Info] = processObjects(pixelList, H, r0set, useCentroid, nRows, options);
 
 % Offset seed points to image coordinates
 seedPoints = cellfun(@(x,y) [x(:,1:2) + y, x(:,3)], seedPoints, objOffset,'UniformOutput',false);
@@ -59,8 +60,7 @@ seedPoints = cellfun(@(x,y) [x(:,1:2) + y, x(:,3)], seedPoints, objOffset,'Unifo
 % Offset r0 and r_final to image coordinates
 if options.Debug
     for i = 1:numel(Info)
-        Info{i}.r0 = Info{i}.r0 + objOffset{i};
-        Info{i}.r_final = Info{i}.r_final + objOffset{i};
+        Info{i}.objOffset = objOffset{i};
     end
 end
 
