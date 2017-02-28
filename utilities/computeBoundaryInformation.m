@@ -72,7 +72,8 @@ function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,object
 
 KAPPA_SMOOTHING_SIGMA = max( 1, round( (2/18) * objectScale) );
 MAX_RADIUS = round( 2* objectScale );
-
+% KAPPA_SMOOTHING_SIGMA = 2;
+% MAX_RADIUS = 35;
 % USE_PARALLEL = options.Use_Parallel;
 % KAPPA_SMOOTHING_SIGMA = options.Curvature_Smoothing_Size;
 % MAX_RADIUS = options.Curvature_Max_Radius;
@@ -82,12 +83,13 @@ MAX_RADIUS = round( 2* objectScale );
 %     return;
 % end
 
-useConvexHull = true;
+useConvexHull = options.Use_ConvexHull;
+% useConvexHull = true;
 
 % Get the boundaries and parant-child matrix
 [tmpB,~,numObjs,bndryTplgy] = bwboundaries(BW,8);
 
-if numel(objectScale) == 1
+if numel(KAPPA_SMOOTHING_SIGMA) == 1
     KAPPA_SMOOTHING_SIGMA = KAPPA_SMOOTHING_SIGMA * ones(numObjs, 1);
     MAX_RADIUS = MAX_RADIUS * ones(numObjs, 1);
 end

@@ -12,14 +12,14 @@ options = seedPointOptions();
 options.Wigner_Seitz_Radius         = 5;
 options.Potential_Depth             = -1;
 options.Potential_Minimum_Location  = 2;
-options.Potential_Extent            = 14;
+options.Potential_Extent            = 12;
 options.Minimum_Hole_Size           = 15;
 options.Point_Selection_Method      = 'r0set_uniformRandom';
 options.Use_GPU                     = false;
-options.Use_Parallel                = false;
+options.Use_Parallel                = true;
 options.Debug                       = false;
 
-options.Potential_Scale             = 19;
+options.Potential_Scale             = 17;
 % options.Mass_Charge_Multiplier      = 0.1;%19 / options.Potential_Scale;
 
 % options.Maximum_Initial_Potential   = 1/3;
@@ -45,8 +45,8 @@ dN = zeros(n,N,7);
 
 % Compute results -------------------------------------------------------
 
-for ind = 1:n
-
+for ind = n:-1:1
+    %     options.Potential_Extent            = 15 - 0.5*ind;
     fprintf('%s >> Image = LD%sP24 (%d/%d)...\n', datestr(now,31),names{ind},ind,numel(names))
     
     I = imread(im_pth(names{ind}));
@@ -61,39 +61,50 @@ for ind = 1:n
     objNumbers = unique(tmp(:,1));
     trueNumberOfNuclei = size(tmp,1);
     TPplusFN(ind,:) = trueNumberOfNuclei;
-
+    
     for ni = 1:N
         if ~mod(ni,10)
             fprintf('  %s >> iteration %d/%d...\n', datestr(now,31),ni,N)
         end
-%         profile on
+        %         profile on
         start = tic;
         [seedPoints, Info] = computeNucleiCenters_distTransform(I,BW,options);
         totalTime = toc(start);
-%         profile off
-%         Info(ind,ni).centers = seedPoints;
-%         Info(ind,ni).solverTime = cellfun(@(x) x.solverTime, runInfo);
-%         Info(ind,ni).totalComputationTime = totalTime;
-%         Info(ind,ni).N = cellfun(@(x) size(x.r0,1), runInfo);
-%         Info(ind,ni).message = cellfun(@(x) x.message, runInfo);
+        %         profile off
+        %         Info(ind,ni).centers = seedPoints;
+        %         Info(ind,ni).solverTime = cellfun(@(x) x.solverTime, runInfo);
+        %         Info(ind,ni).totalComputationTime = totalTime;
+        %         Info(ind,ni).N = cellfun(@(x) size(x.r0,1), runInfo);
+        %         Info(ind,ni).message = cellfun(@(x) x.message, runInfo);
         
         objNum = seedPoints(:,3);
         seedPoints = seedPoints(:,[2,1]);
-
-        for drNo = 1:numel(dr)
-            idx = rangesearch(NS,seedPoints,dr(drNo));
-            TP(ind,ni,drNo) = numel(unique(cat(2,idx{:})));
-        end
-
-        TPplusFP(ind,ni) = size(seedPoints,1);
-
+        
+        % Compute TP+FP: this is the number of seed points calculated
+        % for each object
+        TPplusFP(ind, ni) = size(seedPoints,1);
+        
         %Number of centers difference
         numCents = accumarray(objNum,1,[max(objNumbers),1],[],0);
         d = numCents(objNumbers) - correctNumCents(objNumbers);
-
+        
         d(abs(d)>3) = [];
-        d = d+ 4;
+        d = d + 4;
         dN(ind,ni,:) = accumarray(d,1,[7,1],[],0);
+        
+        % Compute TP
+        [nnIdx,nnD] = knnsearch(NS,seedPoints);
+        
+        toRemove = nnD >= dr(end);
+        nnD(toRemove) = [];
+        nnIdx(toRemove) = [];
+        objNum(toRemove) = [];
+        
+        for drNo = 1:numel(dr)
+            inRange = nnD < dr(drNo);
+            TP(ind, ni, drNo) = numel(unique(nnIdx(inRange)));
+        end
+
     end
 end
 % profile viewer
@@ -137,7 +148,7 @@ results.dims = dims;
 % fprintf('ra = 12, scale = 12\n')
 disp(squeeze(mean(results.F1,2))')
 disp(squeeze(mean(sum(results.dN,1),2))'/(numel(names)*484))
-
+disp(squeeze(mean(results.dN(:,:,3:5),2)/484))
 % figure(1)
 % clf
 % imshow(I)

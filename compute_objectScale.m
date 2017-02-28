@@ -22,5 +22,11 @@ DT = DT(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
 objectScale = cellfun(@(x) max(DT(x)), pixelList);
 objectScale = objectScale(:);
 
+% L = bwlabel(BW);
+% toRemove = L==0;
+% DT(toRemove) = [];
+% L(toRemove) = [];
+% objectScale = accumarray(L,DT,[max(L),1],@max);
+
 
 end

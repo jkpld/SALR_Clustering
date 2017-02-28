@@ -1,5 +1,9 @@
 function [seedPoints, Info] = computeObjectSeedPoints(BW, M, r0set, useCentroid, options, objNumber, errorCount)
 
+% Info.Message : 0, everything is fine
+%                1, object is convex or too small (the center of the object will be the seed point)
+%                2, less than 2 initial particles (the center of the object will be the seed point)
+%                3, there was twice an error, object will be skipped
 
 % See also MODELPARTICLEDYNAMICS EXTRACTCLUSTERCENTERS COMPUTEINITIALPOINTS
 % ADD_EXTERIOR_CONFINING_POTENTIAL PROCESSOBJECTS
@@ -22,26 +26,30 @@ if useCentroid
 end % if
 
 try
-    
+
     PAD_SIZE = options.Potential_Padding_Size;
     R0_MAXV = options.Maximum_Initial_Potential;
     POINT_SELECTION_METHOD = options.Point_Selection_Method;
-    
+
     % Create full confining potential ---------------------------------------
-    [V, scaleFactor] = create_scaleInvar_confining_potential(BW, options);
+    [V, scaleFactor, overlapFactor] = create_scaleInvar_confining_potential(BW, options);
     options.Scale_Factor = scaleFactor;
-    
+
+    % At this point you could use the overlapFactor, the 3rd output of
+    % create_scaleInvar_confining_potential, to modify some parameters,
+    % for example, the Potential_Extent.
+
     if ~isempty(M)
         V = V .* M; % Add in any modifier
     end
-    
+
     % Get initial particle locations ----------------------------------------
     initPointOptions.rs = options.Wigner_Seitz_Radius;
     initPointOptions.r0set = r0set;
-    
+
     % Don't let the particles start with too high a potential energy.
-    allowed_r0_mask = imerode(BW,strel('disk',3)) & ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV );
-    
+    allowed_r0_mask = ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV ); % & imerode(BW,strel('disk',3));
+
     if ~any(allowed_r0_mask(:))
         if ~any(BW)
             error('computeObjectSeedPoints:zeroMask','The object mask is all 0''s! I don''t know how this could happen.')
@@ -50,14 +58,14 @@ try
             allowed_r0_mask = BW;
         end
     end
-    
+
     % Compute initial points
     if DEBUG
         [r0, ComputeInitialPointsInfo] = computeInitialPoints(POINT_SELECTION_METHOD, allowed_r0_mask, initPointOptions); % Note the points r0 do not consider the mask padding.
     else
         r0 = computeInitialPoints(POINT_SELECTION_METHOD, allowed_r0_mask, initPointOptions); % Note the points r0 do not consider the mask padding.
     end % if
-    
+
     % If there was only one initial particle, then we do not symulate it,
     % we will just return the centroid of the object
     if size(r0,1) < 2
@@ -67,10 +75,10 @@ try
         end % if
         return;
     end % if
-    
+
     if DEBUG
         [r_final, Info] = modelParticleDynamics(V, r0, options);
-        
+
         Info.r0 = r0;
         Info.r_final = r_final;
         Info.V = V;
@@ -79,9 +87,9 @@ try
     else
         r_final = modelParticleDynamics(V, r0, options);
     end % if
-    
+
     seedPoints = extractClusterCenters(r_final, options);
-    
+
 catch ME
     % It can be somtimes that there is an error due to a particle flying out of the image region, or something that rarely (hopefully) happens; therefore, we will try to run the function again. If there is an error a second time, then we issue a warning, save the error, and continue on to the next object.
     if errorCount < 1

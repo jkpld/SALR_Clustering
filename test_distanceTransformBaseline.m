@@ -9,7 +9,7 @@ im_pth      = @(n) [pth '\exampleImages\testImage_image_LD' n 'P24.tif'];
 bw_pth      = @(n) [pth '\exampleImages\testImage_mask_LD' n 'P24.tif'];
 results_pth = @(n) [pth '\exampleImages\markedCenters_LD' n 'P24'];
 
-names = {'67'};%{'2','3','4','5','67'};
+names = {'2','3','4','5','67'};
 n = numel(names);
 dr = 3:10;
 
@@ -34,26 +34,54 @@ for ind = 1:n
     TPplusFN(ind,:) = trueNumberOfNuclei;
 
     D = bwdist(~BW);
-    D = imopen(D,strel('disk',2));
+    D = imfilter(D,fspecial('gaussian',7,1));
+%     D = imopen(D,strel('disk',2));
+%     D = imdilate(D,ones(3));
+%     M = (imdilate(D,ones(3)) == imdilate(D,ones(5))) & BW;
     M = imregionalmax(D);
     props = regionprops(M,'Centroid');
     seedPoints = cat(1,props.Centroid);
     objNum = round(interp2mex(L,seedPoints(:,1),seedPoints(:,2)));
 
-    for drNo = 1:numel(dr)
-        idx = rangesearch(NS,seedPoints,dr(drNo));
-        TP(ind,drNo) = numel(unique(cat(2,idx{:})));
-    end
-
     TPplusFP(ind) = size(seedPoints,1);
-
+    
     %Number of centers difference
-    numCents = accumarray(objNum,1,[max(objNumbers),1],[],0);
-    d = numCents(objNumbers) - correctNumCents(objNumbers);
+            numCents = accumarray(objNum,1,[max(objNumbers),1],[],0);
+            d = numCents(objNumbers) - correctNumCents(objNumbers);
 
-    d(abs(d)>3) = [];
-    d = d+ 4;
-    dN(ind,:) = accumarray(d,1,[7,1],[],0);
+            d(abs(d)>3) = [];
+            d = d + 4;
+            dN(ind,:) = accumarray(d,1,[7,1],[],0);
+    
+    % Compute TP
+            [nnIdx,nnD] = knnsearch(NS,seedPoints);
+            
+            toRemove = nnD >= dr(end);
+            nnD(toRemove) = [];
+            nnIdx(toRemove) = [];
+            objNum(toRemove) = [];
+            
+            for drNo = 1:numel(dr)
+                inRange = nnD < dr(drNo);
+                TP(ind, drNo) = numel(unique(nnIdx(inRange)));
+            end
+
+            
+    
+%     for drNo = 1:numel(dr)
+%         idx = rangesearch(NS,seedPoints,dr(drNo));
+%         TP(ind,drNo) = numel(unique(cat(2,idx{:})));
+%     end
+% 
+    
+% 
+%     %Number of centers difference
+%     numCents = accumarray(objNum,1,[max(objNumbers),1],[],0);
+%     d = numCents(objNumbers) - correctNumCents(objNumbers);
+% 
+%     d(abs(d)>3) = [];
+%     d = d+ 4;
+%     dN(ind,:) = accumarray(d,1,[7,1],[],0);
 end
 
 Pnn = TP./TPplusFP;
@@ -87,7 +115,7 @@ dims.dr = dr;
 dims.dN = -3:3;
 dims.image = {'LD2P24','LD3P24','LD4P24','LD5P24','LD67P24'};
 results.dims = dims;
-results.note = 'bwdist -> imopen(disk,2) -> imregionalmax -> centroid';
+results.note = 'bwdist -> fspecial(gaussian,7,1) -> imregionalmax -> centroid';
 
 
 fprintf('Distance transform baseline, open(disk,2)\n')

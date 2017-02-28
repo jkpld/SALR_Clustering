@@ -44,6 +44,7 @@ H = cell(numel(pixelList),1);
 % or smaller than the particle area
 area = cellfun(@numel,pixelList); % object areas
 isConvex = cellfun(@(x,y) ~any(x > (0.25./y)),K, num2cell(objectScale)); % object convex?
+% isConvex = cellfun(@(x) ~any(x > (0.5./35)),K); % object convex?
 useCentroid = isConvex | (area < pi*options.Wigner_Seitz_Radius.^2);
 
 % Offset the r0set points to coorespond to object origin

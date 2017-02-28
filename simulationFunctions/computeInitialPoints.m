@@ -8,7 +8,7 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 % or a set of initial possible positions (see below). OPTIONS should be a
 % structure that gives additional information. Each option should be a
 % field with the required value. There is one required option for all
-% methods, and some methods have additional required options. 
+% methods, and some methods have additional required options.
 %
 % All initial points returned will be located inside of the binary mask.
 %
@@ -38,7 +38,7 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 % 'r0set_random' - From the set of possible initial positions, choose N
 %                  random points, where N is the area of the mask divided
 %                  by the effective particle area (pi*rs^2).
-%                       
+%
 % 'r0set_uniformRandom' - Generate a hexagonal grid with lattice constant
 %                         2*rs. In each hexagon, choose one random position
 %                         from the set of possible initial positions
@@ -127,56 +127,64 @@ if any(strcmp(method,{'r0set_random','r0set_uniformRandom'}))
     end
 
     markers = options.r0set;
+    % TODO: The markers should not be rounded here. couple options -
+    % 1. temporarily round the markers to get the linear indices and then
+    % remove all non-rounded markers that are outside the mask.
+    % 2. use interp2 or nakeinterp2 to get the value of the mask at the
+    % markers without rounding them.
+    % I'm not doing this now because I have all of the results already
+    % calculated and need to finish.
+    markers = round(markers);
     markers(markers(:,1) < 1 | markers(:,1) > imSize(1) | markers(:,2) < 1 | markers(:,2) > imSize(2),:) = [];
     % Remove markers outside the mask.
     markers_lin = markers(:,1) + (markers(:,2)-1)*imSize(1);
     markers(~BW(markers_lin),:) = [];
-    
+
 end
 
 % Create the initial points
 switch method
     case 'random'
         % Select N random points from the BW mask.
-        
+
         % Use the x-y locations of the eroded mask as the start points. The
         % mask is first eroded because we do not want any start point close
         % to the boundary (where the particle would start with high
         % potential energy).
         [i,j] = find(BW);
         validInds = [i,j];
-        
+
         if size(validInds,1) < N
             warning('getInitialPoints:N_to_large','The number of possible starting locations is smaller than the requeted number of points. Using all possible starting locations.')
             N = size(validInds,1);
         end
-        
+
         % Choose a random N start points.
         r0 = validInds(randperm(size(validInds,1),N),:);
-        
+
     case 'uniform'
         % Create a hexagonal grid of points with lattice constant of twice
         % the Wigner-Seitz radius and take all points inside of the
         % (eroded) mask.
-        
+
         % Create hexagonal grid.
         x = a/2 : a : imSize(2)+a;
         y = a/2 : sqrt(3)*a/2 : imSize(1)+a;
         [X,Y] = ndgrid(x,y);
 
         X(:,2:2:end) = X(:,2:2:end) + a/2;
-        
+
         % Create start points.
         r0 = round([Y(:),X(:)]);
         r0( r0(:,1) > imSize(1) | r0(:,2) > imSize(2) ,:) = [];
-        
+
         % Get the indices of the starting points that are inside of the
         % mask.
         good = BW( r0(:,1) + (r0(:,2)-1)*imSize(1) );
-        
+
         % Remove all starting points not inside the mask.
         r0 = r0(good,:);
-        
+
         % Ensure that if there were not centers inside the mask we still
         % get some results
         if isempty(r0)
@@ -188,7 +196,7 @@ switch method
     case 'uniformRandom'
         % Overlay a hexagonal grid with lattice constant 2*rs and then
         % select one pixel in the mask from each hexagon.
-        
+
         % Put this in a try-catch structure to handle the case when the
         % region is very small in one direction. This case would give an
         % error when we are creating a hexagonal grid with having only one
@@ -235,16 +243,16 @@ switch method
     case 'r0set_random'
         % From the curvature, get the radius and the center of the circle.
         % Use a random N of the centers as the initial points.
-                
+
         markers = unique(markers,'rows');
-        
+
         if size(markers,1) < N
             warning('getInitialPoints:N_to_large','The number of possible starting locations is smaller than the requeted number of points. Using all possible starting locations.')
             N = size(markers,1);
         end
-        
+
         r0 = markers(randperm(size(markers,1),N),:);
-        
+
         % Ensure that if there were not centers inside the mask we still
         % get some results
         if isempty(r0)
@@ -254,12 +262,12 @@ switch method
                 Info.r0set = markers;
             end
         end
-        
+
     case 'r0set_uniformRandom'
         % From the curvature, get the radius and the center of the circle.
         % Overlay a hexagonal grid with lattice constant 2*rs and then
         % select one curvature center from each hexagon.
-        
+
         % Put this in a try-catch structure to handle the case when the
         % region is very small in one direction. This case would give an
         % error when we are creating a hexagonal grid with having only one

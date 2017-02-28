@@ -38,7 +38,6 @@ for i = 1:numel(varargin)
         varargout{i} = tmp;
     end
 end
-
 end
 % createObjectImages changes log
 % 2016-10-17

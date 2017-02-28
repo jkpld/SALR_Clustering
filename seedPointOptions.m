@@ -127,9 +127,11 @@ classdef seedPointOptions
     end
 
     properties (Hidden)
-        Scale_Factor = 1;
-        Object_Scale = 1;
+        Scale_Factor = 1; % This changes for each object and is not a global option
+        Object_Scale = 1; % This changes for each object and is not a global option
 
+        Use_ConvexHull = true;
+        
         % These next two parameters would make apearence in functions
         % computing boundary curvature.
         Curvature_Smoothing_Size     = 2; % Not used
