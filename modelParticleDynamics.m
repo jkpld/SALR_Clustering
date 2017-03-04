@@ -8,8 +8,8 @@ function [r, varargout] = modelParticleDynamics(V,r0,options)
 % Input parameters:
 %
 % V         -   Confining potential
-% r0        -   N x d array giving the initial position of the N particles
-%                 in d-dimensions
+% r0        -   N x D array giving the initial position of the N particles
+%                 in D-dimensions
 % options   -   Element of class seedPointOptions
 %
 % Output parameters:
@@ -18,12 +18,13 @@ function [r, varargout] = modelParticleDynamics(V,r0,options)
 % Info -   If options.Debug is true, then Info will be a structure
 %          with the following fields.
 %
-%             dVx - x derivative of V
-%             dVy - y derivative of V
 %             ode_solution - ode solution strucutre returned by
 %                            ode23
 %             converged - logical flag, if true, then the solution
 %                         converged before stopping at maximum time
+%             solverTime - time to reach convergence
+%             SystemInputs - extra inputs for the solver, see the code for
+%                            more information about this
 %
 % See also EXTRACTCLUSTERCENTERS COMPUTEOBJECTSEEDPOINTS PROCESSOBJECTS
 
@@ -47,37 +48,40 @@ HISTORY_SIZE = 5;
 
 % Number of particles
 N = size(r0,1);
+D = size(r0,2);
+sz = size(V);
 
 % Object image size
-maskSize = size(V) - 2*PAD_SIZE;
+% maskSize = sz - 2*PAD_SIZE;
 
 % Compute gradient of confining potential --------------------------------
-[dVx,dVy] = gradient(V, SCALE_FACTOR, SCALE_FACTOR);
+dV = cell(1,D);
+[dV{:}] = gradient(V, SCALE_FACTOR);
+dV([1,2]) = dV([2,1]); % gradient always outputs the derivative along the second dimension first.
 
-% if DEBUG
-%     Info.dVx = dVx(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
-%     Info.dVy = dVy(PAD_SIZE+1:end-PAD_SIZE,PAD_SIZE+1:end-PAD_SIZE);
-% end
 
-% Create interpolating functions for confining force and potential -------
-dVx = @(r) interp2mex(dVx,r(:,2)/SCALE_FACTOR,r(:,1)/SCALE_FACTOR);
-dVy = @(r) interp2mex(dVy,r(:,2)/SCALE_FACTOR,r(:,1)/SCALE_FACTOR);
+% Create interpolating functions for confining force ---------------------
+if D == 2   
+    for i = D:-1:1
+        dV{i} = @(r) interp2mex(dV{i},r(:,2)/SCALE_FACTOR,r(:,1)/SCALE_FACTOR);
+    end
+    % This mex interpolation function assumes the input is from an image (x
+    % and y spacing of 1) and it uses nearest neighbor extrapolation.
+    
+    % .....................................................................
+    % Note, if the above mex functions are not installed, then just use the
+    % code below in the "else" case. It will work find, but will be a bit
+    % slower.
+else
+    dx = cell(1,D);
+    for i = 1:D
+        dx{i} = (1:sz(i)) * SCALE_FACTOR;
+    end
 
-% These mex interpolation functions assume the input is from an image (x
-% and y spacing of 1) and it uses nearest neighbor extrapolation.
-
-% .......................................................................
-% Note, if the above mex functions are not installed, then the code here
-% can be used (though it is slower)
-%
-% [Y,X] = ndgrid(1:size(BW_pad,1),1:size(BW_pad,2));
-% V = griddedInterpolant(Y,X,V);
-% dVx = griddedInterpolant(Y,X,dVx);
-% dVy = griddedInterpolant(Y,X,dVy);
-% Note that the above interpolation methods will use bilinear interpolation
-% with bilinear extrapolation by default.
-% .......................................................................
-
+    for i = D:-1:1
+        dV{i} = griddedInterpolant(dx,dV{i});
+    end
+end
 
 
 % Create particle interaction potential and force ------------------------
@@ -92,7 +96,6 @@ switch InteractionOptions.type
         sig = InteractionOptions.params(3);
 
         % Vint  = @(D)  1./D - A * exp(-(D-mu).^2/(2*sig^2));
-%         dVint = @(D) -1./(D*SCALE_FACTOR + 0.2).^2 + (A*(D*SCALE_FACTOR-mu)/(sig^2)) .* exp(-(D*SCALE_FACTOR-mu).^2/(2*sig^2));
         dVint = @(D) -1./(D + 0.2).^2 + (A*(D-mu)/(sig^2)) .* exp(-(D-mu).^2/(2*sig^2));
 end
 
@@ -100,7 +103,7 @@ end
 r0 = (r0 + PAD_SIZE)*SCALE_FACTOR;
 
 % Particle initial velocities.
-v0 = rand(N,2);
+v0 = rand(N,D);
 v0 = INITIAL_SPEED * v0 ./ sqrt(sum(v0.^2,2));
 
 % Particle charge and mass
@@ -144,21 +147,20 @@ N_to_NtNm1o2 = S1 - S2;
 % https://www.mathworks.com/matlabcentral/newsreader/view_thread/274779
 
 % Set up inputs to interactingParticleSystem()
-% SystemInputs.d = size(r0,2);
+SystemInputs.D = D;
 SystemInputs.q = q;
 SystemInputs.m = m;
 SystemInputs.alpha = alpha;
-SystemInputs.dVx = dVy; % Note that the order of dVx dVy is switched. This is because y is the first dimension and x is the second.
-SystemInputs.dVy = dVx;
+SystemInputs.dV = dV;
 SystemInputs.dVint = dVint;
 SystemInputs.N_to_NtNm1o2 = N_to_NtNm1o2;
 SystemInputs.pdistInds = pdistInds;
 
 % Put initial conditions in correct form
-offset = (0:4:N*4-1)';
+offset = (0:2*D:N*2*D-1)';
 
-rInds = [1,2] + offset;
-vInds = [3,4] + offset;
+rInds = (1:D) + offset;
+vInds = rInds + D;
 
 y0 = zeros(N,1);
 y0(rInds) = r0;
@@ -171,7 +173,7 @@ odeFun = @(t,y) interactingParticleSystem(t,y,SystemInputs);
 hstry = ode_history(SOLVER_TIME_RANGE(1), y0, HISTORY_SIZE);
 
 % Set up the solver options.
-ode_options = odeset('Events',@(t,y) interactingParticleSystem_convergeEvent(t,y,m,hstry),...
+ode_options = odeset('Events',@(t,y) interactingParticleSystem_convergeEvent(t,y,m,hstry,D),...
     'Vectorized','on',...
     'RelTol',1e-4,...
     'AbsTol',1e-6,...
@@ -201,7 +203,7 @@ while 1
         end
 
         failIdx = find(any(isnan(sol.y),1),1);
-
+        
         if failIdx < RESTART_UNDER
 %             fprintf('start fail %d\n',quitIterations+1)
             ode_options.InitialStep = (sol.x(2)-sol.x(1))/2;
@@ -216,8 +218,10 @@ while 1
             sol_hist.y = [sol_hist.y, sol.y(:,1:returnTo-1)];
             sol_hist.x = [sol_hist.x, sol.x(1:returnTo-1)];
 
-            hstry.rewrite(sol.x(returnTo-(HISTORY_SIZE):returnTo-1), sol.y(:,returnTo-(HISTORY_SIZE):returnTo-1), ON_FAIL_BACKTRACK)
-
+            start = max(returnTo - HISTORY_SIZE,1);
+            stop = max(start,returnTo - 1);
+            
+            hstry.rewrite(sol.x(start:stop), sol.y(:,start:stop))
             y0 = sol.y(:,returnTo);
 
             timeRange = [startTime, 1500];
@@ -259,7 +263,7 @@ r = y_end(rInds) - PAD_SIZE; % Subtract the PAD_SIZE
 
 % It could be, if the solution did not converge, that there are particle
 % positions outside of the image. Remove all of these values.
-r(r(:,1) < 1 | r(:,1) > maskSize(1) | r(:,2) < 1 | r(:,2) > maskSize(2),:) = [];
+% r(r(:,1) < 1 | r(:,1) > maskSize(1) | r(:,2) < 1 | r(:,2) > maskSize(2),:) = [];
 
 
 if DEBUG

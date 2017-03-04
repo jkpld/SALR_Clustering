@@ -37,6 +37,7 @@ classdef ode_history < handle
         time            = [];
         iterationNumber = 1;
         windowSize      = 5;
+        validEntries    = 1;
     end
     
     methods
@@ -63,18 +64,21 @@ classdef ode_history < handle
             end
             
             obj.iterationNumber = obj.iterationNumber + 1;
+            obj.validEntries = min(obj.windowSize, obj.validEntries+1);
         end 
         
         function hardreset(obj,t, sol)
             obj.solHistory(:,end) = sol;
             obj.time(end) = t;
-            obj.iterationNumber = 1;            
+            obj.validEntries = 1;            
         end
         
-        function rewrite(obj,ts,sols,offset)
-            obj.solHistory = sols;
-            obj.time = ts;
-            obj.iterationNumber = obj.iterationNumber - offset;
+        function rewrite(obj,ts,sols)
+            n = length(ts);
+
+            obj.solHistory(:,(obj.windowSize-n+1):obj.windowSize) = sols;
+            obj.time((obj.windowSize-n+1):obj.windowSize) = ts;
+            obj.validEntries = n;            
         end
     end
 end

@@ -1,20 +1,20 @@
-function [value, isterminal, direction] = interactingParticleSystem_convergeEvent(t,y,m,hstry)
+function [value, isterminal, direction] = interactingParticleSystem_convergeEvent(t,y,m,hstry,D)
 % INTERACTINGPARTICLESYSTEM_CONVERGEEVENT  Determine if the particle system
 % has converged by checking if the mean speed is below some threshold.
 
 % James Kapaldo
 
-% Number of inputs (4 times the number of particles)
+% Number of inputs (2D times the number of particles)
 N = numel(y);
 
 % Offset indices
-offset = (0:4:N-1)';
+offset = (0:2*D:N-1)';
 
-N = N/4; % Number of particles
+N = N/(2*D); % Number of particles
 
 % Indices of position and velocity for each particle
 % rInds = [1,2] + offset;
-pInds = [3,4] + offset;
+pInds = (1:D) + D + offset;
 
 % Positions and velocities of each particle
 % r = y(rInds); % N x 2
@@ -34,10 +34,10 @@ W = hstry.windowSize;
 
 if W > 0
 
-    if  hstry.iterationNumber >= W
+    if  hstry.validEntries >= W
         pInds = pInds';
         p_hist = hstry.solHistory(pInds(:),:); % 2N x windowSize
-        p_hist = permute( reshape( p_hist, [2, N, W] ), [2,1,3]); % Nx2xM
+        p_hist = permute( reshape( p_hist, [D, N, W] ), [2,1,3]); % Nx2xM
     end
 
     % ================  AVERAGE POSITION STABLE  ========================
@@ -51,7 +51,7 @@ if W > 0
     % direction(2) = -1;
 
     % ===============  AVERAGE VELOCITY STABLE =========================
-    if  hstry.iterationNumber < W
+    if  hstry.validEntries < W
         value(1) = 1;    
     else
         v = sum(mean(cat(3,p_hist,p),3).^2,2); % average speed of each particle over history

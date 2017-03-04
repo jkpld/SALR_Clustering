@@ -22,7 +22,7 @@ POTENTIAL_SCALE = options.Potential_Scale;
 % Process the mask -------------------------------------------------------
 % Pad mask with zeros so that we have a strong potential all around the
 % object.
-BW_pad = padarray(BW,PAD_SIZE*[1 1]);
+BW_pad = padarray(BW,PAD_SIZE*ones(1,ndims(BW)));
 BW_pad = logical(BW_pad);
 
 % Compute bsae confining potential ---------------------------------------
@@ -54,7 +54,14 @@ V_out = 1./(bwdist(BW_pad).^2 + 1);
 V(~BW_pad) = V_out(~BW_pad);
 
 % Smooth the potential will small gaussian
-V = imfilter(V,fspecial('gaussian',7,1),'replicate');
+if ismatrix(BW)
+    V = imfilter(V,fspecial('gaussian',7,1),'replicate');
+else
+    % In higher dimensions we will filter in the frequency domain instead
+    % of the spatial domain because it is faster.
+    V = frequencyGaussianFilter(V,1,5,'replicate');
+%     V = imgaussfilt3(V,1,'FilterDomain','frequency');
+end
 
 % Re scale the potential to correct for the smoothing
 if ~isnan(POTENTIAL_SCALE)

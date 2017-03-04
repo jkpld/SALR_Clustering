@@ -18,12 +18,13 @@ function clusterCenters = extractClusterCenters(r_final,options)
 
 % Number of particles
 N = size(r_final,1);
+D = size(r_final,2);
 
 % Distance between each pair of particles 
-D = pdist(r_final);
+d = pdist(r_final);
 
 % Particle pairs that are connected to each other
-cluster = (D * options.Scale_Factor) < (0.7*options.Potential_Minimum_Location + 0.3*options.Potential_Extent);
+cluster = (d * options.Scale_Factor) < (0.7*options.Potential_Minimum_Location + 0.3*options.Potential_Extent);
 pdistInds = getPdistInds(N);
 linIdx = pdistInds(cluster,1) + (pdistInds(cluster,2)-1)*N;
 
@@ -36,7 +37,7 @@ A = A | A';
 [p,~,r] = dmperm(A);
 
 % Compute the center of each cluster.
-clusterCenters = zeros(numel(r)-1,2);
+clusterCenters = zeros(numel(r)-1,D);
 for i = 1:numel(r)-1
     idx = r(i):r(i+1)-1;
     clusterCenters(i,:) = mean( r_final( p(idx) ,:), 1);
