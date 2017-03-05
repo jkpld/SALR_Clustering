@@ -30,8 +30,14 @@ classdef seedPointOptions
 %   (1, Inf) & integer, [pixels]
 %
 % Maximum_Initial_Potential - The maximum confining potential value that a
-%   particle can have at its initial position. Any possible initial
+%   particle can have as its initial position. Any possible initial
 %   position with a confining potential larger than this value will not be
+%   used as an initial particle position.
+%   (-Inf, Inf] , [arb. units]
+%
+% Minimum_Initial_Potential - The minimum confining potential value that a
+%   particle can have as its initial position. Any possible initial
+%   position with a confining potential smaller than this value will not be
 %   used as an initial particle position.
 %   (-Inf, Inf] , [arb. units]
 %
@@ -98,6 +104,7 @@ classdef seedPointOptions
         Potential_Extent
         Potential_Padding_Size       = 5;
         Maximum_Initial_Potential    = Inf;
+        Minimum_Initial_Potential    = -Inf;
 
         Potential_Scale              = NaN;
 
@@ -232,13 +239,24 @@ classdef seedPointOptions
         end
 
         function obj = set.Potential_Padding_Size(obj,value)
-            validateattributes(value,{'double'},{'integer','scalar','positive','nonzero','real','finite'})
+            validateattributes(value,{'double'},{'integer','scalar','nonnegative','real','finite'})
             obj.Potential_Padding_Size = value;
         end
 
         function obj = set.Maximum_Initial_Potential(obj,value)
             validateattributes(value,{'double'},{'scalar','real','>',-Inf,'<=',Inf})
+            if value < obj.Minimum_Initial_Potential %#ok<MCSUP>
+                error('seedPointOptions:badInput','MaximumM_Initial_Potential must be larger than inimum_Initial_Potential.')
+            end
             obj.Maximum_Initial_Potential = value;
+        end
+        
+        function obj = set.Minimum_Initial_Potential(obj,value)
+            validateattributes(value,{'double'},{'scalar','real','>',-Inf,'<=',Inf})
+            if value > obj.Maximum_Initial_Potential %#ok<MCSUP>
+                error('seedPointOptions:badInput','Minimum_Initial_Potential must be smaller than Maximum_Initial_Potential.')
+            end
+            obj.Minimum_Initial_Potential = value;
         end
 
         function obj = set.Potential_Scale(obj,value)

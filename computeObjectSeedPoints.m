@@ -29,6 +29,7 @@ try
 
     PAD_SIZE = options.Potential_Padding_Size;
     R0_MAXV = options.Maximum_Initial_Potential;
+    R0_MINV = options.Minimum_Initial_Potential;
     POINT_SELECTION_METHOD = options.Point_Selection_Method;
 
     % Create full confining potential ---------------------------------------
@@ -48,7 +49,7 @@ try
     initPointOptions.r0set = r0set;
 
     % Don't let the particles start with too high a potential energy.
-    allowed_r0_mask = ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV ); % & imerode(BW,strel('disk',3));
+    allowed_r0_mask = ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV ) & ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) > R0_MINV ); % & imerode(BW,strel('disk',3));
 
     if ~any(allowed_r0_mask(:))
         if ~any(BW)
