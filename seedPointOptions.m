@@ -45,6 +45,11 @@ classdef seedPointOptions
 %   well.
 %   (0, Inf) , [arb. units]
 %
+% Distance_Metric - The metric used for measuring distance between
+%   particles. If metric is Minkowski, then an extra agrument can be given
+%   with the exponent.
+%   {'euclidean'; 'cityblock'; 'chebychev'; {'minkowski', exponent}}
+%
 % Initial_Speed - The initial speed of the particles in the simulation.
 %   (-Inf, Inf) , [pixels/time]
 %
@@ -73,6 +78,13 @@ classdef seedPointOptions
 %   calculation.
 %   logical
 %
+% Maximum_Memory - The maximum amount of memory that can be used to store
+%   the gradients of the confining potential. The of the amount of space
+%   needed is above this limit, then a slower method will be used that does
+%   not take up memory. (It is assumed that the confining potential is of
+%   class double.)
+%   [0, Inf], Gb
+%
 % Debug -
 %   Determines if additional information will be returned from each
 %   function.
@@ -99,14 +111,18 @@ classdef seedPointOptions
     properties
 
         Wigner_Seitz_Radius          = 10;
+        
         Potential_Depth
         Potential_Minimum_Location
         Potential_Extent
+        
         Potential_Padding_Size       = 5;
         Maximum_Initial_Potential    = Inf;
         Minimum_Initial_Potential    = -Inf;
 
         Potential_Scale              = NaN;
+        
+        Distance_Metric              = 'euclidean';
 
         Initial_Speed                = 0.01;
         Particle_Damping_Rate        = 5e-4;
@@ -119,6 +135,8 @@ classdef seedPointOptions
         Use_GPU                      = false;
         Use_Parallel                 = false;
 
+        Maximum_Memory               = 1;
+        
         Debug                        = false;
 
         Object_Of_Interest           = [];
@@ -131,6 +149,9 @@ classdef seedPointOptions
     properties (SetAccess = private, Hidden)
         potentialParameterIdx = [1 1 1];
         InteractionOptions = struct('type','SRALRR','params',[]);
+        
+        dist = 'euc';
+        dist_arg = [];
     end
 
     properties (Hidden)
@@ -189,6 +210,8 @@ classdef seedPointOptions
             end
         end
 
+        
+        
         function obj = set.Wigner_Seitz_Radius(obj,value)
             validateattributes(value,{'double'},{'positive','scalar','real','finite'})
             obj.Wigner_Seitz_Radius = value;
@@ -267,6 +290,68 @@ classdef seedPointOptions
             obj.Potential_Scale = value;
         end
 
+        function obj = set.Distance_Metric(obj, input)
+            
+            if iscell(input)
+                if length(input) > 1
+                    extraArg = input{2};
+                else
+                    extraArg = [];
+                end
+                metric = input{1};
+            else
+                metric = input;
+                extraArg = [];
+            end
+
+            additionalArg = [];
+            
+            % The code below mostly comes from Matlab's pdist function.
+            methods = {'euclidean'; 'cityblock'; 'chebychev'; 'minkowski'};
+        
+            i = find(strncmpi(metric,methods,length(metric)));
+            if length(i) > 1
+                error('seedPointOptions:AmbiguousDistance', 'Ambiguous distance, %s, try entering the full distance metric''s name.', metric);
+            elseif isempty(i)
+                error('seedPointOptions:UnknownDistance', 'Unknown distance metric, %s.', metric);
+            else
+                metric = lower(methods{i}(1:3));
+            end
+            
+            if strcmp(metric,'min') % Minkowski distance
+                additionalArg = extraArg;
+                if isempty(additionalArg)
+                    metric = 'euc';
+                    i = 1;
+                    additionalArg = [];
+                elseif ~( isscalar(additionalArg) && additionalArg > 0)
+                    error('seedPointOptions:InvalidExponent','Invalid exponent for Minkowski metric.');
+                elseif isinf(additionalArg) %the exponent is inf
+                    metric = 'che';
+                    i = 3;
+                    additionalArg = [];
+                elseif additionalArg == 2 %the exponent is 2
+                    metric = 'euc';
+                    i = 1;
+                    additionalArg = [];
+                elseif additionalArg == 1 %the exponent is 1
+                    metric = 'cit';
+                    i = 2;
+                    additionalArg = [];
+                end
+            end
+            
+            obj.dist = metric; %#ok<MCSUP>
+            obj.dist_arg = additionalArg; %#ok<MCSUP>
+            
+            if isempty(additionalArg)
+                obj.Distance_Metric = methods{i};
+            else
+                obj.Distance_Metric = {methods{i}, additionalArg};
+            end
+            
+        end
+        
         function obj = set.Mass_Charge_Multiplier(obj,value)
             validateattributes(value,{'double'},{'scalar','real','positive','nonzero','finite'})
             obj.Mass_Charge_Multiplier = value;
@@ -301,6 +386,11 @@ classdef seedPointOptions
             obj.Use_Parallel = value;
         end
 
+        function obj = set.Maximum_Memory(obj,value)
+            validateattributes(value,{'double'},{'positive','scalar','real'})
+            obj.Maximum_Memory = value;
+        end
+        
         function obj = set.Debug(obj,value)
             if (value ~= 0) && (value ~= 1)
                 error('seedPointOptions:badInput','Expected input to be logical.')

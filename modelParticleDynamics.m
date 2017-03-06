@@ -40,6 +40,10 @@ InteractionOptions          = options.InteractionOptions;
 MASS_CHARGE_MULTIPLIER      = options.Mass_Charge_Multiplier;
 SCALE_FACTOR                = options.Scale_Factor;
 
+DISTANCE_METRIC             = options.dist;
+DISTANCE_METRIC_ARGUMENT    = options.dist_arg;
+
+MAXIMUM_MEMORY              = options.Maximum_Memory;
 
 MAX_FAILS = 5;
 RESTART_UNDER = 5;
@@ -51,38 +55,53 @@ N = size(r0,1);
 D = size(r0,2);
 sz = size(V);
 
+varargout{1} = [];
+
 % Object image size
 % maskSize = sz - 2*PAD_SIZE;
 
-% Compute gradient of confining potential --------------------------------
-dV = cell(1,D);
-[dV{:}] = gradient(V, SCALE_FACTOR);
-dV([1,2]) = dV([2,1]); % gradient always outputs the derivative along the second dimension first.
+
 
 
 % Create interpolating functions for confining force ---------------------
-if D == 2   
-    for i = D:-1:1
-        dV{i} = @(r) interp2mex(dV{i},r(:,2)/SCALE_FACTOR,r(:,1)/SCALE_FACTOR);
-    end
-    % This mex interpolation function assumes the input is from an image (x
-    % and y spacing of 1) and it uses nearest neighbor extrapolation.
+
+if 8*D*numel(V)/1e9 > MAXIMUM_MEMORY
+    % If the amount of space taken up by all of the gradients is more than
+    % 1 GB, the change how the derivatives are computed to save space.
     
-    % .....................................................................
-    % Note, if the above mex functions are not installed, then just use the
-    % code below in the "else" case. It will work find, but will be a bit
-    % slower.
+    dV = @(r) interpolateGradient(V,r/SCALE_FACTOR);
+    
 else
-    dx = cell(1,D);
-    for i = 1:D
-        dx{i} = (1:sz(i)) * SCALE_FACTOR;
-    end
+    % Compute gradient of confining potential --------------------------------
+    dVi = cell(1,D);
+    [dVi{:}] = gradient(V, SCALE_FACTOR);
+    dVi([1,2]) = dVi([2,1]); % gradient always outputs the derivative along the second dimension first.
 
-    for i = D:-1:1
-        dV{i} = griddedInterpolant(dx,dV{i});
+    if D == 2
+        for i = D:-1:1
+            dVi{i} = @(r) interp2mex(dVi{i},r(:,2)/SCALE_FACTOR,r(:,1)/SCALE_FACTOR);
+        end
+        % This mex interpolation function assumes the input is from an image (x
+        % and y spacing of 1) and it uses nearest neighbor extrapolation.
+
+        % .....................................................................
+        % Note, if the above mex functions are not installed, then just use the
+        % code below in the "else" case. It will work find, but will be a bit
+        % slower.
+    else
+        dx = cell(1,D);
+        for i = 1:D
+            dx{i} = (1:sz(i)) * SCALE_FACTOR;
+        end
+
+        for i = D:-1:1
+            dVi{i} = griddedInterpolant(dx,dVi{i});
+        end
     end
+    
+    dV = @(r) formGradient(dVi,r);
+    
 end
-
 
 % Create particle interaction potential and force ------------------------
 switch InteractionOptions.type
@@ -131,7 +150,7 @@ N_to_NtNm1o2 = S1 - S2;
 
 % Example: we have N particles with positions r0. We need to form the unit
 % vector between each pair of particles. All of these unit vectors will
-% create an array that is N*(N-1)/2 x 2. These unit vectors are simply
+% create an array that is N*(N-1)/2 x D. These unit vectors are simply
 % created by
 %
 % ur = N_to_NtNm1o2 * r0;
@@ -155,6 +174,9 @@ SystemInputs.dV = dV;
 SystemInputs.dVint = dVint;
 SystemInputs.N_to_NtNm1o2 = N_to_NtNm1o2;
 SystemInputs.pdistInds = pdistInds;
+
+SystemInputs.dist = DISTANCE_METRIC;
+SystemInputs.dist_arg = DISTANCE_METRIC_ARGUMENT;
 
 % Put initial conditions in correct form
 offset = (0:2*D:N*2*D-1)';
@@ -273,4 +295,14 @@ if DEBUG
     varargout{1} = Info;
 end
 
+end
+
+
+
+function G = formGradient(dVi, r)
+    D = length(dVi);
+    G = zeros(size(r,1),D);
+    for i = 1:D
+        G(:,i) = dVi{i}(r);
+    end
 end

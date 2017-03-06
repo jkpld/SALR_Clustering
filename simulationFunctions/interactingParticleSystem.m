@@ -36,8 +36,11 @@ function dy = interactingParticleSystem(t,y,extraInputs)
 % James Kapaldo
 
 % Get all the inputs needed ==============================================
-% Particle properties
 D = extraInputs.D; % dimension
+dist = extraInputs.dist;
+dist_arg = extraInputs.dist_arg;
+
+% Particle properties
 q = extraInputs.q; % particle charges (This charge should also include the square root of the coupling constant -- k or 1/(4*pi*eps0).)
 m = extraInputs.m; % particle masses 
 alpha = extraInputs.alpha; % particle damping coefficients 
@@ -104,10 +107,11 @@ p = y(pInds(:),:);
 % function or any other function handle cretaed to give the potentials.)
 
 r = reshape(r,[D,N*M])';
-dp = zeros(N*M, D);
-for i = 1:D
-    dp(:,i) = -dV{i}(r);
-end
+dp = -dV(r);
+% dp = zeros(N*M, D);
+% for i = 1:D
+%     dp(:,i) = -dV{i}(r);
+% end
 
 % In order to calculate the interaction between particles, we will reshape
 % each set of particles to a page. Thus it will have N rows with two
@@ -144,13 +148,13 @@ p = permute( reshape( p, [D, N, M] ), [2,1,3]); % NxDxM
 
 if M == 1
     % d = pdist(r);
-    d = DN_pdistmex(r','euc',[])';
+    d = DN_pdistmex(r',dist,dist_arg)';
 else
     d = zeros(N*(N-1)/2,1,M);
 
     for i = 1:M
         % d(:,1,i) = pdist(r(:,:,i));
-        d(:,1,i) = DN_pdistmex(r(:,:,i)','euc',[]);
+        d(:,1,i) = DN_pdistmex(r(:,:,i)',dist,dist_arg);
     end
 end
 % Get the interaction force between the particles (which only depends on
