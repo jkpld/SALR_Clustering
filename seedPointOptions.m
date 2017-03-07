@@ -81,8 +81,7 @@ classdef seedPointOptions
 % Maximum_Memory - The maximum amount of memory that can be used to store
 %   the gradients of the confining potential. The of the amount of space
 %   needed is above this limit, then a slower method will be used that does
-%   not take up memory. (It is assumed that the confining potential is of
-%   class double.)
+%   not take up memory.
 %   [0, Inf], Gb
 %
 % Debug -

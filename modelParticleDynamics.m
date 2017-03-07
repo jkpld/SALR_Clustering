@@ -65,7 +65,7 @@ varargout{1} = [];
 
 % Create interpolating functions for confining force ---------------------
 
-if 8*D*numel(V)/1e9 > MAXIMUM_MEMORY
+if sizeof(class(V))*D*numel(V)/1e9 > MAXIMUM_MEMORY
     % If the amount of space taken up by all of the gradients is more than
     % 1 GB, the change how the derivatives are computed to save space.
     
