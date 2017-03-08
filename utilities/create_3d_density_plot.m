@@ -1,48 +1,23 @@
-function fig = create_3d_density_plot(n, dims, isoLvls, markers, col_scale, ticks)
-
-if length(unique(dims)) ~= 3
-    error('must have 3 dimensions given')
-end
-if ismatrix(n)
-    error('data should have at least 3 dimensions')
-end
+function fig = create_3d_density_plot(n, dims, isoLvls, varargin)
 
 
-if nargin < 4
-    markers = [];
-end
-if nargin < 5
-    col_scale = [];
-end
-if nargin < 6
-    ticks = [];
-end
+[n, dims, isoLvls, markers, color_scale, ticks, cmap] = parse_inputs(n,dims,isoLvls,varargin{:});
 
-if isempty(col_scale)
-    col_scale = @(x) sqrt(x);
-end
 
-sz = size(n);
-D = length(sz);
-
-inds = find(~ismember(1:D, dims));
-
+% Project input data to the three dimensions given -------------------
+inds = find(~ismember(1:ndims(n), dims));
 for i = inds
     n = sum(n,i);
 end
 n = squeeze(n);
 sz = size(n);
 
-if isempty(ticks)
-    ticks = cell(1,3);
-    for i = 1:3
-        ticks{i} = 0:10:sz(i);
-    end
-end
 
+
+% Compute the isosurfaces and their bounds ----------------------------
 isoBounds = [inf(1,3); -inf(1,3)];
-
 toRemove = false(1,length(isoLvls));
+
 for i = length(isoLvls):-1:1
     iso(i) = isosurface(n,isoLvls(i));
     if isempty(iso(i).vertices)
@@ -59,11 +34,14 @@ end
 iso(toRemove) = [];
 isoLvls(toRemove) = [];
 
+
+
+% Create the figure --------------------------------------------------
 fig = figure('color','w');
 fig.Units = 'inch';
-% fig.Position(3:4) = [3.5,3.5];
-ax = axes('Position',[0 0 1 1]);
+ax = axes('Position',[0 0 1 1],'Visible','off');
 
+% Setup the axis and plane bounds
 lim_offset = [-10; 10];
 plane_offset = [-2; 2];
 
@@ -73,28 +51,18 @@ ax.XLim = isoBounds(:,1) + lim_offset;% * [-1;0];
 ax.YLim = isoBounds(:,2) + lim_offset;% * [-1;0];
 ax.ZLim = isoBounds(:,3) + lim_offset;% * [-1;0];
 
+% Draw the axis planes
 drawAxisPlanes(plane_bounds,ticks,ax)
 
+% Draw a marker to help overlap the isosurfaces with the axis/lines when
+% putting the figure together.
 line(isoBounds(2,1)+2,isoBounds(2,2)+2,ax.ZLim(1),'marker','.','Color','k','Tag','xy','UserData','isoSurfaceMarker','Visible','off')
 
 
-ax.Visible = 'off';
-% grid on
-if exist('brewermap','file')==2
-    cmap = brewermap(9,'GnBu');
-    cmap(1,:) = [];
-else
-    cmap = flipud(parula(9));
-end
 
-if all(isoLvls<1)
-    cmap = flipud(cmap);
-end
-
-
-
+% Plot the isosurfaces and there projects -------------------------------
 for i = 1:length(iso)
-    col = interp1(linspace(0,1,size(cmap,1)),cmap,col_scale(isoLvls(i)/max(isoLvls)));
+    col = interp1(linspace(0,1,size(cmap,1)),cmap,color_scale(isoLvls(i)/max(isoLvls)));
 
     patch(iso(i),...
         'FaceColor',col,...
@@ -110,18 +78,22 @@ for i = 1:length(iso)
     plotProjection(iso(i),col,sz,ax);
 end
 
+
+
+% Plot any markers given ------------------------------------------------
 if ~isempty(markers)
     for i = 1:numel(markers)
         markers(i).dat = markers(i).dat(:,dims([2,1,3]));
         line(markers(i).dat(:,1),markers(i).dat(:,2),markers(i).dat(:,3),markers(i).options,'Parent',ax)
+        if markers.project
+            projectMarkers(markers(i),ax);
+        end
     end
-
-    projectMarkers(markers(end),ax);
 end
 
-addlistener(ax,'View','PostSet',@viewChange);
-ax.UserData.Current_State = [0 0 0 0 0];
 
+
+% Add lighting ----------------------------------------------------------
 for i = 1:2
     for j = 1:2
         for k = 1:2
@@ -129,13 +101,25 @@ for i = 1:2
         end
     end
 end
-
 lighting gouraud
 
+
+
+% Create a listener to move the planes and the projects when the object is
+% rotated ----------------------------------------------------------------
+addlistener(ax,'View','PostSet',@viewChange);
+ax.UserData.Current_State = [0 0 0 0 0];
+
+
+
+% Add axis labels (as the dimension number) ----------------------------
 text(mean(ax.XLim), ax.YLim(2), ax.ZLim(1), num2str(dims(1)),'Tag','xz_xy')
 text(ax.XLim(2), mean(ax.YLim), ax.ZLim(1), num2str(dims(2)),'Tag','yz_xy')
 text(ax.XLim(2), ax.YLim(2), mean(ax.ZLim), num2str(dims(3)),'Tag','zlbl','Rotation',90)
 
+
+
+% Store all of the axis handles for easy use by viewChange() ------------
 xy = findall(ax,'Tag','xy');
 yz = findall(ax,'Tag','yz');
 xz = findall(ax,'Tag','xz');
@@ -153,9 +137,62 @@ ax.UserData.change_with_xz = change_with_xz;
 ax.UserData.change_with_yz = change_with_yz;
 ax.UserData.change_with_zlbl = change_with_zlbl;
 
+
+
+
+% Set the default view ---------------------------------------------------
 daspect([1 1 1])
 view([135,35])
 axis vis3d
+
+end
+
+function [n, dims, isoLvls, Markers, ColorScale, Ticks, Colormap] = parse_inputs(n,dims,isoLvls,varargin)
+
+% Validate required inputs -------------------
+D = ndims(n);
+if length(unique(dims)) ~= 3
+    error('There must be at least 3 dimensions given to plot.')
+end
+if D < 3
+    error('Input data should have at least 3 dimensions')
+end
+validateattributes(isoLvls,{'numeric'},{'nonempty','vector'})
+
+
+% Setup default colormap ---------------------
+if exist('brewermap','file')==2
+    cmap = brewermap(9,'GnBu');
+    cmap(1,:) = [];
+else
+    cmap = flipud(parula(9));
+end
+if all(isoLvls<1)
+    cmap = flipud(cmap);
+end
+
+% Setup default ticks --------------------------
+sz = size(n);
+Ticks = cell(1,3);
+for i = 1:3
+    Ticks{i} = 0:10:sz(i);
+end
+
+% Parse extra inputs ---------------------------
+p = inputParser;
+p.FunctionName = 'create_3d_density_plot';
+
+addParameter(p,'Markers',[]);
+addParameter(p,'ColorScale',@(x) sqrt(x), @(t) isempty(t) || isa(t,'function_handle'));
+addParameter(p,'Ticks',Ticks, @(t) validateattributes(t,{'cell'},{'numel',3}));
+addParameter(p,'Colormap',cmap, @(t) validateattributes(t,{'double'},{'2d','ncols',3,'real','finite','nonnegative','<=',1}));
+
+parse(p,varargin{:})
+
+Markers = p.Results.Markers;
+ColorScale = p.Results.ColorScale;
+Ticks = p.Results.Ticks;
+Colormap = p.Results.Colormap;
 
 end
 
