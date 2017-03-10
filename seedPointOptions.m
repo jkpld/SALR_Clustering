@@ -8,42 +8,65 @@ classdef seedPointOptions
 %
 % seedPointOptions Properties:
 %
+% Solver_Space_Scale - The scale defining the space the particles
+%   are modeled in. This is the space where the interaction potential
+%   parameters (Extent, Minimum Location, and Depth) are defined. There are
+%   four options:
+%       'grid' : The problem is directly solved in the data-storage space
+%       'data' : The problem is solved in the data space
+%       'distance_transform' : The data is solved in 'grid' space, if the
+%           distance transform is not scaled (Max_Distance_Transform =
+%           NaN). If the distance transform is scaled
+%           (Max_Distance_Transform = 'scalar'), then the 'grid' space is
+%           scaled by the same ratio as the distance transform. - This is
+%           the spaced used for the scale invariant seed-point calculations
+%           of the nuclei centers.
+%       [~>10, Inf) : Directly set a scalar scale factor
+%   {[~>10, Inf), 'distance_transform', 'grid', 'data'}
+%           # Comment : The interaction potential cannot be solved well
+%           when the Extent and Minimum Location are small (Extent ~< 5 and
+%           Minimum Location ~< 1); this is why the Solver_Space_Scale
+%           should be >~10
+%
+% Data_Storage_Centers - A cell array of arrays giving the centers of each
+%   data bin in data units.
+%
 % Wigner_Seitz_Radius - The effective size of each particle in the
 %   simulation. This sets the density of the particles used. The
 %   approximate number of particles used in a particular object will be
 %   area(object)/(pi* r_s^2), where r_s is the Wigner_Seitz_Radius.
-%   (0, Inf) , [pixels]
+%   (0, Inf)
 %
 % Potential_Depth - The depth of the potential.
-%   (-Inf,0] , [arb. units]
+%   (-Inf,0]
 %
 % Potential_Minimum_Location - The location of the potential minimum.
-%   (0, Inf) , [pixels]
+%   (0, Inf)
 %
 % Potential_Extent - The radius at which the potential goes from attractive
 %   to repulsive.
-%   (0, Inf) & > Potential_Minimum_Location , [pixels]
+%   (0, Inf) & > Potential_Minimum_Location
 %
 % Potential_Padding_Size - The size of the padding to apply to an object
 %   mask. This is important so that the potential is defined some distance
 %   away from the object when running the simulation.
-%   (1, Inf) & integer, [pixels]
+%   (1, Inf)
 %
 % Maximum_Initial_Potential - The maximum confining potential value that a
 %   particle can have as its initial position. Any possible initial
 %   position with a confining potential larger than this value will not be
 %   used as an initial particle position.
-%   (-Inf, Inf] , [arb. units]
+%   (-Inf, Inf]
 %
 % Minimum_Initial_Potential - The minimum confining potential value that a
 %   particle can have as its initial position. Any possible initial
 %   position with a confining potential smaller than this value will not be
 %   used as an initial particle position.
-%   (-Inf, Inf] , [arb. units]
+%   (-Inf, Inf]
 %
 % Potential_Scale - Value used to set the depth of the confining potential
-%   well.
-%   (0, Inf) , [arb. units]
+%   well. Set to NaN to use the natural depth.
+%   {(0, Inf), NaN}
 %
 % Distance_Metric - The metric used for measuring distance between
 %   particles. If metric is Minkowski, then an extra agrument can be given
@@ -51,25 +74,31 @@ classdef seedPointOptions
 %   {'euclidean'; 'cityblock'; 'chebychev'; {'minkowski', exponent}}
 %
 % Initial_Speed - The initial speed of the particles in the simulation.
-%   (-Inf, Inf) , [pixels/time]
+%   (-Inf, Inf)
+%
+% Mass - The mass of the particles.
+%   (0, Inf)
+%
+% Coupling_Constant - The coupling constant value, k.
+%   (0, Inf) 
 %
 % Particle_Damping_Rate - The rate at which the damping of the particles
 %   increases with simulation time.
-%   [0, Inf) , [1/time^2]
+%   [0, Inf)
 %
 % Charge_Normalization_Beta - The beta exponent for charge normalization
 %   based on number of particles.
-%   (-Inf, Inf), [unitless]
+%   (-Inf, Inf)
 %
 % Solver_Time_Range - Range over which the particles are simulated.
-%   [0, Inf) , [time]
+%   [0, Inf) 
 %
 % Point_Selection_Method - The method used to initialize the particle
 %   locations.
 %   {'random','uniform','uniformRandom','r0set_random','r0set_uniformRandom'}
 %
-% Minimum_Hole_Size - The minimum hole size allowed in the mask.
-%   [0, Inf) , [pixels^2]
+% Minimum_Hole_Size - The minimum hole size (area) allowed in the mask.
+%   [0, Inf)
 %
 % Use_GPU - Determines if a GPU will be used to speed up calculation.
 %   logical
@@ -82,7 +111,7 @@ classdef seedPointOptions
 %   the gradients of the confining potential. The of the amount of space
 %   needed is above this limit, then a slower method will be used that does
 %   not take up memory.
-%   [0, Inf], Gb
+%   [0, Inf], [Gb]
 %
 % Debug -
 %   Determines if additional information will be returned from each
@@ -109,40 +138,55 @@ classdef seedPointOptions
 
     properties
 
-        Wigner_Seitz_Radius          = 10;
+        Solver_Space_Scale           = 'auto';
+        Data_Storage_Centers
         
+        % Initial particles
+        Wigner_Seitz_Radius          = 10;
+        Point_Selection_Method       = 'r0set_uniformRandom';
+        Maximum_Initial_Potential    = Inf;
+        Minimum_Initial_Potential    = -Inf;
+        
+        % Particle interaction
         Potential_Depth
         Potential_Minimum_Location
         Potential_Extent
-        
-        Potential_Padding_Size       = 5;
-        Maximum_Initial_Potential    = Inf;
-        Minimum_Initial_Potential    = -Inf;
-
-        Potential_Scale              = NaN;
-        
+        Potential_Parameter_Space    = 'data'; % {'data', 'max_distance_transform'}
         Distance_Metric              = 'euclidean';
-
+        
+        % Particle parameters
         Initial_Speed                = 0.01;
+        Mass                         = 1;
+        Coupling_Constant            = 1;
         Particle_Damping_Rate        = 5e-4;
         Charge_Normalization_Beta    = 1/3;
+        
+        % Potential parameters
+        Potential_Padding_Size       = 5;
+        Potential_Scale              = NaN;
+        
+        % Solver parameters
         Solver_Time_Range            = 0:10:1500;
-        Point_Selection_Method       = 'r0set_uniformRandom';
-
-        Minimum_Hole_Size            = 50;
-
-        Use_GPU                      = false;
-        Use_Parallel                 = false;
-
         Maximum_Memory               = 1;
         
-        Debug                        = false;
+        % 2D mask clean up
+        Minimum_Hole_Size            = 50;
 
+        % Computation options
+        Use_GPU                      = false;
+        Use_Parallel                 = false;
+        
+        % Debug options
+        Debug                        = false;
         Object_Of_Interest           = [];
+        
+        % Scale invariant interaction parameters
+        ScaleInvarient_Potential_Extent = 15; % The problem will be scaled so that Potential_Extent is equal to this value and then it will be solved. This ensures the interaction potential has the same shape.
     end
 
     properties (SetAccess = private)
         potentialParameters
+        ScaleInvarient_Potential_Minimum_Location
     end
 
     properties (SetAccess = private, Hidden)
@@ -151,6 +195,8 @@ classdef seedPointOptions
         
         dist = 'euc';
         dist_arg = [];
+        
+        Data_Range = []; % Dependent property set when Data_Storage_Centers is set. This gives the range of the data in each dimension.
     end
 
     properties (Hidden)
@@ -165,7 +211,6 @@ classdef seedPointOptions
         Curvature_Max_Radius         = 35; % Not used 
         
         Potential_PreMultiplier = 1; % Not used
-        Mass_Charge_Multiplier = 1; % Not used
     end
 
     methods
@@ -209,7 +254,30 @@ classdef seedPointOptions
             end
         end
 
+        function obj = set.Solver_Space_Scale(obj, value)
+            if ischar(value)
+                if ~strcmp(value,'auto')
+                    error('seedPointOptions:badSolverScale','Solver_Space_Scale must be set to ''auto'' or a positive finite real scalar value.')
+                end
+            else
+                validateattributes(value,{'numeric'},{'positive','scalar','real','finite'})
+                value = double(value);
+                
+                if value < 10
+                    warning('seedPointOptions:potentiallyBadSolverScale','The value of Solver_Space_Scale, %f, may be small and lead to problems with the interaction potential',value)
+                end
+            end
+            
+            obj.Solver_Space_Scale = value;            
+        end
         
+        function obj = set.Data_Storage_Centers(obj, value)
+            validateattributes(value,{'cell'})
+            obj.Data_Storage_Centers = value;
+            
+            dat_range = cellfun(@(x) range(x), value);
+            obj.Data_Range = dat_range(:)'; %#ok<MCSUP>
+        end
         
         function obj = set.Wigner_Seitz_Radius(obj,value)
             validateattributes(value,{'double'},{'positive','scalar','real','finite'})
@@ -219,6 +287,16 @@ classdef seedPointOptions
         function obj = set.Initial_Speed(obj,value)
             validateattributes(value,{'double'},{'scalar','real','finite'})
             obj.Initial_Speed = value;
+        end
+        
+        function obj = set.Mass(obj,value)
+            validateattributes(value,{'double'},{'scalar','positive','real','finite'})
+            obj.Mass = value;
+        end
+        
+        function obj = set.Coupling_Constant(obj,value)
+            validateattributes(value,{'double'},{'scalar','positive','real','finite'})
+            obj.Coupling_Constant = value;
         end
 
         function obj = set.Point_Selection_Method(obj,value)
@@ -350,11 +428,6 @@ classdef seedPointOptions
             end
             
         end
-        
-        function obj = set.Mass_Charge_Multiplier(obj,value)
-            validateattributes(value,{'double'},{'scalar','real','positive','nonzero','finite'})
-            obj.Mass_Charge_Multiplier = value;
-        end
 
         function obj = set.Minimum_Hole_Size(obj,value)
             validateattributes(value,{'double'},{'scalar','nonnegative','real','finite'})
@@ -422,25 +495,60 @@ classdef seedPointOptions
         end
 
         function obj = set.Scale_Factor(obj,value)
-            validateattributes(value,{'double'},{'scalar','real','finite','positive','nonzero'})
+            validateattributes(value,{'double'},{'scalar','real','finite','positive'})
             obj.Scale_Factor = value;
         end
 
+        function obj = set.ScaleInvarient_Potential_Extent(obj, value)
+            validateattributes(value,{'double'},{'scalar','real','finite','positive'})
+            obj.ScaleInvarient_Potential_Extent = value;
+            obj = setPotentialParameter(obj,obj.Potential_Depth,obj.Potential_Minimum_Location,obj.Potential_Extent); %#ok<MCSUP>
+        end
+        
         function plotPotential(obj)
 
+            % Compute the interaction potential
+            scaleFactor = obj.Potential_Extent / obj.ScaleInvarient_Potential_Extent;
+            
             x = obj.InteractionOptions.params;
-            r = 0:0.05:1.3*obj.Potential_Extent;
+            r = 0:0.05:1.3*obj.ScaleInvarient_Potential_Extent;
             Vint = 1./(r+0.2) - x(1)*exp(-(r-x(2)).^2/(2*x(3)^2));
-
+            r = r * scaleFactor;
+            
             figure
-            plot(r,Vint,'b','linewidth',2)
-            title(sprintf('Interaction potential (%0.2f,%0.2f,%0.2f)', obj.Potential_Depth, obj.Potential_Minimum_Location, obj.Potential_Extent))
+            
+            % Plot interaction potential
+            ax1 = subplot(2,1,1);
+            line([r(1),r(end)], [0 0],'linestyle','--','color','k')
+            line(r,Vint,'color','b','linewidth',2)
+            
+            xticks = [0, obj.Potential_Minimum_Location, obj.Potential_Extent];
+            set(gca,'XTick',xticks,'XLim',[r(1),r(end)],'YLim',1.2*abs(obj.Potential_Depth)*[-1,1]);
+            title(sprintf('Interaction potential\n (d_0=%0.2f, r_0=%0.2f, r_a=%0.2f) @ r_{a,SI}=%0.2f', obj.Potential_Depth, obj.Potential_Minimum_Location, obj.Potential_Extent, obj.ScaleInvarient_Potential_Extent))
+            
+            % Plot interaction force
+            ax2 = subplot(2,1,2);
+            line([r(1),r(end)], [0 0],'linestyle','--','color','k')
+            line(r(1:end-1)+0.025,diff(Vint),'color','b','linewidth',2)
+            
+            xticks = [0, obj.Potential_Minimum_Location, obj.Potential_Extent];
+            set(gca,'XTick',xticks,'XLim',[r(1),r(end)],'YLim',1.2*max(diff(Vint))*[-1,1]);
+            title('Interaction force')
+            
+            % Set theme
+            setTheme(gcf,'light')
+
         end
     end
 
     methods (Access = private)
         function obj = setPotentialParameter(obj,depth,center,extent)
 
+            center = obj.ScaleInvarient_Potential_Extent * center / extent;
+            obj.ScaleInvarient_Potential_Minimum_Location = center;
+            
+            extent = obj.ScaleInvarient_Potential_Extent;
+            
             depth_idx = find(obj.potentialParameters.depth == depth);
             center_idx = find(obj.potentialParameters.center == center);
             extent_idx = find(obj.potentialParameters.extent == extent);
@@ -484,20 +592,59 @@ classdef seedPointOptions
                 end
             end
 
-%             obj.Potential_Depth = depth;
-%             obj.Potential_Minimum_Location = center;
-%             obj.Potential_Extent = extent;
             obj.potentialParameterIdx = [depth_idx, center_idx, extent_idx];
 
+            validateInteractionPotential(obj)
             % TODO: Add function that checks to see that the attractive
             % extent, depth, and center actually are where we set them to
             % be. Not all combinations of parameters are possible (small
             % center and large extent for example)
         end
+        
+        function validateInteractionPotential(obj)
+            % Confirm that the interaction potential has the correct depth,
+            % minimum location, and extent; give a warning if the values
+            % are wrong.
+            %
+            % Wrong values occur when A, mu, and sigma could not be solved
+            % for to make the the depth, minimum location, and extent the
+            % same as the values set.
+            
+            x = obj.InteractionOptions.params;
+            Vint = @(r) 1./(r+0.2) - x(1)*exp(-(r-x(2)).^2/(2*x(3)^2));
+            dVint = @(D) -1./(D + 0.2).^2 + (x(1)*(D-x(2))/(x(3)^2)) .* exp(-(D-x(2)).^2/(2*x(3)^2));
+            
+            % Test extent
+            y = obj.ScaleInvarient_Potential_Extent;
+            y_hat = fzero(dVint, y*2);
+            y_err = abs(y_hat - y)/y;
+            
+            if y_err > 1e-2
+                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential attractive extent is %0.2f%% different than the set potential attractive extent. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
+            end
+            
+            % Test minimum location
+            y = obj.ScaleInvarient_Potential_Minimum_Location;
+            y_hat = fzero(dVint, y);
+            y_err = abs(y_hat - y)/y;
+            
+            if y_err > 1e-2
+                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential minimum location is %0.2f%% different than the set potential minimum location. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
+            end
+            
+            % Test depth
+            y = obj.Potential_Depth;
+            y_hat = Vint(y_hat);
+            y_err = abs(y_hat - y)/y;
+            
+            if y_err > 1e-2
+                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential depth is %0.2f%% different than the set potential depth. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
+            end
+        end
     end
-
 end
 
 function out = encodePotentialIdx(depth_idx,center_idx,extent_idx)
     out = uint32(depth_idx + bitshift(center_idx,8) + bitshift(extent_idx,16));
 end
+
