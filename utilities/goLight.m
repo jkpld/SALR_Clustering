@@ -69,7 +69,8 @@ for i = 1:length(childs)
                     set(findall(h.ItemTokens,'Type','Patch'),'FaceAlpha',0.3);
                 end
         end
-    catch
+    catch ME
+        rethrow(ME)
     end
     
 end

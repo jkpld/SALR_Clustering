@@ -1,5 +1,6 @@
 function goDark(fig)
 
+
 try
     if strcmp(fig.Type,'figure')
         fig.Color = [0 0 0];

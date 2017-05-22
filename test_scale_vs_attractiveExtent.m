@@ -8,22 +8,13 @@ results_pth = @(n) [pth 'exampleImages\markedCenters_LD' n 'P24'];
 
 % Initialize options ----------------------------------------------------
 
-WIGNER_SEITZ_RADIUS = 5;
-MINIMUM_HOLE_SIZE = 15;
-
 options = seedPointOptions();
-options.Wigner_Seitz_Radius         = 5;
-options.Potential_Depth             = -1;
-options.Potential_Minimum_Location  = 2;
-options.Potential_Extent            = 13;
-options.Potential_Scale             = NaN;
-options.Minimum_Hole_Size           = 15;
-options.Initial_Speed               = 0.01;
-options.Point_Selection_Method      = 'r0set_uniformRandom';
-
 options.Use_GPU                     = true;
 options.Use_Parallel                = true;
 options.Debug                       = true;
+
+WIGNER_SEITZ_RADIUS = 5;
+MINIMUM_HOLE_SIZE = 15;
 
 % Set up test parameters ------------------------------------------------
 names = {'2','3','4','5','67'};
@@ -46,8 +37,6 @@ rd = -1 + max(0,log10(ra/100));
 params = [ra,scales,r0,rd];
 
 % figure
-% hold on
-% try delete(findall(get(gca,'Children'),'Tag','testPoints')), catch, end
 % line(params(:,2),params(:,1),ones(size(params,1),1),'Marker','.','Color','r','linestyle','none','tag','testPoints')
 
 % Initialize variables for storing resuts -------------------------------
@@ -58,7 +47,6 @@ dN = zeros(n,N,size(params,1),7);
 
 Info = struct('centers',[],'solverTime',[],'totalComputationTime',NaN,'N',NaN,'message',[]);
 Info(n,N,size(params,1)).totalComputationTime = NaN;
-% Info = cell(484,1);
 
 % Compute results -------------------------------------------------------
 
@@ -90,9 +78,8 @@ for ind = 1:n
             options.Use_Parallel = true;
         end
         
-        options.Potential_Depth = params(pp,4);
-        options.Potential_Minimum_Location = params(pp,3);
-        options.Potential_Extent = params(pp,1);
+        options.Potential_Parameters = params(pp,[4,3,1]);
+        options.ScaleInvarient_Potential_Extent = params(pp,1);
         
         options.Wigner_Seitz_Radius = round( params(pp,2) * WIGNER_SEITZ_RADIUS);
         options.Minimum_Hole_Size = round( params(pp,2) * MINIMUM_HOLE_SIZE);
@@ -110,10 +97,10 @@ for ind = 1:n
             [seedPoints, runInfo] = computeNucleiCenters_distTransform(I,BWs,options);
             totalTime = toc(start);
 
-            % If we are scaling the objects, then the number of objects can
-            % change due to objects joining or seperating. We need all of
-            % the object numbers to correspond to the original objects;
-            % thus, for each seed point we compute what object is is in.
+            % If scaling the objects, then the number of objects can change
+            % due to objects joining or seperating. We need all of the
+            % object numbers to correspond to the original objects; thus,
+            % for each seed point we compute what object it is in.
             if params(pp,2) ~= 1
                 seedPoints(:,3) = interp2mex(L,seedPoints(:,2)/params(pp,2),seedPoints(:,1)/params(pp,2));
                 seedPoints(:,3) = ceil(seedPoints(:,3));

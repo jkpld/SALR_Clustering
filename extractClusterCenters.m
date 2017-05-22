@@ -18,15 +18,27 @@ function [clusterCenters, clusterSize] = extractClusterCenters(r_final,options)
 % James Kapaldo
 % 2017-01-20
 
+% Parameters
+ra = options.ScaleInvarient_Potential_Extent;
+r0 = options.ScaleInvarient_Potential_Minimum_Location;
+if isnan(ra)
+    ra = options.Potential_Parameters(3);
+    r0 = options.Potential_Parameters(2);
+end
+
+
+dist = options.dist;
+dist_arg = options.dist_arg;
+
 % Number of particles
 N = size(r_final,1);
 D = size(r_final,2);
 
-% Distance between each pair of particles 
-d = pdist(r_final);
+% Distance between each pair of particles (in data units)
+d = pdist(r_final,dist,dist_arg);
 
 % Particle pairs that are connected to each other
-cluster = (d * options.Scale_Factor) < (0.7*options.Potential_Minimum_Location + 0.3*options.Potential_Extent);
+cluster = d  < (0.7*r0 + 0.3*ra);
 pdistInds = getPdistInds(N);
 linIdx = pdistInds(cluster,1) + (pdistInds(cluster,2)-1)*N;
 

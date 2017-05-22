@@ -5,32 +5,33 @@ function dy = interactingParticleSystem(t,y,extraInputs)
 % The parameter vector y should have the form
 %
 % y  = [y1 | y2 | y3 | ... | yn];
-% y1 = [ rx1, ry1, ..., vx1, vy1, ..., rx2, ry2, ..., vx2, vy2, ... , rxN, ryN, ..., vxN, vyN ]'
+% y1 = [ rx1, ry1, ..., vx1, vy1, ..., rx2, ry2, ..., vx2, vy2, ... , rxN, ryN, ..., vxN, vyN, ... ]'
 % 
 % Where N is the number of particles and where n > 1 if the ode solver is
 % trying to compute multiple points at once.
 %
 % ExtraInputs - structure with the fields
-%       D - number of dimension
-%       q - particle charges
-%       m - particle masses
-%       alpha - particle damping coefficients
-%       dV - cell array with derivatives of potential along each dimension
-%       dVind - derivative of particle interaction potential
-%       pdistInds - indices of particle pairs
-%       N_to_NtNm1o2 - ( read as : N to N*(N-1)/2 ) sparse matrix that can
-%       create particle pair vectors from particle positions and accumulate
-%       all of the forces on a particle from the particle pair forces.
+%       D : number of dimension
+%       q : particle charges
+%       m : particle masses
+%       alpha : particle damping coefficients
+%       dV : confining potential gradient
+%       dVind : derivative of particle interaction potential
+%       pdistInds : indices of particle pairs
+%       N_to_NtNm1o2 : ( read as : N to N*(N-1)/2 ) sparse matrix that can
+%           create particle pair vectors from particle positions and 
+%           accumulate all of the forces on a particle from the particle 
+%           pair forces.
 %
 % Notes: 
 % 
 % q, m, and alpha  :  arrays Nx1, a function handel taking in one paramter,
 % the time, or a griddedInterpolant taking in one paramter, the time.
 %
-% dV{1}, dV{2}, ...  :  function handle or griddedInterpolant taking in 
+% dV  :  function handle or griddedInterpolant taking in 
 % particle position and outputing gradient along each dimension
 %
-% dVint  :  function handel taking in the distance between two particles
+% dVint  :  function handle taking in the distance between two particles
 % and outputing the force.
 
 % James Kapaldo
@@ -81,8 +82,8 @@ p = y(pInds(:),:);
 % r is now a matrix that looks like
 %  [ rx1_1, rx1_2, ..., rx1_M ;
 %  [ ry1_1, ry1_2, ..., ry1_M ;
-%  [ rz1_1, rz1_2, ..., rz1_M ;
 %  [   .  ,   .  , ...,   .   
+%  [ rD1_1, rD1_2, ..., rD1_M ;
 %  [ rx2_1, rx2_2, ..., rx2_M ;
 %  [ ry2_1, ry2_2, ..., ry2_M ;
 %  [   .    .             .
@@ -90,21 +91,23 @@ p = y(pInds(:),:);
 %  [   .          .       .
 %  [ rxN_1,      ...    rxN_M ;
 %  [ ryN_1,      ...    ryN_M ;
-%  [   .  ,      ...      .   ]
+%  [   .  ,      ...      .   ;
+%  [ rDN_1, rDN_2, ..., rDN_M ];
 %
 % and p looks the same
 
 % In order to calculate the potential at each nuclei position, we need the
 % position vectors to be in the form 
 %
-% [ x1,y1, ...; 
-%   x2,y2, ...; 
-%   x3,y3, ...; 
+% [ x1,y1, ..., D1;            --> position vector of particle 1
+%   x2,y2, ..., D2;            --> position vector of particle 2
+%   x3,y3, ..., D3; 
 %    ... ; 
-%   xN*M,yN*M, ...]
+%   xN*M,yN*M, ..., DN*M]      --> position vector of particle N*M
 %
 % (This is/(should be) the form expected by either a griddedInterpolant
-% function or any other function handle cretaed to give the potentials.)
+% function or any other function handle cretaed to give the potential
+% forces.)
 
 r = reshape(r,[D,N*M])';
 dp = -dV(r);
@@ -164,7 +167,7 @@ dVint = dVint_fun(d); % N*(N-1)/2 x 1 x M
 % Get the unit vectors between each pair
 
 if M == 1
-    r_hat = N_to_NtNm1o2*r; % N*(N-1)/2 x 2
+    r_hat = N_to_NtNm1o2*r; % N*(N-1)/2 x D
 else
     r_hat = r(pdistInds(:,1),:,:) - r(pdistInds(:,2),:,:); % N*(N-1)/2 x D x M
 end
@@ -172,7 +175,7 @@ r_hat = r_hat ./ sqrt(sum(r_hat.^2,2));
 
 % Compute the force for each particle pair
 if numel(q)==1
-    forceOut = (r_hat .* dVint) .* q^2; % N*(N-1)/2 x 2 x M
+    forceOut = (r_hat .* dVint) .* q^2; % N*(N-1)/2 x D x M
 else
     forceOut = (r_hat .* dVint) .* prod(q(pdistInds),2); % N*(N-1)/2 x D x M
 end
@@ -193,11 +196,7 @@ end
 dp = dp - (alpha./m) .* p;
 
 % Create the dr array.
-dr = p ./ m;%  - (alpha./m) .* p;
-
-% Limit the maximum particle speed for stability
-% dr(dr<-1) = -1;
-% dr(dr>1) = 1;
+dr = p ./ m;
 
 % Reshape dr and dp
 dr = reshape(permute(dr,[2,1,3]),D*N,M);

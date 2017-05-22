@@ -1,4 +1,4 @@
-classdef seedPointOptions
+classdef seedPointOptions < matlab.mixin.CustomDisplay
 % SEEDPOINTOPTIONS  Set options needed for computing seed point locations.
 %
 % Input can be structure array or parameter value pairs. Options not set
@@ -7,29 +7,6 @@ classdef seedPointOptions
 %   defaultValues = seedPointOptions()
 %
 % seedPointOptions Properties:
-%
-% Solver_Space_Scale - The scale defining the space the particles
-%   are modeled in. This is the space where the interaction potential
-%   parameters (Extent, Minimum Location, and Depth) are defined. There are
-%   four options:
-%       'grid' : The problem is directly solved in the data-storage space
-%       'data' : The problem is solved in the data space
-%       'distance_transform' : The data is solved in 'grid' space, if the
-%           distance transform is not scaled (Max_Distance_Transform =
-%           NaN). If the distance transform is scaled
-%           (Max_Distance_Transform = 'scalar'), then the 'grid' space is
-%           scaled by the same ratio as the distance transform. - This is
-%           the spaced used for the scale invariant seed-point calculations
-%           of the nuclei centers.
-%       [~>10, Inf) : Directly set a scalar scale factor
-%   {[~>10, Inf), 'distance_transform', 'grid', 'data'}
-%           # Comment : The interaction potential cannot be solved well
-%           when the Extent and Minimum Location are small (Extent ~< 5 and
-%           Minimum Location ~< 1); this is why the Solver_Space_Scale
-%           should be >~10
-%
-% Data_Storage_Centers - A cell array of arrays giving the centers of each
-%   data bin in data units.
 %
 % Wigner_Seitz_Radius - The effective size of each particle in the
 %   simulation. This sets the density of the particles used. The
@@ -138,39 +115,36 @@ classdef seedPointOptions
 
     properties
 
-        Solver_Space_Scale           = 'auto';
-        Data_Storage_Centers
-        
-        % Initial particles
-        Wigner_Seitz_Radius          = 10;
+        % Particle initialization
         Point_Selection_Method       = 'r0set_uniformRandom';
-        Maximum_Initial_Potential    = Inf;
+        Wigner_Seitz_Radius          = 10;
+        Maximum_Initial_Potential    = 1;
         Minimum_Initial_Potential    = -Inf;
+        Initial_Speed                = 0.01;
         
         % Particle interaction
-        Potential_Depth
-        Potential_Minimum_Location
-        Potential_Extent
-        Potential_Parameter_Space    = 'data'; % {'data', 'max_distance_transform'}
+        Potential_Parameters         = [-1 2 15];% 1x3 array with depth, minimum location, extent
+        Potential_Parameter_Space    = 'distance_transform'; % {'data', 'distance_transform'}
         Distance_Metric              = 'euclidean';
+        Characteristic_Distance      = NaN; % If not NaN, the solver space will be scaled until the attractive exent is equal to this distance (i.e. it is scaled by a factor of Characteristic_Distance/Potential_Parameters(3)).
         
         % Particle parameters
-        Initial_Speed                = 0.01;
         Mass                         = 1;
         Coupling_Constant            = 1;
-        Particle_Damping_Rate        = 5e-4;
         Charge_Normalization_Beta    = 1/3;
         
-        % Potential parameters
+        % Confining potential parameters
+        Max_Distance_Transform       = NaN; % If not NaN, the distance transform will be scaled until the maximum value is equal to this parameter.
+        Max_Potential_Force          = NaN; % Potential force at 99% percentile. Ignored if NaN
         Potential_Padding_Size       = 5;
-        Potential_Scale              = NaN;
         
         % Solver parameters
+        Particle_Damping_Rate        = 5e-4;
         Solver_Time_Range            = 0:10:1500;
         Maximum_Memory               = 1;
         
         % 2D mask clean up
-        Minimum_Hole_Size            = 50;
+        Minimum_Hole_Size            = 15;
 
         % Computation options
         Use_GPU                      = false;
@@ -178,39 +152,35 @@ classdef seedPointOptions
         
         % Debug options
         Debug                        = false;
-        Object_Of_Interest           = [];
+        Object_Of_Interest           = [];       
         
-        % Scale invariant interaction parameters
-        ScaleInvarient_Potential_Extent = 15; % The problem will be scaled so that Potential_Extent is equal to this value and then it will be solved. This ensures the interaction potential has the same shape.
-    end
-
-    properties (SetAccess = private)
-        potentialParameters
-        ScaleInvarient_Potential_Minimum_Location
     end
 
     properties (SetAccess = private, Hidden)
+        ScaleInvarient_Potential_Extent = nan; % The problem will be scaled so that Potential_Extent is equal to this value and then it will be solved. This ensures the interaction potential has the same shape.
+        ScaleInvarient_Potential_Minimum_Location
+        
+        potentialParameters % This holds a cache of all previously computed parameters
         potentialParameterIdx = [1 1 1];
         InteractionOptions = struct('type','SRALRR','params',[]);
         
         dist = 'euc';
         dist_arg = [];
-        
-        Data_Range = []; % Dependent property set when Data_Storage_Centers is set. This gives the range of the data in each dimension.
     end
 
     properties (Hidden)
-        Scale_Factor = 1; % This changes for each object and is not a global option
-        Object_Scale = 1; % This changes for each object and is not a global option
+        
+        % These values can change for each object and are not global
+        % options
+        Scale_Factor = 1; 
+        Object_Scale = 1;
 
         Use_ConvexHull = true;
         
         % These next two parameters would make apearence in functions
-        % computing boundary curvature.
+        % relating to computing boundary curvature.
         Curvature_Smoothing_Size     = 2; % Not used
         Curvature_Max_Radius         = 35; % Not used 
-        
-        Potential_PreMultiplier = 1; % Not used
     end
 
     methods
@@ -223,18 +193,10 @@ classdef seedPointOptions
                 error('seedPointOptions:missingPotentialParamters','The file potentialParameters.mat is missing or not on the path. This file is required for setting the potentialParamters. It may be created with the function computePotentialParamters if you do not have it.')
             end
 
-            depth_idx = 1;
-            center_idx = 1;
-            extent_idx = numel(options.potentialParameters.extent);
-
-            options.potentialParameterIdx = [depth_idx, center_idx, extent_idx];
-            idx = options.potentialParameters.parametersIdx == encodePotentialIdx(depth_idx, center_idx, extent_idx);
-            options.InteractionOptions.params = options.potentialParameters.parameters(idx,:);
-
-            options.Potential_Depth = options.potentialParameters.depth(1);
-            options.Potential_Minimum_Location = options.potentialParameters.center(1);
-            options.Potential_Extent = options.potentialParameters.extent(end);
-
+            options.Characteristic_Distance = nan;
+            options.Potential_Parameters = [-1,2,15];
+            options = setPotentialParameter(options, [-1, 2, 15]);
+            
             % Now assign any properties given.
             if nargin > 0
                 if numel(varargin) == 1 && isstruct(varargin{1})
@@ -252,31 +214,6 @@ classdef seedPointOptions
                     end
                 end
             end
-        end
-
-        function obj = set.Solver_Space_Scale(obj, value)
-            if ischar(value)
-                if ~strcmp(value,'auto')
-                    error('seedPointOptions:badSolverScale','Solver_Space_Scale must be set to ''auto'' or a positive finite real scalar value.')
-                end
-            else
-                validateattributes(value,{'numeric'},{'positive','scalar','real','finite'})
-                value = double(value);
-                
-                if value < 10
-                    warning('seedPointOptions:potentiallyBadSolverScale','The value of Solver_Space_Scale, %f, may be small and lead to problems with the interaction potential',value)
-                end
-            end
-            
-            obj.Solver_Space_Scale = value;            
-        end
-        
-        function obj = set.Data_Storage_Centers(obj, value)
-            validateattributes(value,{'cell'})
-            obj.Data_Storage_Centers = value;
-            
-            dat_range = cellfun(@(x) range(x), value);
-            obj.Data_Range = dat_range(:)'; %#ok<MCSUP>
         end
         
         function obj = set.Wigner_Seitz_Radius(obj,value)
@@ -304,38 +241,63 @@ classdef seedPointOptions
             obj.Point_Selection_Method = value;
         end
 
-        function obj = set.Potential_Depth(obj,value)
-            validateattributes(-value,{'double'},{'scalar','nonnegative','real','finite'})
-
-            if ~isempty(obj.Potential_Minimum_Location) && ~isempty(obj.Potential_Extent) %#ok<MCSUP>
-                obj = setPotentialParameter(obj, value, obj.Potential_Minimum_Location, obj.Potential_Extent); %#ok<MCSUP>
+        function obj = set.Potential_Parameters(obj, value)
+            validateattributes(value,{'double'},{'numel',3,'real','finite'})
+            
+            if value(1) > 0
+                error('seedPointOptions:badSet','The potential depth must less than zero.')
             end
-            obj.Potential_Depth = value;
+            if value(3) <= value(2)
+                error('seedPointOptions:badSet','The potential minimum location must be smaller than the potential extent.')
+            end
+            
+            obj.Potential_Parameters = value;
+            if isnan(obj.Characteristic_Distance) %#ok<MCSUP>
+                obj.ScaleInvarient_Potential_Extent = value(3); %#ok<MCSUP>
+            end
+            obj = setPotentialParameter(obj, value);
+            
         end
-
-        function obj = set.Potential_Minimum_Location(obj,value)
-            validateattributes(value,{'double'},{'scalar','positive','real','finite'})
-
-            if value > obj.Potential_Extent %#ok<MCSUP>
-                error('seedPointOptions:badSet','Potential_Minimum_Location must be smaller than Potential_Extent.')
+        
+        function obj = set.Potential_Parameter_Space(obj,value)
+            
+            validOptions = {'data', 'distance_transform'};
+            idx = find(strncmpi(value, validOptions, length(value)));
+            
+            if isempty(idx)
+                error('seedPointOptions:unknownPtntlPrmtrSpace','The Potential_Parameter_Space, %s, is not valid. Valid options are ''data'' and ''distance_transform''.',value)
+            elseif length(idx)>1
+                error('seedPointOptions:unknownPtntlPrmtrSpace','The Potential_Parameter_Space, %s, is ambiguous. Please be more specific.',value)
             end
-
-            if ~isempty(obj.Potential_Depth) && ~isempty(obj.Potential_Extent) %#ok<MCSUP>
-                obj = setPotentialParameter(obj, obj.Potential_Depth, value, obj.Potential_Extent); %#ok<MCSUP>
-            end
-            obj.Potential_Minimum_Location = value;
+            
+            obj.Potential_Parameter_Space = validOptions{idx};
         end
-
-        function obj = set.Potential_Extent(obj,value)
-            validateattributes(value,{'double'},{'scalar','positive','real','finite'})
-
-            if value < obj.Potential_Minimum_Location %#ok<MCSUP>
-                error('seedPointOptions:badSet','Potential_Extent must be larger than Potential_Minimum_Location.')
+        
+        function obj = set.Max_Distance_Transform(obj, value)
+            
+            validateattributes(value,{'double'},{'scalar','positive','real'})
+            if isnan(value)
+                if strcmp(obj.Potential_Parameter_Space,'max_distance_transform') %#ok<MCSUP>
+                    warning('seedPointOptions:nanMaxDT','Setting Potential_Parameter_Space to ''data''. Potential_Parameter_Space cannot be set to ''max_distance_transform'' when Max_Distance_Transform is NaN.')
+                    obj.Potential_Parameter_Space = 'data'; %#ok<MCSUP>
+                end
+            elseif isinf(value)
+                error('seedPointOptions:infMaxDT','Max_Distance_Transform must be a scalar positive real finite number, or NaN.')
             end
-            if ~isempty(obj.Potential_Depth) && ~isempty(obj.Potential_Minimum_Location) %#ok<MCSUP>
-                obj = setPotentialParameter(obj, obj.Potential_Depth, obj.Potential_Minimum_Location, value); %#ok<MCSUP>
+            
+            obj.Max_Distance_Transform = value;
+                
+        end
+        
+        function obj = set.Max_Potential_Force(obj, value)
+            
+            validateattributes(value,{'double'},{'scalar','positive','real'})
+            if isinf(value)
+                error('seedPointOptions:infMaxForce','Max_Potential_Force must be a scalar positive real finite number, or NaN.')
             end
-            obj.Potential_Extent = value;
+            
+            obj.Max_Potential_Force = value;
+                
         end
 
         function obj = set.Potential_Padding_Size(obj,value)
@@ -357,14 +319,6 @@ classdef seedPointOptions
                 error('seedPointOptions:badInput','Minimum_Initial_Potential must be smaller than Maximum_Initial_Potential.')
             end
             obj.Minimum_Initial_Potential = value;
-        end
-
-        function obj = set.Potential_Scale(obj,value)
-            validateattributes(value,{'double'},{'scalar','real','positive','nonzero'})
-            if isinf(value)
-                error('setPotentialScale:inf','Input must not be Inf.')
-            end
-            obj.Potential_Scale = value;
         end
 
         function obj = set.Distance_Metric(obj, input)
@@ -498,52 +452,110 @@ classdef seedPointOptions
             validateattributes(value,{'double'},{'scalar','real','finite','positive'})
             obj.Scale_Factor = value;
         end
-
-        function obj = set.ScaleInvarient_Potential_Extent(obj, value)
-            validateattributes(value,{'double'},{'scalar','real','finite','positive'})
-            obj.ScaleInvarient_Potential_Extent = value;
-            obj = setPotentialParameter(obj,obj.Potential_Depth,obj.Potential_Minimum_Location,obj.Potential_Extent); %#ok<MCSUP>
+        
+        function obj = set.Characteristic_Distance(obj, value)
+            if isnan(value)
+                obj.ScaleInvarient_Potential_Extent = obj.Potential_Parameters(3); %#ok<MCSUP>
+            else
+                validateattributes(value,{'double'},{'scalar','real','finite','positive'})
+                obj.ScaleInvarient_Potential_Extent = value; %#ok<MCSUP>
+            end
+            obj.Characteristic_Distance = value;
+            
+            obj = setPotentialParameter(obj,obj.Potential_Parameters); %#ok<MCSUP>
         end
         
-        function plotPotential(obj)
+        function out = plotPotential(obj,maxR)
 
+            if nargin < 2
+                maxR = 1.3;
+            end
+            
             % Compute the interaction potential
-            scaleFactor = obj.Potential_Extent / obj.ScaleInvarient_Potential_Extent;
+            scaleFactor = obj.Potential_Parameters(3) / obj.ScaleInvarient_Potential_Extent;
             
             x = obj.InteractionOptions.params;
-            r = 0:0.05:1.3*obj.ScaleInvarient_Potential_Extent;
+            r = 0:0.05:maxR*obj.ScaleInvarient_Potential_Extent;
             Vint = 1./(r+0.2) - x(1)*exp(-(r-x(2)).^2/(2*x(3)^2));
             r = r * scaleFactor;
+            
+            if nargout > 0
+                out = {r,Vint, r(1:end-1)+0.025,diff(Vint)};
+                return
+            end
             
             figure
             
             % Plot interaction potential
-            ax1 = subplot(2,1,1);
+            subplot(2,1,1)
             line([r(1),r(end)], [0 0],'linestyle','--','color','k')
             line(r,Vint,'color','b','linewidth',2)
             
-            xticks = [0, obj.Potential_Minimum_Location, obj.Potential_Extent];
-            set(gca,'XTick',xticks,'XLim',[r(1),r(end)],'YLim',1.2*abs(obj.Potential_Depth)*[-1,1]);
-            title(sprintf('Interaction potential\n (d_0=%0.2f, r_0=%0.2f, r_a=%0.2f) @ r_{a,SI}=%0.2f', obj.Potential_Depth, obj.Potential_Minimum_Location, obj.Potential_Extent, obj.ScaleInvarient_Potential_Extent))
+            xticks = [0, obj.Potential_Parameters(2), obj.Potential_Parameters(3)];
+            set(gca,'XTick',xticks,'XLim',[r(1),r(end)],'YLim',1.2*abs(obj.Potential_Parameters(1))*[-1,1]);
+            title(sprintf('Interaction potential\n (d_0=%0.2f, r_0=%0.2f, r_a=%0.2f) @ r_{a,SI}=%0.2f', obj.Potential_Parameters(1), obj.Potential_Parameters(2),obj.Potential_Parameters(3), obj.ScaleInvarient_Potential_Extent))
             
             % Plot interaction force
-            ax2 = subplot(2,1,2);
+            subplot(2,1,2)
             line([r(1),r(end)], [0 0],'linestyle','--','color','k')
             line(r(1:end-1)+0.025,diff(Vint),'color','b','linewidth',2)
             
-            xticks = [0, obj.Potential_Minimum_Location, obj.Potential_Extent];
             set(gca,'XTick',xticks,'XLim',[r(1),r(end)],'YLim',1.2*max(diff(Vint))*[-1,1]);
             title('Interaction force')
             
             % Set theme
             setTheme(gcf,'light')
+            
+            
 
+        end
+        
+        function validateInteractionPotential(obj)
+            % Confirm that the attractive extent, depth, and center
+            % actually are where we set them to be. Not all combinations of
+            % parameters are possible (small center and large extent for
+            % example)
+            
+            x = obj.InteractionOptions.params;
+            Vint = @(r) 1./(r+0.2) - x(1)*exp(-(r-x(2)).^2/(2*x(3)^2));
+            dVint = @(D) -1./(D + 0.2).^2 + (x(1)*(D-x(2))/(x(3)^2)) .* exp(-(D-x(2)).^2/(2*x(3)^2));
+            
+            % Test extent
+            y = obj.ScaleInvarient_Potential_Extent;
+            y_hat = fzero(dVint, y*2);
+            y_err = abs(y_hat - y)/y;
+            
+            if y_err > 1e-2
+                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential attractive extent is %0.2f%% different than the set potential attractive extent. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
+            end
+            
+            % Test minimum location
+            y = obj.ScaleInvarient_Potential_Minimum_Location;
+            y_hat = fzero(dVint, y);
+            y_err = abs(y_hat - y)/y;
+            
+            if y_err > 1e-2
+                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential minimum location is %0.2f%% different than the set potential minimum location. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
+            end
+            
+            % Test depth
+            y = obj.Potential_Parameters(1);
+            y_hat = Vint(y_hat);
+            y_err = abs(y_hat - y)/y;
+            
+            if y_err > 1e-2
+                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential depth is %0.2f%% different than the set potential depth. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
+            end
         end
     end
 
     methods (Access = private)
-        function obj = setPotentialParameter(obj,depth,center,extent)
+        function obj = setPotentialParameter(obj,params)
 
+            depth = params(1);
+            center = params(2);
+            extent = params(3);
+            
             center = obj.ScaleInvarient_Potential_Extent * center / extent;
             obj.ScaleInvarient_Potential_Minimum_Location = center;
             
@@ -595,52 +607,72 @@ classdef seedPointOptions
             obj.potentialParameterIdx = [depth_idx, center_idx, extent_idx];
 
             validateInteractionPotential(obj)
-            % TODO: Add function that checks to see that the attractive
-            % extent, depth, and center actually are where we set them to
-            % be. Not all combinations of parameters are possible (small
-            % center and large extent for example)
         end
-        
-        function validateInteractionPotential(obj)
-            % Confirm that the interaction potential has the correct depth,
-            % minimum location, and extent; give a warning if the values
-            % are wrong.
-            %
-            % Wrong values occur when A, mu, and sigma could not be solved
-            % for to make the the depth, minimum location, and extent the
-            % same as the values set.
-            
-            x = obj.InteractionOptions.params;
-            Vint = @(r) 1./(r+0.2) - x(1)*exp(-(r-x(2)).^2/(2*x(3)^2));
-            dVint = @(D) -1./(D + 0.2).^2 + (x(1)*(D-x(2))/(x(3)^2)) .* exp(-(D-x(2)).^2/(2*x(3)^2));
-            
-            % Test extent
-            y = obj.ScaleInvarient_Potential_Extent;
-            y_hat = fzero(dVint, y*2);
-            y_err = abs(y_hat - y)/y;
-            
-            if y_err > 1e-2
-                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential attractive extent is %0.2f%% different than the set potential attractive extent. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
+    end
+    
+    methods (Access = protected)
+        function displayScalarObject(obj)
+         className = matlab.mixin.CustomDisplay.getClassNameForHeader(obj);
+         fprintf('\n%s\n',[className,' with properties:']);
+         
+         propgroup = getPropertyGroups(obj);
+         matlab.mixin.CustomDisplay.displayPropertyGroups(obj,propgroup)
+%          for i = 1:length(propgroup)
+%              propgroup(i).Aligned = 0;
+%              matlab.mixin.CustomDisplay.displayPropertyGroups(obj,propgroup(i))
+%              fprintf('\n')
+%          end
+         
+         
+      end
+      
+      function propgrp = getPropertyGroups(obj)
+         if ~isscalar(obj)
+            propgrp = getPropertyGroups@matlab.mixin.CustomDisplay(obj);
+         else
+            % property groups for scalars
+            nGroups = 8;
+%             gTitles = {'Particle initialization';
+%                        'Particle interaction';
+%                        'Particle parameters';
+%                        'Confining potential parameters';
+%                        'Solver parameters';
+%                        '2D mask clean up';
+%                        'Computation options';
+%                        'Debug options'};
+            gTitles = repmat({' '},1,nGroups);
+
+            propLists = cell(1,nGroups);
+            propLists{1} = {'Point_Selection_Method';
+                            'Wigner_Seitz_Radius';
+                            'Maximum_Initial_Potential';
+                            'Minimum_Initial_Potential';
+                            'Initial_Speed'};
+            propLists{2} = {'Potential_Parameters';
+                            'Potential_Parameter_Space';
+                            'Distance_Metric';
+                            'Characteristic_Distance'};
+            propLists{3} = {'Mass';
+                            'Coupling_Constant';
+                            'Distance_Metric'};
+            propLists{4} = {'Max_Distance_Transform';
+                            'Max_Potential_Force';
+                            'Potential_Padding_Size'};
+            propLists{5} = {'Particle_Damping_Rate';
+                            'Solver_Time_Range';
+                            'Maximum_Memory'};
+            propLists{6} = {'Minimum_Hole_Size'};
+            propLists{7} = {'Use_GPU';
+                            'Use_Parallel'};
+            propLists{8} = {'Debug';
+                            'Object_Of_Interest'};
+                            
+                        
+            for i = nGroups:-1:1
+                propgrp(i) = matlab.mixin.util.PropertyGroup(propLists{i},gTitles{i});
             end
-            
-            % Test minimum location
-            y = obj.ScaleInvarient_Potential_Minimum_Location;
-            y_hat = fzero(dVint, y);
-            y_err = abs(y_hat - y)/y;
-            
-            if y_err > 1e-2
-                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential minimum location is %0.2f%% different than the set potential minimum location. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
-            end
-            
-            % Test depth
-            y = obj.Potential_Depth;
-            y_hat = Vint(y_hat);
-            y_err = abs(y_hat - y)/y;
-            
-            if y_err > 1e-2
-                warning('seedPointOptions:unsolvableInteractionPotential', 'The potential depth is %0.2f%% different than the set potential depth. Consider modifying the potential parameters to ensure the interaction potential is as expected.',y_err*100)
-            end
-        end
+         end
+      end
     end
 end
 

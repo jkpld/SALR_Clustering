@@ -2,8 +2,6 @@ function [seedPoints, Info] = processObjects(pixels, M, r0set, useCentroid, nRow
 
 % See also COMPUTEOBJECTSEEDPOINTS CREATEOBJECTIMAGES MODELPARTICLEDYNAMICS
 
-    Info = [];
-
     % Number of input objects
     N = numel(pixels);
 

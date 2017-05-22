@@ -17,7 +17,7 @@ function [V, scaleFactor, overlapFactor] = create_scaleInvar_confining_potential
 % James Kapaldo
 
 PAD_SIZE = options.Potential_Padding_Size;
-POTENTIAL_SCALE = options.Potential_Scale;
+MAX_DT = options.Max_Distance_Transform;
 
 % Process the mask -------------------------------------------------------
 % Pad mask with zeros so that we have a strong potential all around the
@@ -38,13 +38,13 @@ overlapFactor = 1;
 
 % Scale confining potential if necessary, create external confining
 % potential, and determing the scaleFactor.
-if isnan(POTENTIAL_SCALE)
+if isnan(MAX_DT)
     scaleFactor = 1; % scale normalization factor
     overlapFactor = 1;
 else
     % Normalize scale by scaling the distance transform
-    V = 1 + (POTENTIAL_SCALE - 1) *(V - 1) / (object_scale - 1); % The +- 1's make sure that the distance transform goes from 1 to POTENTIAL_SCALE.
-    scaleFactor = POTENTIAL_SCALE / object_scale; % scale normalization factor
+    V = 1 + (MAX_DT - 1) *(V - 1) / (object_scale - 1); % The +- 1's make sure that the distance transform goes from 1 to POTENTIAL_SCALE.
+    scaleFactor = MAX_DT / object_scale; % scale normalization factor
 end
 
 % Add exterior confining potential
@@ -60,12 +60,17 @@ else
     % In higher dimensions we will filter in the frequency domain instead
     % of the spatial domain because it is faster.
     V = frequencyGaussianFilter(V,1,5,'replicate');
-%     V = imgaussfilt3(V,1,'FilterDomain','frequency');
+    
+    % Sometimes this smoothing function can return very small magnitude
+    % negative numbers where 0's should be. Since our confining potential
+    % should be everywhere larger than zero, we can just set all negative
+    % numbers to zero.
+    V(V<0) = 0; 
 end
 
 % Re scale the potential to correct for the smoothing
-if ~isnan(POTENTIAL_SCALE)
-    V = POTENTIAL_SCALE * V / max(V(BW_pad));
+if ~isnan(MAX_DT)
+    V = MAX_DT * V / max(V(BW_pad));
 end
 
 % Invert to get final confining potential well.

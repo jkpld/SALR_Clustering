@@ -8,21 +8,14 @@ results_pth = @(n) [pth 'exampleImages\markedCenters_LD' n 'P24'];
 
 % Initialize options ----------------------------------------------------
 
-WIGNER_SEITZ_RADIUS = 5;
-MINIMUM_HOLE_SIZE = 15;
-
 options = seedPointOptions();
-options.Wigner_Seitz_Radius         = 5;
-options.Potential_Depth             = -1;
-options.Potential_Minimum_Location  = 2;
-options.Potential_Extent            = 15;
-options.Minimum_Hole_Size           = 15;
-options.Initial_Speed               = 0.01;
-options.Point_Selection_Method      = 'r0set_uniformRandom';
-
 options.Use_GPU                     = true;
 options.Use_Parallel                = true;
 options.Debug                       = true;
+
+WIGNER_SEITZ_RADIUS = 5;
+MINIMUM_HOLE_SIZE = 15;
+POTENTIAL_DEPTH = -1;
 
 % Set up test parameters ------------------------------------------------
 names = {'2','3','4','5','67'};
@@ -59,8 +52,6 @@ r0 = round(ra*0.12);
 params = [ra(:),ps(:),r0(:)];
 
 % figure
-% hold on
-% try delete(findall(get(gca,'Children'),'Tag','testPoints')), catch, end
 % line(params(:,2),params(:,1),ones(size(params,1),1),'Marker','.','Color','r','linestyle','none','tag','testPoints')
 % daspect([1 1 1])
 
@@ -95,9 +86,9 @@ for ind = 1:n
     objNumbers = unique(tmp(:,1));
     TPplusFN(ind,:) = size(tmp,1); % true Number Of Nuclei
 
-    for pi = 1:size(params,1)
-        if ~mod(pi,2)
-            fprintf('  %s >> param %d/%d...\n', datestr(now,31),pi,size(params,1))
+    for pp = 1:size(params,1)
+        if ~mod(pp,2)
+            fprintf('  %s >> param %d/%d...\n', datestr(now,31),pp,size(params,1))
         end
         
         if (strcmp(names{ind},'67') || strcmp(names{ind},'5')) && (scale > 4)
@@ -106,10 +97,9 @@ for ind = 1:n
             options.Use_Parallel = true;
         end
         
-        options.Potential_Minimum_Location = params(pi,3);
-        options.Potential_Extent = params(pi,1);
-        options.Potential_Scale = params(pi,2);
-        
+        options.Potential_Parameters = [POTENTIAL_DEPTH, params(pp,[3,1])];
+        options.ScaleInvarient_Potential_Extent = params(pp,1);
+        options.Max_Distance_Transform = params(pp,2);
         options.Wigner_Seitz_Radius = round( scale * WIGNER_SEITZ_RADIUS);
         options.Minimum_Hole_Size = round( scale * MINIMUM_HOLE_SIZE);
 
@@ -126,10 +116,10 @@ for ind = 1:n
             [seedPoints, runInfo] = computeNucleiCenters_distTransform(I,BWs,options);
             totalTime = toc(start);
 
-            % If we are scaling the objects, then the number of objects can
-            % change due to objects joining or seperating. We need all of
-            % the object numbers to correspond to the original objects;
-            % thus, for each seed point we compute what object is is in.
+            % If scaling the objects, then the number of objects can change
+            % due to objects joining or seperating. We need all of the
+            % object numbers to correspond to the original objects; thus,
+            % for each seed point we compute what object it is in.
             if scale ~= 1
                 seedPoints(:,3) = interp2mex(L,seedPoints(:,2)/scale,seedPoints(:,1)/scale);
                 seedPoints(:,3) = ceil(seedPoints(:,3));
@@ -137,11 +127,11 @@ for ind = 1:n
             end
 
             if options.Debug
-                Info(ind,ni,pi).centers = seedPoints;
-                Info(ind,ni,pi).solverTime = cellfun(@(x) x.solverTime, runInfo);
-                Info(ind,ni,pi).totalComputationTime = totalTime;
-                Info(ind,ni,pi).N = cellfun(@(x) size(x.r0,1), runInfo);
-                Info(ind,ni,pi).message = cellfun(@(x) x.message, runInfo);
+                Info(ind,ni,pp).centers = seedPoints;
+                Info(ind,ni,pp).solverTime = cellfun(@(x) x.solverTime, runInfo);
+                Info(ind,ni,pp).totalComputationTime = totalTime;
+                Info(ind,ni,pp).N = cellfun(@(x) size(x.r0,1), runInfo);
+                Info(ind,ni,pp).message = cellfun(@(x) x.message, runInfo);
             end
             
             clear runInfo
@@ -151,7 +141,7 @@ for ind = 1:n
             
             % Compute TP+FP: this is the number of seed points calculated
             % for each object
-            TPplusFP(ind, ni, pi) = size(seedPoints,1);
+            TPplusFP(ind, ni, pp) = size(seedPoints,1);
             
             
             %Number of centers difference
@@ -160,7 +150,7 @@ for ind = 1:n
 
             d(abs(d)>3) = [];
             d = d + 4;
-            dN(ind,ni,pi,:) = accumarray(d,1,[7,1],[],0);
+            dN(ind,ni,pp,:) = accumarray(d,1,[7,1],[],0);
             
             
             % Compute TP
@@ -173,7 +163,7 @@ for ind = 1:n
             
             for drNo = 1:numel(dr)
                 inRange = nnD < drs(drNo);
-                TP(ind, ni, pi, drNo) = numel(unique(nnIdx(inRange)));
+                TP(ind, ni, pp, drNo) = numel(unique(nnIdx(inRange)));
             end
         end
     end

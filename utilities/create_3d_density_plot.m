@@ -1,7 +1,7 @@
-function fig = create_3d_density_plot(n, dims, isoLvls, varargin)
+function Parent = create_3d_density_plot(n, dims, isoLvls, varargin)
 
 
-[n, dims, isoLvls, markers, color_scale, ticks, cmap] = parse_inputs(n,dims,isoLvls,varargin{:});
+[n, dims, isoLvls, markers, color_scale, ticks, ticklabels, cmap, axisPlaneOffset,Parent] = parse_inputs(n,dims,isoLvls,varargin{:});
 
 
 % Project input data to the three dimensions given -------------------
@@ -9,8 +9,10 @@ inds = find(~ismember(1:ndims(n), dims));
 for i = inds
     n = sum(n,i);
 end
+
 n = squeeze(n);
 sz = size(n);
+n = permute(n,[2,1,3]);
 
 
 
@@ -23,10 +25,13 @@ for i = length(isoLvls):-1:1
     if isempty(iso(i).vertices)
         toRemove(i) = true;
     else
+%         iso(i).vertices = iso(i).vertices(:,[2,1,3]);
         isoBounds(1,:) = min(isoBounds(1,:), min(iso(i).vertices,[],1));
         isoBounds(2,:) = max(isoBounds(2,:), max(iso(i).vertices,[],1));
     end
 end
+
+% isoBounds = isoBounds(:,[2,1,3]);
 
 if all(toRemove)
     error('create_d3_density_plot:badIsoLevels','There is no data for any of the isolevels given. Please try changing them.')
@@ -37,12 +42,10 @@ isoLvls(toRemove) = [];
 
 
 % Create the figure --------------------------------------------------
-fig = figure('color','w');
-fig.Units = 'inch';
-ax = axes('Position',[0 0 1 1],'Visible','off');
+ax = axes('Parent',Parent,'Position',[0 0 1 1],'Visible','off');
 
 % Setup the axis and plane bounds
-lim_offset = [-10; 10];
+lim_offset = axisPlaneOffset * [-1; 1];
 plane_offset = [-2; 2];
 
 plane_bounds = isoBounds + plane_offset;
@@ -52,20 +55,21 @@ ax.YLim = isoBounds(:,2) + lim_offset;% * [-1;0];
 ax.ZLim = isoBounds(:,3) + lim_offset;% * [-1;0];
 
 % Draw the axis planes
-drawAxisPlanes(plane_bounds,ticks,ax)
+drawAxisPlanes(plane_bounds,ticks,ticklabels,ax)
 
 % Draw a marker to help overlap the isosurfaces with the axis/lines when
 % putting the figure together.
 line(isoBounds(2,1)+2,isoBounds(2,2)+2,ax.ZLim(1),'marker','.','Color','k','Tag','xy','UserData','isoSurfaceMarker','Visible','off')
 
-
-
-% Plot the isosurfaces and there projects -------------------------------
+% Scale the isolevels for getting good colors (maybe)
+isoLvls = isoLvls - min(isoLvls);
+isoLvls = isoLvls/max(isoLvls);
+cols = interp1(linspace(0,1,size(cmap,1)), cmap, color_scale(isoLvls));
+% Plot the isosurfaces and their projects -------------------------------
 for i = 1:length(iso)
-    col = interp1(linspace(0,1,size(cmap,1)),cmap,color_scale(isoLvls(i)/max(isoLvls)));
 
     patch(iso(i),...
-        'FaceColor',col,...
+        'FaceColor',cols(i,:),...
         'FaceAlpha',0.3,...
         'EdgeColor','none',...
         'AmbientStrength',0.6,...
@@ -75,7 +79,7 @@ for i = 1:length(iso)
         'SpecularExponent',225,...
         'Tag','isoSurface')
     
-    plotProjection(iso(i),col,sz,ax);
+    plotProjection(iso(i),cols(i,:),sz,ax);
 end
 
 
@@ -83,10 +87,12 @@ end
 % Plot any markers given ------------------------------------------------
 if ~isempty(markers)
     for i = 1:numel(markers)
-        markers(i).dat = markers(i).dat(:,dims([2,1,3]));
-        line(markers(i).dat(:,1),markers(i).dat(:,2),markers(i).dat(:,3),markers(i).options,'Parent',ax)
-        if markers.project
-            projectMarkers(markers(i),ax);
+        if ~isempty(markers(i).dat)
+            markers(i).dat = markers(i).dat(:,dims([1,2,3]));
+            line(markers(i).dat(:,1),markers(i).dat(:,2),markers(i).dat(:,3),markers(i).options,'Parent',ax)
+            if markers(i).project
+                projectMarkers(markers(i),ax);
+            end
         end
     end
 end
@@ -103,19 +109,22 @@ for i = 1:2
 end
 lighting gouraud
 
+set(findall(ax,'UserData','contourLine'),'EdgeLighting','none')
 
 
 % Create a listener to move the planes and the projects when the object is
 % rotated ----------------------------------------------------------------
 addlistener(ax,'View','PostSet',@viewChange);
+addlistener(ax,'XDir','PostSet',@xreverseChange);
+addlistener(ax,'YDir','PostSet',@yreverseChange);
 ax.UserData.Current_State = [0 0 0 0 0];
 
 
 
 % Add axis labels (as the dimension number) ----------------------------
-text(mean(ax.XLim), ax.YLim(2), ax.ZLim(1), num2str(dims(1)),'Tag','xz_xy')
-text(ax.XLim(2), mean(ax.YLim), ax.ZLim(1), num2str(dims(2)),'Tag','yz_xy')
-text(ax.XLim(2), ax.YLim(2), mean(ax.ZLim), num2str(dims(3)),'Tag','zlbl','Rotation',90)
+text(mean(ax.XLim), ax.YLim(2), ax.ZLim(1), ['D' num2str(dims(1))],'Tag','xz_xy','UserData',[0,0.15])
+text(ax.XLim(2), mean(ax.YLim), ax.ZLim(1), ['D' num2str(dims(2))],'Tag','yz_xy','UserData',[0,0.15])
+text(ax.XLim(2), ax.YLim(2), mean(ax.ZLim), ['D' num2str(dims(3))],'Tag','zlbl','Rotation',90,'UserData',[0,0.2])
 
 
 
@@ -147,7 +156,7 @@ axis vis3d
 
 end
 
-function [n, dims, isoLvls, Markers, ColorScale, Ticks, Colormap] = parse_inputs(n,dims,isoLvls,varargin)
+function [n, dims, isoLvls, Markers, ColorScale, Ticks, TickLabels, Colormap,AxisPlaneOffset,Parent] = parse_inputs(n,dims,isoLvls,varargin)
 
 % Validate required inputs -------------------
 D = ndims(n);
@@ -167,15 +176,17 @@ if exist('brewermap','file')==2
 else
     cmap = flipud(parula(9));
 end
-if all(isoLvls<1)
+if all(isoLvls<=1)
     cmap = flipud(cmap);
 end
 
 % Setup default ticks --------------------------
 sz = size(n);
 Ticks = cell(1,3);
+TickLabels = cell(1,3);
 for i = 1:3
     Ticks{i} = 0:10:sz(i);
+    TickLabels{i} = [];
 end
 
 % Parse extra inputs ---------------------------
@@ -183,16 +194,88 @@ p = inputParser;
 p.FunctionName = 'create_3d_density_plot';
 
 addParameter(p,'Markers',[]);
-addParameter(p,'ColorScale',@(x) sqrt(x), @(t) isempty(t) || isa(t,'function_handle'));
+addParameter(p,'ColorScale',@(x) x, @(t) isempty(t) || isa(t,'function_handle'));
 addParameter(p,'Ticks',Ticks, @(t) validateattributes(t,{'cell'},{'numel',3}));
+addParameter(p,'TickLabels',TickLabels, @(t) validateattributes(t,{'cell'},{'numel',3}));
 addParameter(p,'Colormap',cmap, @(t) validateattributes(t,{'double'},{'2d','ncols',3,'real','finite','nonnegative','<=',1}));
+addParameter(p,'Parent',[], @(t) isempty(t) || isa(t,'matlab.UI.Figure') || isa(t,'matlab.ui.container.internal.UIContainer') || isa(t,'matlab.ui.container.internal.UIFlowContainer'))
+% addParameter(p,'AxisPlaneOffset',10, @(t) validateattributes(t,{'double'},{'numel',1,'real','finite','nonnegative'}))
 
 parse(p,varargin{:})
 
 Markers = p.Results.Markers;
 ColorScale = p.Results.ColorScale;
 Ticks = p.Results.Ticks;
+TickLabels = p.Results.TickLabels;
 Colormap = p.Results.Colormap;
+AxisPlaneOffset = 10;%p.Results.AxisPlaneOffset;
+Parent = p.Results.Parent;
+
+if isempty(Parent)
+    Parent = figure('color','w');
+    Parent.Units = 'inch';
+end
+end
+
+function xreverseChange(~,evt)
+ax = evt.AffectedObject;
+
+h = ax.UserData.change_with_yz;
+
+for ii = 1:numel(h)
+    switch h(ii).Type
+        case {'line','patch'}
+            currentValue = h(ii).XData(1);
+            idx = currentValue ~= ax.XLim;
+
+            h(ii).XData = ax.XLim(idx)*ones(size(h(ii).XData));
+        case 'text'
+            if ~isempty(h(ii).UserData)
+                dr = h(ii).UserData(1);
+                dr = dr*[1,-1];
+                currentValue = h(ii).Position(1);
+                idx = currentValue ~= (ax.XLim + dr);  
+                h(ii).Position(1) = ax.XLim(idx) + dr(idx);
+            else
+                currentValue = h(ii).Position(1);
+                idx = currentValue ~= ax.XLim;
+                h(ii).Position(1) = ax.XLim(idx);
+            end
+    end
+end
+
+viewChange([],evt)
+
+end
+
+function yreverseChange(~,evt)
+ax = evt.AffectedObject;
+
+h = ax.UserData.change_with_xz;
+
+for ii = 1:numel(h)
+    switch h(ii).Type
+        case {'line','patch'}
+            currentValue = h(ii).YData(1);
+            idx = currentValue ~= ax.YLim;
+            h(ii).YData = ax.YLim(idx)*ones(size(h(ii).YData));
+        case 'text'
+            if ~isempty(h(ii).UserData)
+                dr = h(ii).UserData(1);
+                dr = dr*[1,-1];
+                currentValue = h(ii).Position(2);
+                idx = currentValue ~= (ax.YLim + dr);  
+                h(ii).Position(2) = ax.YLim(idx) + dr(idx);
+            else
+                currentValue = h(ii).Position(2);
+                idx = currentValue ~= ax.YLim;
+                h(ii).Position(2) = ax.YLim(idx);
+            end
+
+    end
+end
+
+viewChange([],evt)
 
 end
 
@@ -207,14 +290,24 @@ if tmp ~= ax.UserData.Current_State(1)
 
     for ii = 1:numel(h)
         switch h(ii).Type
-            case 'line'
+            case {'line','patch'}
                 currentValue = h(ii).XData(1);
                 idx = currentValue ~= ax.XLim;
+                
                 h(ii).XData = ax.XLim(idx)*ones(size(h(ii).XData));
             case 'text'
-                currentValue = h(ii).Position(1);
-                idx = currentValue ~= ax.XLim;
-                h(ii).Position(1) = ax.XLim(idx);
+                if ~isempty(h(ii).UserData)
+                    dr = h(ii).UserData(1);
+                    dr = dr*[1,-1];
+                    currentValue = h(ii).Position(1);
+                    idx = currentValue ~= (ax.XLim + dr);  
+                    h(ii).Position(1) = ax.XLim(idx) + dr(idx);
+                else
+                    currentValue = h(ii).Position(1);
+                    idx = currentValue ~= ax.XLim;
+                    h(ii).Position(1) = ax.XLim(idx);
+                end
+                
         end
     end
 end
@@ -227,43 +320,67 @@ if tmp ~= ax.UserData.Current_State(2)
 
     for ii = 1:numel(h)
         switch h(ii).Type
-            case 'line'
+            case {'line','patch'}
                 currentValue = h(ii).YData(1);
                 idx = currentValue ~= ax.YLim;
                 h(ii).YData = ax.YLim(idx)*ones(size(h(ii).YData));
             case 'text'
-                currentValue = h(ii).Position(2);
-                idx = currentValue ~= ax.YLim;
-                h(ii).Position(2) = ax.YLim(idx);
+                if ~isempty(h(ii).UserData)
+                    dr = h(ii).UserData(1);
+                    dr = dr*[1,-1];
+                    currentValue = h(ii).Position(2);
+                    idx = currentValue ~= (ax.YLim + dr);  
+                    h(ii).Position(2) = ax.YLim(idx) + dr(idx);
+                else
+                    currentValue = h(ii).Position(2);
+                    idx = currentValue ~= ax.YLim;
+                    h(ii).Position(2) = ax.YLim(idx);
+                end
+                
         end
     end
 end
 ax.UserData.Current_State(2) = tmp; % Update value
 
-% Change with z label (every 90 degree)
+
 tmp =  [mod(abs(floor((ax.View(1))/90)),2) ~= 0, ...
         mod(abs(floor((ax.View(1))/180)),2) ~= 0];
-% if ~isequal(tmp, ax.UserData.Current_State(4:5))
-    h = ax.UserData.change_with_zlbl;
-    for ii = 1:numel(h)
-        switch h(ii).Type
-            case 'text'
-                dx = 0.1*diff(ax.XLim);
-                dy = 0.1*diff(ax.YLim);
 
-                if isequal(tmp,[0,0])
-                    h(ii).Position(1:2) = [ax.XLim(1) - dx*cosd(mod((ax.View(1)),90)), ax.YLim(1)];
-                elseif isequal(tmp,[0,1])
-                    h(ii).Position(1:2) = [ax.XLim(2) + dx*cosd(mod((ax.View(1)),90)), ax.YLim(2)];
-                elseif isequal(tmp,[1,0])
-                    h(ii).Position(1:2) = [ax.XLim(2), ax.YLim(1) - dy*cosd(mod((ax.View(1)),90))];
-                elseif isequal(tmp,[1,1])                    
-                    h(ii).Position(1:2) = [ax.XLim(1), ax.YLim(2) + dy*cosd(mod((ax.View(1)),90))];
-                end
-        end
+xlims = ax.XLim;
+xf = 1;
+if strcmp(ax.XDir,'reverse')
+    xlims = flip(xlims);
+    xf = -1;
+end
+    
+ylims = ax.YLim;
+yf = 1;
+if strcmp(ax.YDir,'reverse')
+    ylims = flip(ylims);
+    yf = -1;
+end
+
+h = ax.UserData.change_with_zlbl;
+for ii = 1:numel(h)
+    switch h(ii).Type
+        case 'text'
+            dr1 = h(ii).UserData(2);
+            dr2 = h(ii).UserData(1);
+            dx = dr1*diff(ax.XLim);
+            dy = dr1*diff(ax.YLim);
+
+            if isequal(tmp,[0,0])
+                h(ii).Position(1:2) = [xlims(1) - xf*dx*cosd(mod((ax.View(1)),90)), ylims(1) + yf*dr2];
+            elseif isequal(tmp,[0,1])
+                h(ii).Position(1:2) = [xlims(2) + xf*dx*cosd(mod((ax.View(1)),90)), ylims(2) - yf*dr2];
+            elseif isequal(tmp,[1,0])
+                h(ii).Position(1:2) = [xlims(2) - xf*dr2, ylims(1) - yf*dy*cosd(mod((ax.View(1)),90))];
+            elseif isequal(tmp,[1,1])                    
+                h(ii).Position(1:2) = [xlims(1) + xf*dr2, ylims(2) + yf*dy*cosd(mod((ax.View(1)),90))];
+            end
     end
-% end
-% ax.UserData.Current_State(4:5) = tmp;
+end
+
 
 % XY axis plane
 tmp = ax.View(2) <= 0;
@@ -272,7 +389,7 @@ if tmp ~= ax.UserData.Current_State(3)
 
     for ii = 1:numel(h)
         switch h(ii).Type
-            case 'line'
+            case {'line','patch'}
                 h(ii).ZData = ax.ZLim(tmp+1)*ones(size(h(ii).YData));
             case 'text'
                 h(ii).Position(3) = ax.ZLim(tmp+1);
@@ -286,13 +403,18 @@ tmp = ax.View(2) <= 0;
 ang = (1-min(1,abs(ax.View(2)/30)))*sign(ax.View(2));
 for ii = 1:numel(h)
     if strcmp(h(ii).Type,'text')
-        h(ii).Position(3) = ax.ZLim(tmp+1) - ang*0.05*diff(ax.ZLim);
+        if ~isempty(h(ii).UserData)
+            dr = h(ii).UserData(2);
+        else
+            dr = 0.05;
+        end
+        h(ii).Position(3) = ax.ZLim(tmp+1) - ang*dr*diff(ax.ZLim);
     end
 end
 
 end
 
-function drawAxisPlanes(bnds,ticks,ax)
+function drawAxisPlanes(bnds,ticks,ticklabels,ax)
 
 s = [0 0;
     0 1;
@@ -300,73 +422,87 @@ s = [0 0;
     1 0;
     0 0];
 
-for i = 1:3
-    ticks{i}(ticks{i}==0) = [];
+for i = 3:-1:1
+    if isempty(ticklabels{i})
+        tks{i} = ticks{i};
+    else
+        tks{i} = ticklabels{i};
+    end
+    if all(tks{i} == round(tks{i}))
+        fmt{i} = '%2.0f';
+    else
+        fmt{i} = '%2.1f';
+    end
+    if i~=3
+        fmt{i}(2)='0';
+    end
 end
 
 for dims = 1:3
     
     switch dims
         case 1
+            dx = diff(bnds(:,1));
             dz = diff(bnds(:,3));
             z = s(:,1)*dz + min(bnds(:,3));
-            
-            dx = diff(bnds(:,1));
             x = s(:,2)*dx + min(bnds(:,1));
-            
             y = ax.YLim(1)*ones(size(x));
+            
             tag = 'xz';
-            for i = 1:numel(ticks{3})
+            
                 
-                if ticks{3}(i) + min(bnds(:,3)) < max(bnds(:,3))
+            for i = 1:numel(ticks{3})
+                if ticks{3}(i) < max(bnds(:,3)) && ticks{3}(i) > min(bnds(:,3))
                     tx = bnds(:,1);
                     ty = ax.YLim(1)*[1;1];
-                    tz = ticks{3}(i)*[1;1] + min(bnds(:,3));
+                    tz = ticks{3}(i)*[1;1];
                     
                     line(tx, ty, tz,'Color',0.8*[1 1 1],'LineWidth',0.5,'Tag',tag)
-                    %                     line(max(bnds(:,1))+[0;1], ty, tz,'Color',0*[1 1 1],'LineWidth',1)
+                    % line(max(bnds(:,1))+[0;1], ty, tz,'Color',0*[1 1 1],'LineWidth',1)
+                    
+                    tcklbl = sprintf(fmt{3},tks{3}(i));
+                    text(tx(1),ty(1),ticks{3}(i),tcklbl,'Tag','zlbl','UserData',[4,0.1])
                 end
             end
             for i = 1:numel(ticks{1})
-                if ticks{1}(i) + min(bnds(:,1)) < max(bnds(:,1))
+                if ticks{1}(i) < max(bnds(:,1)) && ticks{1}(i) > min(bnds(:,1))
                     tz = bnds(:,3);
                     ty = ax.YLim(1)*[1;1];
-                    tx = ticks{1}(i)*[1;1] + min(bnds(:,1));
+                    tx = ticks{1}(i)*[1;1];
                     
                     line(tx, ty, tz,'Color',0.8*[1 1 1],'LineWidth',0.5,'Tag',tag)
-                    %                     line(tx, ty, max(bnds(:,3))+[0;1],'Color',0*[1 1 1],'LineWidth',1)
+                    % line(tx, ty, max(bnds(:,3))+[0;1],'Color',0*[1 1 1],'LineWidth',1)
                 end
             end
             
         case 2
             
+            dy = diff(bnds(:,2));
             dz = diff(bnds(:,3));
             z = s(:,1)*dz + min(bnds(:,3));
-            
-            dy = diff(bnds(:,2));
             y = s(:,2)*dy + min(bnds(:,2));
+            x = ax.XLim(1)*ones(size(y));            
             
-            x = ax.XLim(1)*ones(size(y));
             tag = 'yz';
             for i = 1:numel(ticks{3})
                 
-                if ticks{3}(i) + min(bnds(:,3)) < max(bnds(:,3))-1
+                if ticks{3}(i) < max(bnds(:,3)) && ticks{3}(i) > min(bnds(:,3))
                     ty = bnds(:,2);
                     tx = ax.XLim(1)*[1;1];
-                    tz = ticks{3}(i)*[1;1] + min(bnds(:,3));
+                    tz = ticks{3}(i)*[1;1];
                     
                     line(tx, ty, tz,'Color',0.8*[1 1 1],'LineWidth',0.5,'Tag',tag)
-                    %                     line(tx, max(bnds(:,2))+[0;1], tz,'Color',0*[1 1 1],'LineWidth',1)
+                    % line(tx, max(bnds(:,2))+[0;1], tz,'Color',0*[1 1 1],'LineWidth',1)
                 end
             end
             for i = 1:numel(ticks{2})
-                if ticks{2}(i) + min(bnds(:,2)) < max(bnds(:,2))-1
+                if ticks{2}(i) < max(bnds(:,2)) && ticks{2}(i) > min(bnds(:,2))
                     tz = bnds(:,3);
                     tx = ax.XLim(1)*[1;1];
-                    ty = ticks{2}(i)*[1;1] + min(bnds(:,2));
+                    ty = ticks{2}(i)*[1;1];
                     
                     line(tx, ty, tz,'Color',0.8*[1 1 1],'LineWidth',0.5,'Tag',tag)
-                    %                     line(tx, max(bnds(:,2))+[0;1], tz,'Color',0*[1 1 1],'LineWidth',1)
+                    % line(tx, max(bnds(:,2))+[0;1], tz,'Color',0*[1 1 1],'LineWidth',1)
                 end
             end
             
@@ -382,23 +518,27 @@ for dims = 1:3
             tag = 'xy';
             for i = 1:numel(ticks{1})
                 
-                if (ticks{1}(i) + min(bnds(:,1))) < (max(bnds(:,1)))
+                if ticks{1}(i) < max(bnds(:,1)) && ticks{1}(i) > min(bnds(:,1))
                     ty = bnds(:,2);
                     tz = ax.ZLim(1)*[1;1];
-                    tx = ticks{1}(i)*[1;1] + min(bnds(:,1));
+                    tx = ticks{1}(i)*[1;1];
                     
                     line(tx, ty, tz,'Color',0.8*[1 1 1],'LineWidth',0.5,'Tag',tag)
-                    %                     line(tx, max(bnds(:,2))+[0;1], tz,'Color',0*[1 1 1],'LineWidth',1)
+                    % line(tx, max(bnds(:,2))+[0;1], tz,'Color',0*[1 1 1],'LineWidth',1)
+                    tcklbl = sprintf(fmt{1},tks{1}(i));
+                    text(tx(1),ax.YLim(2)-5,tz(1),tcklbl,'Tag','xz_xy','UserData',[5,0.05],'HorizontalAlignment','center')
                 end
             end
             for i = 1:numel(ticks{2})   
-                if (ticks{2}(i) + min(bnds(:,2))) < (max(bnds(:,2)))
+                if ticks{2}(i) < max(bnds(:,2)) && ticks{2}(i) > min(bnds(:,2))
                     tx = bnds(:,1);
                     tz = ax.ZLim(1)*[1;1];
-                    ty = ticks{2}(i)*[1;1] + min(bnds(:,2));
+                    ty = ticks{2}(i)*[1;1];
                     
                     line(tx, ty, tz,'Color',0.8*[1 1 1],'LineWidth',0.5,'Tag',tag)
-                    %                     line(max(bnds(:,1))+[0;1], ty, tz,'Color',0*[1 1 1],'LineWidth',1)
+                    % line(max(bnds(:,1))+[0;1], ty, tz,'Color',0*[1 1 1],'LineWidth',1)
+                    tcklbl = sprintf(fmt{2},tks{2}(i));
+                    text(ax.XLim(2)-5,ty(1),tz(1),tcklbl,'Tag','yz_xy','UserData',[5,0.05],'HorizontalAlignment','center')
                 end
             end
     end
@@ -415,10 +555,11 @@ function plotProjection(fv,col,sz,ax)
 v = round(fv.vertices);
 
 for ind = 1:3
-    
+
     inds = find(~ismember(1:3, ind));
-    
+
     tmp = zeros(sz(inds));
+
     tmp(v(:,inds(1)) + (v(:,inds(2))-1)*sz(inds(1))) = 1;
     
     cntrs = bwboundaries(tmp);
@@ -456,7 +597,8 @@ for ind = 1:3
                 z = ax.ZLim(1)*ones(size(x));
                 tag = 'xy';
         end
-        line(x,y,z,'Color',col,'LineWidth',2,'Tag',tag,'Parent',ax,'UserData','contourLine')
+        patch('XData',x,'YData',y,'ZData',z,'FaceColor','none','EdgeColor',col,'Tag',tag,'Parent',ax,'UserData','contourLine','LineWidth',2,'EdgeLighting','none','FaceLighting','none')
+%         line(x,y,z,'Color',col,'LineWidth',2,'Tag',tag,'Parent',ax,'UserData','contourLine')
     end
 end
 end

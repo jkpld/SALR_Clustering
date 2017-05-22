@@ -31,9 +31,10 @@ try
     R0_MAXV = options.Maximum_Initial_Potential;
     R0_MINV = options.Minimum_Initial_Potential;
     POINT_SELECTION_METHOD = options.Point_Selection_Method;
-
-    % Create full confining potential ---------------------------------------
-    [V, scaleFactor, overlapFactor] = create_scaleInvar_confining_potential(BW, options);
+    
+    
+    % Create confining potential ---------------------------------------
+    [V, scaleFactor, overlapFactor] = create_scaleInvar_confining_potential(BW, options); %#ok<ASGLU>
     options.Scale_Factor = scaleFactor;
 
     % At this point you could use the overlapFactor, the 3rd output of
@@ -43,13 +44,23 @@ try
     if ~isempty(M)
         V = V .* M; % Add in any modifier
     end
+    
+    % Compute scale factors ----------------------------------------------
+    [grid_spacing, grid_to_solver] = computeScaleFactors(options, size(V)-1);
+    solver_to_data = @(x) (x./grid_to_solver - PAD_SIZE);
 
-    % Get initial particle locations ----------------------------------------
+    
+    % Compute confining force --------------------------------------------
+    dV = confiningForce(V, grid_spacing, grid_to_solver, options);
+
+    
+    % Get initial particle locations -------------------------------------
     initPointOptions.rs = options.Wigner_Seitz_Radius;
     initPointOptions.r0set = r0set;
 
-    % Don't let the particles start with too high a potential energy.
-    allowed_r0_mask = ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) < R0_MAXV ) & ( V(PAD_SIZE+1:end-PAD_SIZE, PAD_SIZE+1:end-PAD_SIZE) > R0_MINV ); % & imerode(BW,strel('disk',3));
+    % Don't let the particles start with too high or too low a potential
+    % energy.
+    allowed_r0_mask = removePadding( (V < R0_MAXV) & (V > R0_MINV),  PAD_SIZE);
 
     if ~any(allowed_r0_mask(:))
         if ~any(BW)
@@ -65,32 +76,37 @@ try
         [r0, ComputeInitialPointsInfo] = computeInitialPoints(POINT_SELECTION_METHOD, allowed_r0_mask, initPointOptions); % Note the points r0 do not consider the mask padding.
     else
         r0 = computeInitialPoints(POINT_SELECTION_METHOD, allowed_r0_mask, initPointOptions); % Note the points r0 do not consider the mask padding.
-    end % if
-
-    % If there was only one initial particle, then we do not symulate it,
+    end 
+    size(r0)
+    % If there was only one initial particle, then we will not simulate it,
     % we will just return the centroid of the object
     if size(r0,1) < 2
         [seedPoints,Info] = computeCentroid(BW,DEBUG,2);%'lessThan_2_initial_particles');
         if DEBUG
             Info.ComputeInitialPoints = ComputeInitialPointsInfo;
-        end % if
+        end 
         return;
-    end % if
+    end 
 
+    % Convert initial positions to solver space
+    r0 = (r0 + PAD_SIZE) .* grid_to_solver;
+    
+    
+    % Model dynamics -----------------------------------------------------
     if DEBUG
-        [r_final, Info] = modelParticleDynamics(V, r0, options);
+        [r_final, Info] = modelParticleDynamics(dV, r0, options); % r_final is in solver space
 
-        Info.r0 = r0;
-        Info.r_final = r_final;
+        Info.r0 = solver_to_data(r0);
+        Info.r_final = solver_to_data(r_final);
         Info.V = V;
         Info.ComputeInitialPoints = ComputeInitialPointsInfo;
         Info.message = 0;%'';
     else
-        r_final = modelParticleDynamics(V, r0, options);
-    end % if
+        r_final = modelParticleDynamics(dV, r0, options);
+    end 
 
     seedPoints = extractClusterCenters(r_final, options);
-
+    seedPoints = solver_to_data(seedPoints);
 catch ME
     % It can be somtimes that there is an error due to a particle flying out of the image region, or something that rarely (hopefully) happens; therefore, we will try to run the function again. If there is an error a second time, then we issue a warning, save the error, and continue on to the next object.
     if errorCount < 1
@@ -108,11 +124,10 @@ catch ME
         fprintf('\nWarning! There was an error in object %d. Full error report stored in Info{%d}.error\n', objNumber, objNumber)
         fprintf(2,'%s\n', getReport(Info.error,'basic'))
         fprintf('\n')
-    end % if
-end % try/catch
+    end 
+end 
 
-end % function
-
+end 
 
 function [seedPoint, Info] = computeCentroid(BW,DEBUG,reason)
 [i,j] = find(BW);
@@ -124,5 +139,5 @@ if DEBUG
     Info.V = [];
     Info.solverTime = NaN;
     Info.message = reason;
-end % if
-end % function
+end 
+end 

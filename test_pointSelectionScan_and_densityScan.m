@@ -8,47 +8,33 @@ results_pth = @(n) [pth 'exampleImages\markedCenters_LD' n 'P24'];
 
 % Initialize options ----------------------------------------------------
 
-WIGNER_SEITZ_RADIUS = 5;
-MINIMUM_HOLE_SIZE = 15;
-
 options = seedPointOptions();
-options.Wigner_Seitz_Radius         = 5;
-options.Potential_Depth             = -1;
-options.Potential_Minimum_Location  = 2;
-options.Potential_Extent            = 13;
-options.Potential_Scale             = 18;
-options.Minimum_Hole_Size           = 15;
-options.Initial_Speed               = 0.01;
 options.Maximum_Initial_Potential   = 1/5;
-options.Point_Selection_Method      = 'r0set_uniformRandom';
-
 options.Use_GPU                     = true;
 options.Use_Parallel                = true;
 options.Debug                       = true;
+
+POTENTIAL_DEPTH = -1;
+POTENTIAL_MINIMUM_LOCATION = 2;
+MINIMUM_HOLE_SIZE = 15;
 
 % Set up test parameters ------------------------------------------------
 names = {'2','3','4','5','67'};
 n = numel(names);
 dr = 3:10; 
-N = 20; % number of iterations
+N = 1; % number of iterations
 
 % Generate grid of scan points.
-% rs = num2cell([2.5, 5:5:20]);
-% params = {  5,  'r0set_uniformRandom',  true, 13, 18};
-% params = repmat(params, numel(rs), 1);
-% [params{:,1}] = deal(rs{:});
-% 
-% params = [params; 
-%           {5, 'r0set_uniformRandom', false, 13, 18};
-%           {5, 'uniformRandom', true, 13, 18};
-%           {5, 'r0set_uniformRandom', true, 14, NaN}];
+rs = num2cell([2.5, 5:5:20]);
+params = {5,  'r0set_uniformRandom',  true, 13, 18}; % { r_s, point selection method, useConvexHull, attractive extent, max distance transform}
+params = repmat(params, numel(rs), 1);
+[params{:,1}] = deal(rs{:});
 
-% rs = num2cell([3,4]);
-params = {  5,  'random',  true, 13, 18};
-% params = repmat(params, numel(rs), 1);
-% [params{:,1}] = deal(rs{:});
-      
-% params = {5, 'r0set_uniformRandom', true, 13, 18};
+params = [params; 
+          {5, 'r0set_uniformRandom', false, 13, 18};
+          {5, 'uniformRandom', true, 13, 18};
+          {5, 'r0set_uniformRandom', true, 14, NaN}];
+
 
 scale = 1;
 
@@ -60,7 +46,6 @@ dN = zeros(n,N,size(params,1),7);
 
 Info = struct('centers',[],'solverTime',[],'totalComputationTime',NaN,'N',NaN,'message',[]);
 Info(n,N,size(params,1)).totalComputationTime = NaN;
-% Info = cell(484,1);
 
 % Compute results -------------------------------------------------------
 
@@ -92,8 +77,9 @@ for ind = 1:n
             options.Use_Parallel = true;
         end
         
-        options.Potential_Extent = params{pp,4};
-        options.Potential_Scale  = params{pp,5};
+        options.Potential_Parameters = [POTENTIAL_DEPTH, POTENTIAL_MINIMUM_LOCATION, params{pp,4}];
+        options.ScaleInvarient_Potential_Extent = params{pp,4};
+        options.Max_Distance_Transform  = params{pp,5};
         
         options.Point_Selection_Method = params{pp,2};
         options.Use_ConvexHull = params{pp,3};
@@ -114,10 +100,10 @@ for ind = 1:n
             [seedPoints, runInfo] = computeNucleiCenters_distTransform(I,BWs,options);
             totalTime = toc(start);
 
-            % If we are scaling the objects, then the number of objects can
-            % change due to objects joining or seperating. We need all of
-            % the object numbers to correspond to the original objects;
-            % thus, for each seed point we compute what object is is in.
+            % If scaling the objects, then the number of objects can change
+            % due to objects joining or seperating. We need all of the
+            % object numbers to correspond to the original objects; thus,
+            % for each seed point we compute what object it is in.
             if scale ~= 1
                 seedPoints(:,3) = interp2mex(L,seedPoints(:,2)/scale,seedPoints(:,1)/scale);
                 seedPoints(:,3) = ceil(seedPoints(:,3));
@@ -165,7 +151,7 @@ for ind = 1:n
     end
 end
 
-save([pth 'resultsInfo_random_' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'Info','options')
+% save([pth 'resultsInfo_random_' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'Info','options')
 
 % Analyze and save results ----------------------------------------------
 % Results for each individual image
@@ -206,4 +192,6 @@ results.dims = dims;
 results.notes = 'History_Size = 5; no speed limit; converge @ 2e-3; commit e3ee7460cc13dd1c21b54396c45b0746fa33e4d4 (Tue Feb 7 21:24:22 2017 -0500)';
 results.options = options;
 results
-save([pth 'results_random_' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'results')
+squeeze(results.F1)'
+squeeze(mean(results.dN,1))'/484
+% save([pth 'results_random_' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'results')

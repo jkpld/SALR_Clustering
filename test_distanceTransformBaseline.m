@@ -1,5 +1,5 @@
-%% Base line : distance transform -> regionalmax -> mean-shift
-% Compare results of new method with base line distance transform. Since
+%% Baseline : distance transform -> smooth -> regionalmax -> centroid
+% Compare results of new method with baseline distance transform. Since
 % the new method uses the distance transform, I want to see if the new
 % method is good, or if the distance transform is good.
 
@@ -35,9 +35,6 @@ for ind = 1:n
 
     D = bwdist(~BW);
     D = imfilter(D,fspecial('gaussian',7,1));
-%     D = imopen(D,strel('disk',2));
-%     D = imdilate(D,ones(3));
-%     M = (imdilate(D,ones(3)) == imdilate(D,ones(5))) & BW;
     M = imregionalmax(D);
     props = regionprops(M,'Centroid');
     seedPoints = cat(1,props.Centroid);
@@ -46,42 +43,25 @@ for ind = 1:n
     TPplusFP(ind) = size(seedPoints,1);
     
     %Number of centers difference
-            numCents = accumarray(objNum,1,[max(objNumbers),1],[],0);
-            d = numCents(objNumbers) - correctNumCents(objNumbers);
+    numCents = accumarray(objNum,1,[max(objNumbers),1],[],0);
+    d = numCents(objNumbers) - correctNumCents(objNumbers);
 
-            d(abs(d)>3) = [];
-            d = d + 4;
-            dN(ind,:) = accumarray(d,1,[7,1],[],0);
+    d(abs(d)>3) = [];
+    d = d + 4;
+    dN(ind,:) = accumarray(d,1,[7,1],[],0);
     
     % Compute TP
-            [nnIdx,nnD] = knnsearch(NS,seedPoints);
-            
-            toRemove = nnD >= dr(end);
-            nnD(toRemove) = [];
-            nnIdx(toRemove) = [];
-            objNum(toRemove) = [];
-            
-            for drNo = 1:numel(dr)
-                inRange = nnD < dr(drNo);
-                TP(ind, drNo) = numel(unique(nnIdx(inRange)));
-            end
+    [nnIdx,nnD] = knnsearch(NS,seedPoints);
 
-            
-    
-%     for drNo = 1:numel(dr)
-%         idx = rangesearch(NS,seedPoints,dr(drNo));
-%         TP(ind,drNo) = numel(unique(cat(2,idx{:})));
-%     end
-% 
-    
-% 
-%     %Number of centers difference
-%     numCents = accumarray(objNum,1,[max(objNumbers),1],[],0);
-%     d = numCents(objNumbers) - correctNumCents(objNumbers);
-% 
-%     d(abs(d)>3) = [];
-%     d = d+ 4;
-%     dN(ind,:) = accumarray(d,1,[7,1],[],0);
+    toRemove = nnD >= dr(end);
+    nnD(toRemove) = [];
+    nnIdx(toRemove) = [];
+    objNum(toRemove) = [];
+
+    for drNo = 1:numel(dr)
+        inRange = nnD < dr(drNo);
+        TP(ind, drNo) = numel(unique(nnIdx(inRange)));
+    end
 end
 
 Pnn = TP./TPplusFP;
