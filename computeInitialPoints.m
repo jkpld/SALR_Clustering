@@ -1,26 +1,28 @@
-function [r0,Info] = computeInitialPoints(method,BW,options)
+function [r0,Info] = computeInitialPoints(BW,method,rs,r0set,iterations)
 % COMPUTEINITIALPOINTS  Generate a set of initial particle locations for
 % modeling.
 %
-% [r0,Info] = computeInitialPoints(method, BW, options)
+% This function is polymorphic in the dimension of the data. If the data is
+% 2D, then one set of starting positions are returned and more advanced
+% methods of distribution the particles can be used. If the data is N-D,
+% then many sets of starting positions are returned (iterations), but only
+% simple methods for distributing the particles can be used. (An
+% explanation for these difference can be seen below.)
 %
-% Create a set of initial positions r0, using METHOD, from a binary mask BW
-% or a set of initial possible positions (see below). OPTIONS should be a
-% structure that gives additional information. Each option should be a
-% field with the required value. There is one required option for all
-% methods, and some methods have additional required options.
+% If the data is 2D (ndims(BW)==2):
 %
-% All initial points returned will be located inside of the binary mask.
+% [r0,Info] = computeInitialPoints(BW, method, rs, r0set)
+%
+% Compute the particles initial starting locations.
 %
 % Input parameters:
-% method - The method used to compute the initial points (see below).
 % BW - A binary mask of a single object
-% options - A structure with additional parameters (see below).
-%
-% Required option:
+% method - The method used to compute the initial points (see below).
 % rs - Wigner-Seitz radius giving the effective radius of a particle. This
 %      will be used to calculate grid sizes and/or the number of
 %      particles.
+% r0set - An array of possible initial positions. This is required if
+%         method is 'r0set_random' or 'r0set_uniformRandom'.
 %
 % Available methods:
 % 'random' - Select N random locations from the binary mask where N is the
@@ -43,13 +45,6 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 %                         2*rs. In each hexagon, choose one random position
 %                         from the set of possible initial positions
 %
-% Additional requierd options for each method:
-% There are no additional required options for 'random' or 'uniform'. For
-% both 'r0set_random' and 'r0set_uniformRandom' there is one
-% additional required options
-%
-% r0set - An array of possible initial positions.
-%
 % Output parameters:
 % r0 - Nx2 array with the initial N particle locations.
 % Info - A structure array giving information that may be off help when
@@ -62,7 +57,7 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 %
 %           r0setHexData - A structure with fields X, Y, Z with the
 %           data returned from using decimateData on the curvature centers
-%           returned by getCurvatureAndShapeMarkers. This field is only
+%           returned by getCurvatureAndCenters. This field is only
 %           returned if the method is 'r0set_uniformRandom'.
 %
 % Notes:
@@ -77,25 +72,81 @@ function [r0,Info] = computeInitialPoints(method,BW,options)
 % * If the binary mask area is smaller than the effective particle area,
 % then one point will still be output.
 %
+% * All initial points returned will be located inside of the binary mask.
+%
+%
+% If the data is N-D (ndims(BW)~=2):
+%
+% r0_set = computeInitialPoints_nd(BW, method, rs, N)
+%
+% Compute N sets of initial starting positions.
+%
+% Input parameters:
+% BW - A binary mask of a single object
+% method - The method used to compute the initial points. Available
+%   methods for N-D data are 'random', 'uniform', and 'uniformRandom' (see
+%   above).
+% rs - Wigner-Seitz radius giving the effective radius of a particle. This
+%      will be used to calculate grid sizes and/or the number of
+%      particles.
+% N - The number of sets of initial values to compute.
+%
+% Output parameters:
+% r0set - 1xN cell array where each element is a set of possible starting
+%   positions.
+%
+%
+%
+% Reason for differences in data dimension:
+% If the data is 2-D, then likely we are working on images with many
+% objects to simulate, so we only simulate each object once (for speed),
+% and we want the starting locations to be closer to expected locations
+% (which is why we can use an r0set.).
+% If the data is N-D, then an initial possible set of points (r0set) is
+% likely quite difficult to compute, so we run many iterations of the
+% simulation and then combine the iterations to get stable results.
+%
+%
 % See also DECIMATEDATA COMPUTEBOUNDARYINFORMATION
 
 % JamesKapaldo
 % 2016-10-10
 
-
-% There must be an option giving the Wigner-Seitz radius of each particle
-if ~isfield(options,'rs')
-    error('getInitialPoints:missingInput','You must have a field named "rs" in OPTIONS that gives the Wigner-Seitz radius of each particle (if the particle where a sphere/circle this would be its radius).')
+if nargin < 5
+    iterations = 1;
+end
+if nargin < 4
+    r0set = [];
 end
 
-% Get rs.
-rs = options.rs;
+if ismatrix(BW) == 2
+    if nargout > 1
+        [r0, Info] = computeInitialPoints_2d(BW,method,rs,r0set);
+    else
+        r0 = computeInitialPoints_2d(BW,method,rs,r0set);
+    end
+else
+    if nargout > 1
+        Info = [];
+    end
+    r0 = computeInitialPoints_nd(BW,method,rs,iterations);
+end
+
+end
+
+
+function [r0, Info] = computeInitialPoints_2d(BW,method,rs,r0set)
+% There must be an option giving the Wigner-Seitz radius of each particle
+if nargin < 4
+    r0set = [];
+end
 
 % Compute effective area of particle.
 A = pi*rs^2;
 
 % Get size of image.
 imSize = size(BW);
+
 
 % Initialize givenMethodFailed if Info is requested.
 if nargout > 1
@@ -122,8 +173,8 @@ end
 
 if any(strcmp(method,{'r0set_random','r0set_uniformRandom'}))
     % There must be an option giving the set of initial possible positions
-    if ~isfield(options,'r0set')
-        error('getInitialPoints:missingInput','You must have a field named "r0set" in OPTIONS that curvature centers.')
+    if isempty(r0set)
+        error('getInitialPoints:missingInput','You must have a non-empty set of initial points, r0set, to use r0set_random or r0set_uniformRandom.')
     end
 
     markers = options.r0set;
@@ -319,7 +370,80 @@ if nargout > 1
 end
 
 end
+
+
 % computeInitialPoints : changeLog
 % 2016-11-2 : added in uniformRandom method
 % 2017-01-20 : renamed options and removed the eroding and potential limit
 % of the mask
+
+function r0_set = computeInitialPoints_nd(BW, method, rs, N)
+
+
+if nargin < 3
+    N = 1;
+end
+sz = size(BW);
+D = length(sz);
+
+% The lattice constant is the volume of a D-dimension ball to the (1/D)
+% power:
+a = pi^(1/2)/gamma(D/2+1)^(1/D) * rs;
+
+switch method
+
+    case 'random'
+        idx = find(BW);
+
+        M = round(numel(idx)/a^D); % Number of particles to use
+
+        r0_set = cell(1,N);
+        for i = 1:N
+            r0_set_i = cell(1,D);
+            idx = idx(randperm(size(idx,1),M));
+            [r0_set_i{:}] = ind2sub(sz,idx);
+            r0_set{i} = cat(2,r0_set_i{:});
+        end
+
+    case 'uniform'
+        r0_set = cell(1,D);
+
+        for i = 1:D
+            r0_set{i} = 1:a:sz(i);
+        end
+
+        [r0_set{:}] = ndgrid(r0_set{:});
+        r0_set = cellfun(@(x) x(:), r0_set,'UniformOutput',false);
+
+        ind = sub2ind(sz,round(r0_set{:}));
+        remove = BW(ind) == 0;
+
+        r0_set = cat(2,r0_set{:});
+        r0_set(remove,:) = [];
+        r0_set = repmat({r0_set},1,N);
+
+    case 'uniformRandom'
+
+        idx = find(BW);
+        locs = cell(1,D);
+        [locs{:}] = ind2sub(sz,idx);
+
+        bin = zeros(numel(idx),D,'int8');
+        for i = D:-1:1
+            edges = 0 : a : (sz(i)+a);
+            bin(:,i) = discretize(locs{i},edges);
+        end
+
+        locs = cat(2,locs{:});
+
+        r0_set = cell(1,N);
+        for i = 1:N
+            r0_set_idx = accumarray(bin(all(bin>0,2),:), (1:numel(idx))', [], @(x) x(randi(numel(x),1)), 0);
+            r0_set_idx = r0_set_idx(logical(r0_set_idx));
+            r0_set{i} = locs(r0_set_idx,:);
+        end
+    otherwise
+        error('compute_seedPoints_nd:notValidSelectionMethod','The point selection method, %s, is either unknown or has not been programed from N-D data. Valid options are ''random'', ''uniform'', and ''uniformRandom''.',options.Point_Selection_Method)
+end
+
+end
