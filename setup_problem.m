@@ -1,4 +1,40 @@
 function [dV, r0, problem_scales, Info] = setup_problem(binned_data, data_range, options, r0set)
+% SETUP_PROBLEM Generate the confining force, the initial particle
+% locations, and the scaling factors for the simulation.
+%
+% [dV, r0, problem_scales] = setup_problem(binned_data, data_range, options)
+% [dV, r0, problem_scales] = setup_problem(binned_data, data_range, options, r0set)
+% [dV, r0, problem_scales, Info] = setup_problem(binned_data, data_range, options, ...)
+%
+% Input parameters:
+% binned_data : Binned data to be used for forming the confining potential
+% data_range : 1xD array giving the range of the actual data along each
+%   dimension. Alternatively data_range can be empty, in which case the
+%   size of each bin is assumed to be 1.
+% options : An instance of class seedPointOptions.
+% r0set : (optional) A NxD array giving a set of possible initial
+%   positions *in data space*. This is required if
+%   options.Point_Selection_Method is 'r0set_random' or
+%   'r0set_uniformRandom'.
+%
+% Output parameters:
+% dV : Function handle taking in an NxD array of locations and outputing
+%   the potential gradient (also an NxD array) at those locations.
+% r0 : A cell array (of length options.Iterations) where each element
+%   containts the initial positions to be used for the simulation.
+% problem_scales : A structure with fields grid_spacing and grid_to_solver
+%   giving the size of each bin in data units and the scale factor to go
+%   from the grid to the solver space.
+% Info : A structure array of information that may be useful when debuging.
+%   If options.Debug is false, then Info will be empty; otherwise, it will
+%   have the following fields
+%       V : the confining potential
+%       ComputeInitialPointsInfo : A structure containing the debug
+%           information from the computeInitialPoints() function.
+%
+% See also COMPUTEPROBLEMSCALES COMPUTEINITIALPOINTS
+
+% James Kapaldo
 
 if nargin < 4
     r0set = [];
@@ -39,7 +75,7 @@ BW = (V < options.Maximum_Initial_Potential) & (V > options.Minimum_Initial_Pote
 
 if DEBUG
     Info.V = V;
-    Info.ComputeInitialPoints = InitPointsInfo;
+    Info.ComputeInitialPointsInfo = InitPointsInfo;
 end
 
 end
@@ -49,6 +85,7 @@ function problem_scales = scale_object_for_distance_transform(problem_scales, sc
 
 dg = problem_scales.grid_spacing;
 gts = problem_scales.grid_to_solver;
+D = numel(dg);
 
 % Check data and grid aspect ratios
 mdg = mean(dg);
