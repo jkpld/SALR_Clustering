@@ -84,7 +84,7 @@ function [r0,Info] = computeInitialPoints(BW,options,varargin)
 
 % James Kapaldo
 
-[sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cellarray] = parse_inputs(BW, options, varargin{:});
+[sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cellarray] = prepare_inputs(BW, options, varargin{:});
 R = options.Iterations;
 debug = options.Debug;
 Info = [];
@@ -150,7 +150,7 @@ end
 
 end
 
-function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cellarray] = parse_inputs(BW, options, varargin)
+function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cellarray] = prepare_inputs(BW, options, varargin)
 
     sz = size(BW);
     D = numel(sz);
@@ -227,8 +227,25 @@ function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cel
             ['No initial set of points was given, but the point selection',...
             ' method requires a set of initial points.'])
     end
+
+    if ~isempty(r0set)
+        % Convert the r0set from data space to grid space.
+        r0set = (r0set ./ problem_scales.grid_spacing) + options.Potential_Padding_Size;
+
+        % Remove all points not in the mask;
+        r0set(interpolateMask(BW,r0set)<0.5,:) = [];
+    end
 end
 
+function BWi = interpolateMask(BW,r)
+sz = size(BW);
+for i = numel(sz):-1:1
+    dx{i} = (1:sz(i));
+end
+
+BWi = griddedInterpolant(dx,single(BW));
+BWi = BWi(r);
+end
 
 % function r0_set = random(BW, N, repetitions)
 %

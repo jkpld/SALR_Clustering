@@ -20,8 +20,8 @@ function [seedPoints, Info] = computeObjectSeedPoints(BW, M, r0set, useCentroid,
 %           r0 : initial points used in simulation
 %           r_final : final location of simulated points
 %           V : confining potential
-%           ComputeInitialPoints : structure of initial points information,
-%               see computeInitialPoints()
+%           ComputeInitialPointsInfo : structure of initial points
+%               information, see computeInitialPoints()
 %           message : integer giving an exit code
 %               0, everything is fine
 %               1, object is convex or too small (the center of the object
@@ -63,10 +63,7 @@ try
     if ~isempty(M)
         options.Potential_Modifier = @(V) V .* M;
     end
-
-    % Pad initial positions
-    r0set = r0set + PAD_SIZE;
-
+    
     % Compute confining force, initial points, and problem scales.
     [dV, r0, problem_scales, SetupInfo] = setup_problem(BW, [], options, r0set);
     solver_to_data = @(x) (x./problem_scales.grid_to_solver - PAD_SIZE);
@@ -87,7 +84,7 @@ try
             [seedPoints_n{n}, clstSz] = extractClusterCenters(r, options);
 
             Info.simulationInfo{n} = simInfo;
-            Info.r0{n} = solver_to_data(r0);
+            Info.r0{n} = solver_to_data(r0{n});
             Info.r_final{n} = solver_to_data(r);
             Info.seedPoints_n{n} = solver_to_data(seedPoints_n{n});
             Info.cluster_sizes_n{n} = clstSz;
@@ -125,7 +122,7 @@ try
         for fn = 1:numel(to_combine)
             Info.(to_combine{fn}) = cat(1, Info.(to_combine{fn}){:});
         end
-        Info.solverTime = mean(cellfun(@(x) x.solverTime, Info.simulationInfo))
+        Info.solverTime = mean(cellfun(@(x) x.solverTime, Info.simulationInfo));
         Info.message = 0;%'';
     end
 
