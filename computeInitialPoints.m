@@ -26,7 +26,7 @@ function [r0,Info] = computeInitialPoints(BW,options,varargin)
 %        fields of Info are
 %           N : the number of particles returned (number of rows in r0).
 %
-%           givenMethodFailed : boolian. If true, then method requested
+%           givenMethodFailed : boolean. If true, then method requested
 %           failed to produce a single particle position. (See notes below
 %           for more information about this.)
 %
@@ -44,11 +44,11 @@ function [r0,Info] = computeInitialPoints(BW,options,varargin)
 %   area of the mask divided by the effective (hyper-)volume of a particle
 %   (pi*rs^2 in 2D).
 %
-% 'uniform' : A lattice is overlayed on the binary mask, and the centers of
+% 'uniform' : A lattice is overlaid on the binary mask, and the centers of
 %   each lattice cell that are inside the binary mask are used as the
 %   initial points.
 %
-% 'uniformRandom' : A lattice is overlayed on the binary mask, and from
+% 'uniformRandom' : A lattice is overlaid on the binary mask, and from
 %   each lattice cell a random point from the mask is used as an initial
 %   point.
 %
@@ -56,13 +56,13 @@ function [r0,Info] = computeInitialPoints(BW,options,varargin)
 %   points are chosen, where N is the area of the mask divided by the
 %   effective volume of a particle (pi*rs^2 in 2D).
 %
-% 'r0set_uniformRandom' : A lattice is overlayed on the binary mask, and
+% 'r0set_uniformRandom' : A lattice is overlaid on the binary mask, and
 %   from each lattice cell a random point from a set of possible initial
 %   positions is chosen.
 %
 % If a lattice is used, the lattice is a hexagonal lattice in 2-D, and is a
 % (hyper-)cubic lattice in N-D. The lattice constant is chosen so that the
-% volumne of each lattice cell is equal to the effective volume of a
+% volume of each lattice cell is equal to the effective volume of a
 % (hyper-)spherical particle with a radius given by the Wigner-Seitz
 % radius.
 %
@@ -84,7 +84,7 @@ function [r0,Info] = computeInitialPoints(BW,options,varargin)
 
 % James Kapaldo
 
-[sz, lattice_constant, N, r0set, BWpts, offset, use_cellarray] = parse_inputs(BW, options, varargin{:});
+[sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cellarray] = parse_inputs(BW, options, varargin{:});
 R = options.Iterations;
 debug = options.Debug;
 Info = [];
@@ -150,27 +150,28 @@ end
 
 end
 
-function [sz, lattice_constant, N, r0set, BWpts, offset, use_cellarray] = parse_inputs(BW, options, varargin)
+function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cellarray] = parse_inputs(BW, options, varargin)
 
     sz = size(BW);
     D = numel(sz);
 
-    % Validate options
-    validateattributes(options, {'seedPointOptions'}, {})
+    % Validate options -- cannot check if it is type seedPointOptions
+    % because it is copied to a struct when run in parallel.
+    % validateattributes(options, {'seedPointOptions'}, {})
 
     % Parse remaining inputs
     p = inputParser;
     p.FunctionName = 'computeInitialPoints';
 
-    validateProblemScales = @(stct) isfield(strc,'grid_spacing') && ...
-                                    isfield(strc,'grid_to_solver') && ...
-                                    (numel(strc.grid_spacing) == D) && ...
-                                    (numel(strc.grid_to_solver) == D);
+    validateProblemScales = @(stct) isfield(stct,'grid_spacing') && ...
+                                    isfield(stct,'grid_to_solver') && ...
+                                    (numel(stct.grid_spacing) == D) && ...
+                                    (numel(stct.grid_to_solver) == D);
 
     addParameter(p,'problem_scales', ...
         struct('grid_spacing',ones(1,D), 'grid_to_solver',ones(1,D)), ...
         validateProblemScales)
-    addParameter(p,'r0set',[], validateattributes(t, {'double'}, {'2d'}))
+    addParameter(p,'r0set',[], @(t) validateattributes(t, {'double'}, {'2d'}))
     addParameter(p,'use_cellarray',true, @(t) t==0 || t==1)
 
     parse(p,varargin{:})
