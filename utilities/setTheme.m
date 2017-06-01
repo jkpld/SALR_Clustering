@@ -11,6 +11,8 @@ switch darkLight
         error('figureTheme:unknownThemeName','Unknown theme name.')
 end
 
+% Add a short pause so that everything draws correctly.
+pause(1e-5);
 
 
 try
@@ -107,5 +109,7 @@ for i = 1:length(childs)
     
 end
 
+% Add a short pause so that everything draws correctly.
+pause(1e-5);
 
 end
