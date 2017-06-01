@@ -192,8 +192,10 @@ switch gridType
             if strcmp(reductionMethod,'density')
                 toRemove = ~Z;
             else
-                n = accumarray(bin(all(bin>0,2),:),1,sizeX,[],0);
-                toRemove = ~n(:);
+                toRemove = isnan(Z);
+                toRemove = toRemove(:);
+%                 n = accumarray(bin(all(bin>0,2),:),1,sizeX,[],0);
+%                 toRemove = ~n(:);
             end
             X(toRemove) = [];
             Y(toRemove) = [];
@@ -234,7 +236,7 @@ if generatePlots
             c.FontWeight = 'bold';
     end
     drawnow;
-    goDark(gcf)
+    setTheme(gcf,'dark')
 end
 
 end
