@@ -1,12 +1,39 @@
 function [seedPoints, Info] = computeObjectSeedPoints(BW, M, r0set, useCentroid, options, objNumber, errorCount)
-
-% Info.Message : 0, everything is fine
-%                1, object is convex or too small (the center of the object will be the seed point)
-%                2, less than 2 initial particles (the center of the object will be the seed point)
-%                3, there was twice an error, object will be skipped
+% COMPUTEOBJECTSEEDPOINTS Compute the seed points for a single object
+%
+% [seedPoints, Info] = computeObjectSeedPoints(BW, M, r0set, useCentroid, options, objNumber)
+%
+% Input parameters:
+%   BW : binary mask of a single object
+%   M : base potential modifier, should be 1 outside of object
+%   r0set : Nx2 array, set of initial positions
+%   useCentroid : logical, if true, then the centroid of the mask is
+%       returned.
+%   objNumber : Optional. The object number of this object (this is used
+%       for creating error messages only)
+%
+% Output parameters:
+%   seedPoints : Lx2 array of computed seed points
+%   Info : If options.debug is False, then Info will be empty. If
+%       options.debug is True, then Info will be a structure with several
+%       fields:
+%           r0 : initial points used in simulation
+%           r_final : final location of simulated points
+%           V : confining potential
+%           ComputeInitialPoints : structure of initial points information,
+%               see computeInitialPoints()
+%           message : integer giving an exit code
+%               0, everything is fine
+%               1, object is convex or too small (the center of the object
+%                   will be the seed point)
+%               2, less than 2 initial particles (the center of the object
+%                   will be the seed point)
+%               3, there was twice an error, object will be skipped
 
 % See also MODELPARTICLEDYNAMICS EXTRACTCLUSTERCENTERS COMPUTEINITIALPOINTS
-% ADD_EXTERIOR_CONFINING_POTENTIAL PROCESSOBJECTS
+% CREATE_SCALEINVAR_CONFINING_POTENTIAL COMPUTEGRIDSCALEFACTORS
+
+% James Kapaldo
 
 % M : base potential modifier - should be 1 outside of nuclei.
 
@@ -14,7 +41,10 @@ function [seedPoints, Info] = computeObjectSeedPoints(BW, M, r0set, useCentroid,
 Info = [];
 
 % Get the error count
-if nargin == 6
+if nargin < 6
+    objNumber = 1;
+end
+if nargin < 7
     errorCount = 0;
 end
 
@@ -26,118 +56,128 @@ if useCentroid
 end % if
 
 try
-
     PAD_SIZE = options.Potential_Padding_Size;
-    R0_MAXV = options.Maximum_Initial_Potential;
-    R0_MINV = options.Minimum_Initial_Potential;
-    POINT_SELECTION_METHOD = options.Point_Selection_Method;
-    
-    
-    % Create confining potential ---------------------------------------
-    [V, scaleFactor, overlapFactor] = create_scaleInvar_confining_potential(BW, options); %#ok<ASGLU>
-    options.Scale_Factor = scaleFactor;
 
-    % At this point you could use the overlapFactor, the 3rd output of
-    % create_scaleInvar_confining_potential, to modify some parameters,
-    % for example, the Potential_Extent.
-
+    % Setup problem ------------------------------------------------------
+    % Add in potential modifier
     if ~isempty(M)
-        V = V .* M; % Add in any modifier
+        options.Potential_Modifier = @(V) V .* M;
     end
-    
-    % Compute scale factors ----------------------------------------------
-    [grid_spacing, grid_to_solver] = computeScaleFactors(options, size(V)-1);
-    solver_to_data = @(x) (x./grid_to_solver - PAD_SIZE);
 
-    
-    % Compute confining force --------------------------------------------
-    dV = confiningForce(V, grid_spacing, grid_to_solver, options);
+    % Pad initial positions
+    r0set = r0set + PAD_SIZE;
 
-    
-    % Get initial particle locations -------------------------------------
-    initPointOptions.rs = options.Wigner_Seitz_Radius;
-    initPointOptions.r0set = r0set;
+    % Compute confining force, initial points, and problem scales.
+    [dV, r0, problem_scales, SetupInfo] = setup_problem(BW, [], options, r0set);
+    solver_to_data = @(x) (x./problem_scales.grid_to_solver - PAD_SIZE);
 
-    % Don't let the particles start with too high or too low a potential
-    % energy.
-    allowed_r0_mask = removePadding( (V < R0_MAXV) & (V > R0_MINV),  PAD_SIZE);
+    % Model dynamics -----------------------------------------------------
+    R = options.Iterations;
+    seedPoints_n = cell(R,1);
 
-    if ~any(allowed_r0_mask(:))
-        if ~any(BW)
-            error('computeObjectSeedPoints:zeroMask','The object mask is all 0''s! I don''t know how this could happen.')
-        else
-            warning('computeObjectSeedPoints:noValidPositions','There are no valid positions to put a particle. Try increasing the Maximum_Initial_Potential.\n Switching to use binary mask without potential requirement.')
-            allowed_r0_mask = BW;
+    if DEBUG
+        Info = struct('simulationInfo', cell(1,R), ...
+                      'r0', cell(1,R), ...
+                      'r_final', cell(1,R), ...
+                      'seedPoints_n', cell(1,R), ...
+                      'cluster_sizes_n', cell(1,R), ...
+                      'iteration_sizes', cell(1,R));
+        for n = 1:R
+            [r, simInfo] = modelParticleDynamics(dV, r0{n}, options); % r_final is in solver space
+            [seedPoints_n{n}, clstSz] = extractClusterCenters(r, options);
+
+            Info.simulationInfo{n} = simInfo;
+            Info.r0{n} = solver_to_data(r0);
+            Info.r_final{n} = solver_to_data(r);
+            Info.seedPoints_n{n} = solver_to_data(seedPoints_n{n});
+            Info.cluster_sizes_n{n} = clstSz;
+            Info.iteration_sizes{n} = [size(r,1), numel(clstSz)];
+        end
+    else
+        for n = 1:R
+            r = modelParticleDynamics(dV, r0{n}, options); % r_final is in solver space
+            [seedPoints_n{n}, clstSz] = extractClusterCenters(r, options);
         end
     end
 
-    % Compute initial points
-    if DEBUG
-        [r0, ComputeInitialPointsInfo] = computeInitialPoints(POINT_SELECTION_METHOD, allowed_r0_mask, initPointOptions); % Note the points r0 do not consider the mask padding.
+    % % Post-processing --------------------------------------------------
+    % % Remove any particles outide the object.
+    seedPoint_set = cat(1, seedPoints_n{:});
+    % Vi = interpolatePotential(V, seedPoint_set, problem_scales);
+    % seedPoint_set(Vi>1,:) = [];
+
+    % Cluster the results of the iterations
+    if R > 1
+        [seedPoints, clstSz] = extractClusterCenters(seedPoint_set, options);
+        toRemove = clstSz < options.Minimum_Cluster_Size * R;
+        seedPoints(toRemove,:) = [];
     else
-        r0 = computeInitialPoints(POINT_SELECTION_METHOD, allowed_r0_mask, initPointOptions); % Note the points r0 do not consider the mask padding.
-    end 
-    size(r0)
-    % If there was only one initial particle, then we will not simulate it,
-    % we will just return the centroid of the object
-    if size(r0,1) < 2
-        [seedPoints,Info] = computeCentroid(BW,DEBUG,2);%'lessThan_2_initial_particles');
-        if DEBUG
-            Info.ComputeInitialPoints = ComputeInitialPointsInfo;
-        end 
-        return;
-    end 
-
-    % Convert initial positions to solver space
-    r0 = (r0 + PAD_SIZE) .* grid_to_solver;
-    
-    
-    % Model dynamics -----------------------------------------------------
-    if DEBUG
-        [r_final, Info] = modelParticleDynamics(dV, r0, options); % r_final is in solver space
-
-        Info.r0 = solver_to_data(r0);
-        Info.r_final = solver_to_data(r_final);
-        Info.V = V;
-        Info.ComputeInitialPoints = ComputeInitialPointsInfo;
-        Info.message = 0;%'';
-    else
-        r_final = modelParticleDynamics(dV, r0, options);
-    end 
-
-    seedPoints = extractClusterCenters(r_final, options);
+        seedPoints = seedPoint_set;
+    end
     seedPoints = solver_to_data(seedPoints);
+
+    if DEBUG
+        Info.cluster_sizes = clstSz;
+        Info.V = SetupInfo.V;
+        Info.ComputeInitialPoints = SetupInfo.ComputeInitialPointsInfo;
+
+        to_combine = {'r0','r_final','seedPoints_n','cluster_sizes_n','iteration_sizes'};
+        for fn = 1:numel(to_combine)
+            Info.(to_combine{fn}) = cat(1, Info.(to_combine{fn}){:});
+        end
+        Info.solverTime = mean(cellfun(@(x) x.solverTime, Info.simulationInfo))
+        Info.message = 0;%'';
+    end
+
 catch ME
     % It can be somtimes that there is an error due to a particle flying out of the image region, or something that rarely (hopefully) happens; therefore, we will try to run the function again. If there is an error a second time, then we issue a warning, save the error, and continue on to the next object.
     if errorCount < 1
         [seedPoints, Info] = computeObjectSeedPoints(BW, M, r0set, useCentroid, options, objNumber, errorCount+1);
     else
         seedPoints = [NaN, NaN];
-        Info.error = ME;
         if DEBUG
-            Info.r0 = [NaN, NaN];
-            Info.r_final = [NaN, NaN];
-            Info.V = [];
-            Info.solverTime = NaN;
-            Info.message = 3;%'error';
+            Info = emptyInfo();
+            Info.message = 3;
+            Info.error = ME;
+        else
+            Info.error = ME;
         end
         fprintf('\nWarning! There was an error in object %d. Full error report stored in Info{%d}.error\n', objNumber, objNumber)
         fprintf(2,'%s\n', getReport(Info.error,'basic'))
         fprintf('\n')
-    end 
-end 
+    end
+end
 
-end 
+end
 
 function [seedPoint, Info] = computeCentroid(BW,DEBUG,reason)
 [i,j] = find(BW);
 seedPoint = mean([i,j],1);
 Info = [];
 if DEBUG
-    Info.r0 = [NaN, NaN];
-    Info.r_final = [NaN, NaN];
-    Info.V = [];
-    Info.solverTime = NaN;
+    Info = emptyInfo();
     Info.message = reason;
-end 
-end 
+end
+end
+
+% function Vi = interpolatePotential(V, r, problem_scales)
+%
+% r = r ./ problem_scales.grid_to_solver;
+% Vi = interp2mex(V, r(:,2), r(:,1))
+%
+% end
+
+
+function Info = emptyInfo()
+    Info = struct('ComputeInitialPoints', struct(), ...
+                  'simulationInfo', {struct()}, ...
+                  'r0', NaN(1,2), ...
+                  'r_final', NaN(1,2), ...
+                  'seedPoints_n', NaN(1,2), ...
+                  'cluster_sizes_n', NaN, ...
+                  'iteration_sizes', NaN(1,2), ...
+                  'cluster_sizes', NaN, ...
+                  'V', [], ...
+                  'solverTime', NaN, ...
+                  'message', NaN);
+end
