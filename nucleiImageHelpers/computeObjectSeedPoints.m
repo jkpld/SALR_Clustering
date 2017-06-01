@@ -109,11 +109,11 @@ try
     % Cluster the results of the iterations
     if R > 1
         [seedPoints, clstSz] = extractClusterCenters(seedPoint_set, options);
-        toRemove = clstSz < options.Minimum_Cluster_Size;
-        seedPoints(toRemove,:) = [];
     else
         seedPoints = seedPoint_set;
     end
+    toRemove = clstSz < options.Minimum_Cluster_Size;
+    seedPoints(toRemove,:) = [];
     seedPoints = solver_to_data(seedPoints);
 
     if DEBUG
