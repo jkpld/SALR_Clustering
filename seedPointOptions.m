@@ -467,7 +467,21 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
             if (value ~= 0) && (value ~= 1)
                 error('seedPointOptions:badInput','Expected input to be logical.')
             end
-            obj.Use_Parallel = value;
+
+            if value == 1
+                % Make sure the parallel computing toolbox is installed and
+                % can be used.
+                ver_info = ver('distcomp');
+                ver_lic = license('test','Distrib_Computing_Toolbox');
+                if isempty(ver_info) || ~ver_lic
+                    warning('seedPointOptions:NoParallelToolbox','Cannot use parallel computing. The parallel computing toolbox either is not installed or there is no license for it.')
+                    obj.Use_Parallel = false;
+                else
+                    obj.Use_Parallel = true;
+                end
+            else
+                obj.Use_Parallel = false;
+            end
         end
 
         function obj = set.Maximum_Memory(obj,value)
