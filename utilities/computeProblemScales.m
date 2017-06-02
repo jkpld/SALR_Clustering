@@ -24,11 +24,13 @@ else
     grid_spacing = data_range ./ grid_range;
 end
 
+grid_to_data = grid_spacing;
+
 % Now scale the grid_to_solver space so that the attractive extent is
 % given in terms of the ScaleInvarient_Potential_Extent
 grid_to_solver = grid_spacing * options.ScaleInvarient_Potential_Extent / options.Potential_Parameters(3);
 
 % Form output structure
-problem_scales = struct('grid_spacing', grid_spacing, 'grid_to_solver', grid_to_solver);
+problem_scales = struct('grid_spacing', grid_spacing, 'grid_to_data', grid_to_data, 'grid_to_solver', grid_to_solver);
 
 end
