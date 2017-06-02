@@ -56,8 +56,6 @@ if useCentroid
 end % if
 
 try
-    PAD_SIZE = options.Potential_Padding_Size;
-
     % Setup problem ------------------------------------------------------
     % Add in potential modifier
     if ~isempty(M)
@@ -66,7 +64,7 @@ try
     
     % Compute confining force, initial points, and problem scales.
     [dV, r0, problem_scales, SetupInfo] = setup_problem(BW, [], options, r0set);
-    solver_to_data = @(x) (x./problem_scales.grid_to_solver - PAD_SIZE);
+    solver_to_data = @(x) problem_scales.grid_to_data(x./problem_scales.grid_to_solver);
 
     % Model dynamics -----------------------------------------------------
     % If there was only one initial particle, then we do not simulate it,
@@ -163,6 +161,10 @@ end
 end
 
 function [seedPoint, Info] = computeCentroid(BW,DEBUG,reason)
+
+% Note, BW has not been padded and so the centroid is already in data
+% units.
+
 [i,j] = find(BW);
 seedPoint = mean([i,j],1);
 Info = [];

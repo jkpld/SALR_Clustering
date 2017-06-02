@@ -1,4 +1,4 @@
-function [dV, r0, problem_scales, Info] = setup_problem(binned_data, data_range, options, r0set)
+function [dV, r0, problem_scales, Info] = setup_problem(binned_data, data_limits, options, r0set)
 % SETUP_PROBLEM Generate the confining force, the initial particle
 % locations, and the scaling factors for the simulation.
 %
@@ -46,7 +46,7 @@ DEBUG = options.Debug;
 PAD_SIZE = options.Potential_Padding_Size;
 
 % Problem scales
-problem_scales = computeProblemScales(options, size(binned_data)-1, data_range);
+problem_scales = computeProblemScales(options, size(binned_data), data_limits);
 
 % Create confining potential
 switch options.Potential_Type
@@ -59,7 +59,7 @@ switch options.Potential_Type
         V = min(1.5,1./binned_data);
         V = padarray(V, PAD_SIZE*ones(1,D), 1.5);
 end
-% problem_scales
+
 % Apply potential modifier
 if ~isempty(options.Potential_Modifier)
     V = options.Potential_Modifier(V);
