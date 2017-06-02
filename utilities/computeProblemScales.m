@@ -15,9 +15,9 @@ function problem_scales = computeProblemScales(options, grid_size, data_limits)
 %       computed using
 %           data_limits = [min(dat,1); max(dat,1)];
 %
-%   *Note: If data_limits is not given, then data_limits will be set to
-%   data_limits = [zeros(1,D), grid_size]. This will give a grid_spacing of
-%   1.
+%   *Note: If data_limits is not given or is empty, then data_limits will
+%   be set to data_limits = [zeros(1,D), grid_size]. This will give a
+%   grid_spacing of 1.
 %
 % Output parameters:
 % problem_scales : structure with four fields
@@ -37,7 +37,7 @@ function problem_scales = computeProblemScales(options, grid_size, data_limits)
 % Dimension
 D = length(grid_size);
 
-if nargin < 3
+if (nargin < 3) || isempty(data_limits)
     % If the data limits are not given, assume the grid spacing is 1 and
     % there is no translation between grid and data spaces. Thus, the data
     % limits are
