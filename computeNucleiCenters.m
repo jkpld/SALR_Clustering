@@ -38,7 +38,7 @@ H = cell(numel(pixelList),1);
 [B,~,K,r0set] = computeBoundaryInformation(BW, objectScale, options);
 
 % If there is an object of interest, remove all the others.
-[pixelList, B, K, r0set, H] = getObjectOfInterest(options, pixelList, B, K, r0set, H);
+[pixelList, B, K, r0set, H, objectScale] = getObjectOfInterest(options, pixelList, B, K, r0set, H, objectScale);
 
 % Use the object centroid as the seed point for any object that is convex
 % or smaller than the particle area
