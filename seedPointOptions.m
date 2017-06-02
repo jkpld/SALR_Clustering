@@ -1,4 +1,4 @@
-classdef seedPointOptions < matlab.mixin.CustomDisplay
+classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
     % SEEDPOINTOPTIONS  Set options needed for computing seed point locations.
     %
     % Input can be structure array or parameter value pairs. Options not set
@@ -198,9 +198,9 @@ classdef seedPointOptions < matlab.mixin.CustomDisplay
                 error('seedPointOptions:missingPotentialParamters','The file potentialParameters.mat is missing or not on the path. This file is required for setting the potentialParamters. It may be created with the function computePotentialParamters if you do not have it.')
             end
 
-            options.Solver_Space_Attractive_Extent = 'Attractive_Extent';
-            options.Potential_Parameters = [-1,2,15];
-            options = setPotentialParameter(options, [-1, 2, 15]);
+            % Make sure the potential parameters are initialized correctly
+            options.Solver_Space_Attractive_Extent = options.Solver_Space_Attractive_Extent;
+            options = setPotentialParameter(options, options.Potential_Parameters);
 
             % Now assign any properties given.
             if nargin > 0
@@ -227,7 +227,7 @@ classdef seedPointOptions < matlab.mixin.CustomDisplay
         end
 
         function obj = set.Wigner_Seitz_Radius_Space(obj,value)
-            % The code below mostly comes from Matlab's pdist function.
+
             methods = {'data'; 'grid'; 'solver'};
 
             i = find(strncmpi(value,methods,length(value)));
@@ -372,7 +372,7 @@ classdef seedPointOptions < matlab.mixin.CustomDisplay
         end
 
         function obj = set.Minimum_Initial_Potential(obj,value)
-            validateattributes(value,{'double'},{'scalar','real','>',-Inf,'<=',Inf})
+            validateattributes(value,{'double'},{'scalar','real','>=',-Inf,'<',Inf})
             if value > obj.Maximum_Initial_Potential %#ok<MCSUP>
                 error('seedPointOptions:badInput','Minimum_Initial_Potential must be smaller than Maximum_Initial_Potential.')
             end
@@ -530,9 +530,6 @@ classdef seedPointOptions < matlab.mixin.CustomDisplay
                     obj = setPotentialParameter(obj,obj.Potential_Parameters); %#ok<MCSUP>
                 end
             end
-
-
-
         end
 
         function out = plotPotential(obj,maxR)
