@@ -239,7 +239,7 @@ function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cel
 
     if ~isempty(r0set)
         % Convert the r0set from data space to grid space.
-        r0set = problem_scales.grid_to_data(r0set);
+        r0set = problem_scales.data_to_grid(r0set);
 
         % Remove all points not in the mask;
         r0set(interpolateMask(BW,r0set)<0.5,:) = [];
