@@ -69,6 +69,21 @@ try
     solver_to_data = @(x) (x./problem_scales.grid_to_solver - PAD_SIZE);
 
     % Model dynamics -----------------------------------------------------
+    % If there was only one initial particle, then we do not simulate it,
+    % we will just return the centroid of the object. 
+    %
+    % Note: Since we can model the object several times, if all of the
+    % iterations have less than 4 particles and at least 1 of them only has
+    % one particle, then we will not simulation it.
+    num_r0 = cellfun(@(x) size(x,1), r0);
+    if all(num_r0<4) && any(num_r0<2)
+        [seedPoints,Info] = computeCentroid(BW,DEBUG,2);%'lessThan_2_initial_particles');
+        if DEBUG
+            Info.ComputeInitialPoints = SetupInfo.ComputeInitialPointsInfo;
+        end % if
+        return;
+    end % if
+    
     R = options.Iterations;
     seedPoints_n = cell(R,1);
 
@@ -122,7 +137,7 @@ try
         for fn = 1:numel(to_combine)
             Info.(to_combine{fn}) = cat(1, Info.(to_combine{fn}){:});
         end
-        Info.solverTime = mean(cellfun(@(x) x.solverTime, Info.simulationInfo));
+        Info.solverTime = mean(cellfun(@(x) x.solverTime, Info.simulationInfo),'omitnan');
         Info.message = 0;%'';
     end
 
@@ -167,7 +182,7 @@ end
 
 function Info = emptyInfo()
     Info = struct('ComputeInitialPoints', struct(), ...
-                  'simulationInfo', {struct()}, ...
+                  'simulationInfo', {struct('solverTime',NaN,'ode_solution',[],'SystemInputs',[])}, ...
                   'r0', NaN(1,2), ...
                   'r_final', NaN(1,2), ...
                   'seedPoints_n', NaN(1,2), ...
