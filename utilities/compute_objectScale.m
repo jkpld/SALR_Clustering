@@ -1,7 +1,10 @@
 function objectScale = compute_objectScale(BW, pixelList)
-% COMPUTE_OBJECTSCALE
+% COMPUTE_OBJECTSCALE : return the maximum distance transform value for
+% each object
 %
 % objectScale = compute_objectScale(BW, pixelList, options)
+
+% James Kapaldo
 
 PAD_SIZE = 1;
 

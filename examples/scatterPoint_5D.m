@@ -9,7 +9,7 @@
 
 %% Load data
 
-dat = load('seed_point_detection\exampleImages\damage_data_5D.mat');
+dat = load('exampleImages\damage_data_5D.mat');
 dat = dat.dat;
 
 % Scale by stddev
@@ -21,10 +21,11 @@ nbins = 30;
 density_threshold = 20;
 smooth_data = true; % Slow, but memory efficient, smoothing with Gaussian: sigma=0.5, kernal_size=3
 
-[n, cents, sz] = prepare_ND_Example_Data(dat, nbins, density_threshold, smooth_data,1);
+[n, cents, sz] = binData(dat, nbins, density_threshold, smooth_data,1);
 
 data_range = cellfun(@(x) range(x), cents);
 data_scale = data_range./(sz-1);
+
 
 %% Explore/Visualize the data
 
@@ -54,41 +55,44 @@ options = seedPointOptions();
 
 options.Point_Selection_Method = 'uniformRandom';
 options.Wigner_Seitz_Radius = 5;
+options.Wigner_Seitz_Radius_Space = 'grid';
 options.Maximum_Initial_Potential = 1/4;
 options.Minimum_Initial_Potential = 1/6;
 
-options.Characteristic_Distance = 10;
+options.Solver_Space_Attractive_Extent = 10;
 options.Potential_Parameters = [-1, 0.15*2, 2];
-options.Potential_Parameter_Space = 'data';
+options.Potential_Parameters_Space = 'data';
 options.Distance_Metric = {'min',4}; % Minkowski distance metric with exponent 5
 
 options.Particle_Damping_Rate = 5e-4;
 options.Potential_Padding_Size = 0;
 options.Max_Potential_Force = 0.4;
 
-options.Debug = true;
+options.Debug = false;
 options.Maximum_Memory = 2; % Allow for 1 GB of data to be used for potential gradients
+options.Use_Parallel = false;
 
-N = 20;
+N = 10;
 
+tic
 [seedPoints,Info] = compute_seedPoints_nd(n,data_range,options,'iterations',N,'minClusterSize',N/3,'verbose',1);
-
+toc
 
 % Plot the results
 
-dimensions = [1,2,5];
+dimensions = [1,3,4];
 isoLevels = [20,150,500,2000];
 
 markers = [];
 
-markers(3).dat = Info.seedPoint_set;
+markers(3).dat = Info.data_to_grid(Info.seedPoint_set);
 markers(3).options.Marker = '.';
 markers(3).options.Color = 'k';
 markers(3).options.LineStyle = 'none';
 markers(3).options.MarkerSize = 4;
 markers(3).project = true;
 
-markers(2).dat = seedPoints;
+markers(2).dat = Info.data_to_grid(seedPoints);
 markers(2).options.Marker = '.';
 markers(2).options.Color = 'r';
 markers(2).options.LineStyle = 'none';
@@ -149,7 +153,7 @@ view([50,35])
 
 %% Export figure
 % Export lines as pdf.
-% Export transparent isosurfaces as png. 
+% Export transparent isosurfaces as png.
 % Overlay the png on the pdf in other software.
 %
 % Note, this is distructive! It will delete the transparent objects before

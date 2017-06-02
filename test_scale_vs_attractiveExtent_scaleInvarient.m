@@ -94,7 +94,7 @@ for ind = 1:n
             end
 
             start = tic;
-            [seedPoints, runInfo] = computeNucleiCenters_distTransform(I,BWs,options);
+            [seedPoints, runInfo] = computeNucleiCenters(I,BWs,options);
             totalTime = toc(start);
 
             % If scaling the objects, then the number of objects can change

@@ -59,7 +59,7 @@ switch options.Potential_Type
         V = min(1.5,1./binned_data);
         V = padarray(V, PAD_SIZE*ones(1,D), 1.5);
 end
-
+% problem_scales
 % Apply potential modifier
 if ~isempty(options.Potential_Modifier)
     V = options.Potential_Modifier(V);

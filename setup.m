@@ -9,6 +9,7 @@ fprintf('\nStarting setup...\n')
 % Get the path to the current folder -------------------------------------
 fileLocation = mfilename('fullpath');
 path = fileparts(fileLocation);
+
 fprintf('...found path\n')
 
 % Compile the needed C files into .mex files -----------------------------
@@ -53,7 +54,7 @@ fprintf('...added pdistmex\n')
 
 % Add subfolders of current location to path -----------------------------
 % (but do not include any .git repositories
-pths = split(genpath(path),';');
+pths = split(string(genpath(path)),';');
 pths = pths(~pths.contains('.git')).join(';');
 addpath(pths.char());
 fprintf('...added subfolders to path\n')

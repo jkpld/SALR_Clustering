@@ -5,7 +5,7 @@
 %   computeBoundaryInformation  - Compute the boundary contours, inward
 %   computePotentialParameters  - Solve for the potential parameters that give
 %   decimateData                - Bin 2D spatial data and return a single value for each bin.
-%   getCurvatureAndShapeMarkers - Compute boundary curvature and centers.
+%   getCurvatureAndCenters - Compute boundary curvature and centers.
 %   getImageEdges               - 
 %   getPdistInds                - Get the indices of the pairs formed by pdist.
 %   goDark                      - 

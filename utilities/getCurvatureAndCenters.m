@@ -1,5 +1,7 @@
-function [kappa,shapeMarkers,negKappaInds,d_bndry,shapeMarkersXY,kappa_s] = getCurvatureAndShapeMarkers(BWperim,imSize,kappaSmoothingSigma,maxRadius,useConvexHull)
-% GETCURVATUREANDSHAPEMARKERS  Compute boundary curvature and centers.
+function [kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,kappaSmoothingSigma,maxRadius,useConvexHull)
+% GETCURVATUREANDCENTERS  Compute boundary curvature and centers.
+%
+% [kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,kappaSmoothingSigma,maxRadius,useConvexHull)
 
 % James Kapaldo
 
@@ -71,12 +73,12 @@ bndry = round(bsxfun(@plus,bndry,cntr));
 % on the short side, and it will allow of the the shape markers to better
 % separate two touching ellipses.
 
-shapeMarkersXY = [];
+CoC = [];
 shiftInd = find(kappa>POSITIVE_CURVATURE_THRESHOLD,1);
 kappa_s = kappa;
 
 if ~isempty(shiftInd)
-    
+
     if useConvexHull
         kappa = circshift(kappa,-shiftInd+1);
         kappa_s = circshift(kappa_s,-shiftInd+1);
@@ -88,7 +90,7 @@ if ~isempty(shiftInd)
         bnds = [0;find(abs(diff(nInd)));numel(kappa)];
         ind = (1:numel(kappa))';
 
-        for i = 2:2:numel(bnds)-1 
+        for i = 2:2:numel(bnds)-1
             % only replace the negative curvatures with the smoothed convex
             % hull. can also smooth the positive curvatures by replacing with
             % 1:numel(bnds)-1, but then finding the maximum curvatures for
@@ -119,21 +121,11 @@ if ~isempty(shiftInd)
 
         kappa_s = circshift(kappa_s,shiftInd-1);
         kappa = circshift(kappa,shiftInd-1);
-        
-    end
-    
-    R_s = 1./kappa_s;
-%     R_s = 1./kappa; % This is for not using the convex hull transformed markers.
-    shapeMarkersXY = bndry + bsxfun(@times, n,R_s);
 
-    % -----------
-    % This will now be done in a later function!
-    % ...
-%     % Remove points not within the boundary made smaller by 3.
-%     bndry = bndry -3*n;
-%     
-%     [in,on] = inpolygon(shapeMarkersXY(:,1),shapeMarkersXY(:,2),bndry(:,1),bndry(:,2));
-%         shapeMarkersXY(~in | on,:) = []; % Does't work for children
+    end
+
+    R_s = 1./kappa_s;
+    CoC = bndry + bsxfun(@times, n,R_s);
 
 end
 
@@ -142,16 +134,16 @@ end
 % negKappaInds = find((kappa_s == imdilate(kappa_s,ones(5,1))) & kappa_s > max((negativeMADKappaMultiplier*mad(kappa_s,1)+median(kappa_s)),0));
 negKappaInds = [];
 
-if isempty(shapeMarkersXY)
-    shapeMarkersXY = bsxfun(@plus, cntr, [-1 0; 1 0; 0 -1; 0 1; 0 0]);
+if isempty(CoC)
+    CoC = bsxfun(@plus, cntr, [-1 0; 1 0; 0 -1; 0 1; 0 0]);
 end
 
-shapeMarkersXY = round(shapeMarkersXY);
+CoC = round(CoC);
 
 % convert the centers to linear indices of the full image.
-shapeMarkers = shapeMarkersXY(:,1) + (shapeMarkersXY(:,2)-1)*imSize(1);
+CoC_linIdx = CoC(:,1) + (CoC(:,2)-1)*imSize(1);
 
-% set the output kappa, complete the contour and add a row of nan. 
+% set the output kappa, complete the contour and add a row of nan.
 
 kappa = [kappa; nan];
 kappa_s = [kappa_s; nan];

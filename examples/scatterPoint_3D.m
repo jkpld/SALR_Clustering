@@ -10,11 +10,12 @@ dat = dat .* [1, 1, 5];
 %% Compute data density
 nbins = 30;
 density_threshold = 2;
-smooth_data = false; % use a faster smoothing after preperation
+smooth_data = true; % use a faster smoothing after preperation
 
-[n, cents, sz] = prepare_ND_Example_Data(dat, nbins, density_threshold, smooth_data, true);
-n = frequencyGaussianFilter(n,0.5,3,'replicate');
-n(n<0) = 0;
+[n, cents, sz] = binData(dat, nbins, density_threshold, smooth_data, true);
+
+% n = frequencyGaussianFilter(n,0.5,3,'replicate');
+% n(n<0) = 0;
 
 % Get data scale factors
 data_range = cellfun(@(x) range(x), cents);
@@ -56,28 +57,37 @@ Omega = n > 5;
 
 options = seedPointOptions();
 options.Wigner_Seitz_Radius = 2.5; % This is in units of the discretized space!
-options.Potential_Padding_Size = 1;
-options.Maximum_Initial_Potential = 1/5;
-options.Max_Distance_Transform = 18;
-options.Potential_Parameters = [-1, 2, 13];
+options.Wigner_Seitz_Radius_Space = 'grid';
 options.Point_Selection_Method = 'uniformRandom';
-options.Particle_Damping_Rate = 5e-4;
+options.Maximum_Initial_Potential = 1/5;
+options.Potential_Padding_Size = 1;
+
+% Scale the object so that the maximum distance transform value is 18.
+options.Max_Distance_Transform = 18;
+
+% Set the particle interaction parameter values.
+options.Potential_Parameters = [-1, 2, 13];
+options.Potential_Parameters_Space = 'solver'; % No
+
+% options.Particle_Damping_Rate = 5e-4;
 options.Debug = true;
 options.Use_Parallel = false;
 
-
-seedPoints = cell(20,1);
-for i = 1:20
+NN = 1;
+seedPoints = cell(NN,1);
+tmp_seedPoints = [];
+for i = 1:NN
 N = 20;
 start = tic;
 
 [seedPoints{i},Info] = compute_seedPoints_nd(Omega, data_range, options,'iterations',N,'minClusterSize',N/2,'verbose',0);
+tmp_seedPoints = [tmp_seedPoints; Info.seedPoint_set];
 fprintf('Finished, avg set time = %f\n', toc(start)/N)
 end
 
 
-seedPoint_set = cat(1,seedPoints{:});
-% seedPoint_set = Info.seedPoint_set;
+seedPoint_set_all = cat(1,seedPoints{:});
+seedPoint_set = tmp_seedPoints;%Info.seedPoint_set;
 r0 = Info.iteration_info{1}.r0;
 
 % Plot the results
@@ -87,19 +97,19 @@ dimensions = [1,2,3];
 isoLevels = [1,5,10,15];
 markers = [];
 
-markers(2).dat = seedPoint_set;
+markers(2).dat = Info.data_to_grid(seedPoint_set_all);
 markers(2).options.Marker = '.';
 markers(2).options.Color = 'r';
 markers(2).options.LineStyle = 'none';
 markers(2).options.MarkerSize = 15;
 markers(2).project = true;
 
-% markers(1).dat = seedPoint_set;
-% markers(1).options.Marker = '.';
-% markers(1).options.Color = 'k';
-% markers(1).options.LineStyle = 'none';
-% markers(1).options.MarkerSize = 4;
-% markers(1).project = false;
+markers(1).dat = Info.data_to_grid(seedPoint_set);
+markers(1).options.Marker = '.';
+markers(1).options.Color = 'k';
+markers(1).options.LineStyle = 'none';
+markers(1).options.MarkerSize = 4;
+markers(1).project = true;
 
 
 try close(fig), catch, end

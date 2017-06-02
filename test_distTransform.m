@@ -68,7 +68,7 @@ for ind = n:-1:1
         end
         %         profile on
         start = tic;
-        [seedPoints, Info] = computeNucleiCenters_distTransform(I,BW,options);
+        [seedPoints, Info] = computeNucleiCenters(I,BW,options);
         totalTime = toc(start);
         %         profile off
         %         Info(ind,ni).centers = seedPoints;

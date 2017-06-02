@@ -1,4 +1,4 @@
-function [seedPoints, Info] = computeNucleiCenters_distTransform(I,BW,options)
+function [seedPoints, Info] = computeNucleiCenters(I,BW,options)
 % COMPUTENUCLEICENTERS Declump the nuclei in an image
 %
 % [BW,cuts,Info] = computeNucleiCenters(I,BW,options)
@@ -53,6 +53,7 @@ r0set = cellfun(@(x,y) x - y, r0set, objOffset,'UniformOutput',false);
 % Compute the seed points.
 % Note, if you want to also use the seed points to segment the objects, then it would be a good choice to insert the segmentation code in this function "processObjects" and add in any additional input/outputs you need.
 [seedPoints, Info] = processObjects(pixelList, H, r0set, useCentroid, nRows, options);
+
 
 % Offset seed points to image coordinates
 seedPoints = cellfun(@(x,y) [x(:,1:2) + y, x(:,3)], seedPoints, objOffset,'UniformOutput',false);

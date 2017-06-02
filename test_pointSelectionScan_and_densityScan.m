@@ -20,22 +20,23 @@ MINIMUM_HOLE_SIZE = 15;
 
 % Set up test parameters ------------------------------------------------
 names = {'2','3','4','5','67'};
+% names = {'2'};
 n = numel(names);
-dr = 3:10; 
+dr = 3:10;
 N = 1; % number of iterations
 
 % Generate grid of scan points.
 rs = num2cell([2.5, 5:5:20]);
-params = {5,  'r0set_uniformRandom',  true, 13, 18}; % { r_s, point selection method, useConvexHull, attractive extent, max distance transform}
-params = repmat(params, numel(rs), 1);
-[params{:,1}] = deal(rs{:});
+% params = {5,  'r0set_uniformRandom',  true, 13, 18}; % { r_s, point selection method, useConvexHull, attractive extent, max distance transform}
+% params = repmat(params, numel(rs), 1);
+% [params{:,1}] = deal(rs{:});
+% 
+% params = [params;
+%           {5, 'r0set_uniformRandom', false, 13, 18};
+%           {5, 'uniformRandom', true, 13, 18};
+%           {5, 'r0set_uniformRandom', true, 14, NaN}];
 
-params = [params; 
-          {5, 'r0set_uniformRandom', false, 13, 18};
-          {5, 'uniformRandom', true, 13, 18};
-          {5, 'r0set_uniformRandom', true, 14, NaN}];
-
-
+params = {5,  'r0set_uniformRandom',  true, 13, 18};
 scale = 1;
 
 % Initialize variables for storing resuts -------------------------------
@@ -48,11 +49,11 @@ Info = struct('centers',[],'solverTime',[],'totalComputationTime',NaN,'N',NaN,'m
 Info(n,N,size(params,1)).totalComputationTime = NaN;
 
 % Compute results -------------------------------------------------------
-
+% profile on
 for ind = 1:n
 
     fprintf('%s >> Image = LD%sP24 (%d/%d)...\n', datestr(now,31),names{ind},ind,numel(names))
-    
+
     I = imread(im_pth(names{ind}));
     BW = imread(bw_pth(names{ind})) > 0;
     L = bwlabel(imfill(I~=0,'holes'));
@@ -60,8 +61,8 @@ for ind = 1:n
     results = load(results_pth(names{ind}));
     result_fields = fieldnames(results);
     tmp = results.(result_fields{1});
-    truthDat = tmp;    
-    
+    truthDat = tmp;
+
     correctNumCents = accumarray(tmp(:,1),1,[],[],0);
     objNumbers = unique(tmp(:,1));
     TPplusFN(ind,:) = size(tmp,1); % true Number Of Nuclei
@@ -70,17 +71,17 @@ for ind = 1:n
         if ~mod(pp,2)
             fprintf('  %s >> param %d/%d...\n', datestr(now,31),pp,size(params,1))
         end
-        
-        if (strcmp(names{ind},'67') || strcmp(names{ind},'5')) && (scale > 4)
-            options.Use_Parallel = false;
-        else
-            options.Use_Parallel = true;
-        end
-        
+
+%         if (strcmp(names{ind},'67') || strcmp(names{ind},'5')) && (scale > 4)
+%             options.Use_Parallel = false;
+%         else
+%             options.Use_Parallel = true;
+%         end
+
         options.Potential_Parameters = [POTENTIAL_DEPTH, POTENTIAL_MINIMUM_LOCATION, params{pp,4}];
-        options.ScaleInvarient_Potential_Extent = params{pp,4};
+%         options.ScaleInvarient_Potential_Extent = params{pp,4};
         options.Max_Distance_Transform  = params{pp,5};
-        
+
         options.Point_Selection_Method = params{pp,2};
         options.Use_ConvexHull = params{pp,3};
         options.Wigner_Seitz_Radius = round( scale * params{pp,1});
@@ -90,14 +91,14 @@ for ind = 1:n
         BWs = imresize(BW,scale,'bilinear','Antialiasing',false)>0.5;
         NS = createns(truthDat(:,[3,2])*scale);
         drs = dr*scale;
-        
+
         for ni = 1:N
             if ~mod(ni,10)
                 fprintf('    %s >> iteration %d/%d...\n', datestr(now,31),ni,N)
             end
 
             start = tic;
-            [seedPoints, runInfo] = computeNucleiCenters_distTransform(I,BWs,options);
+            [seedPoints, runInfo] = computeNucleiCenters(I,BWs,options);
             totalTime = toc(start);
 
             % If scaling the objects, then the number of objects can change
@@ -117,16 +118,16 @@ for ind = 1:n
                 Info(ind,ni,pp).N = cellfun(@(x) size(x.r0,1), runInfo);
                 Info(ind,ni,pp).message = cellfun(@(x) x.message, runInfo);
             end
-            
-            clear runInfo
-            
+
+%             clear runInfo
+
             objNum = seedPoints(:,3);
             seedPoints = seedPoints(:,[2,1]);
-            
+
             % Compute TP+FP: this is the number of seed points calculated
             % for each object
             TPplusFP(ind, ni, pp) = size(seedPoints,1);
-            
+
             %Number of centers difference
             numCents = accumarray(objNum,1,[max(objNumbers),1],[],0);
             d = numCents(objNumbers) - correctNumCents(objNumbers);
@@ -134,15 +135,15 @@ for ind = 1:n
             d(abs(d)>3) = [];
             d = d + 4;
             dN(ind,ni,pp,:) = accumarray(d,1,[7,1],[],0);
-            
+
             % Compute TP
             [nnIdx,nnD] = knnsearch(NS,seedPoints);
-            
+
             toRemove = nnD >= drs(end);
             nnD(toRemove) = [];
             nnIdx(toRemove) = [];
             objNum(toRemove) = [];
-            
+
             for drNo = 1:numel(dr)
                 inRange = nnD < drs(drNo);
                 TP(ind, ni, pp, drNo) = numel(unique(nnIdx(inRange)));
@@ -150,7 +151,8 @@ for ind = 1:n
         end
     end
 end
-
+% profile off
+% profile viewer
 % save([pth 'resultsInfo_random_' datestr(now,'yyyymmddTHHMMSS') '.mat'], 'Info','options')
 
 % Analyze and save results ----------------------------------------------

@@ -13,7 +13,7 @@ grid_range = sz - 1;
 
 
 Use_Parallel = options.Use_Parallel;
-if N < 1
+if N < 2
     Use_Parallel = false;
 end
 
@@ -33,16 +33,20 @@ switch data_type
 end
 
 % Compute scale factors --------------------------------------------------
-[grid_spacing, grid_to_solver, grid_to_data] = computeScaleFactors(options, grid_range, data_range);
-solver_to_data = @(x) (x./grid_to_solver - PAD_SIZE);% .* grid_to_data;
-
+[grid_spacing, grid_to_solver, grid_to_data] = computeGridScaleFactors(options, grid_range, data_range);
+solver_to_data = @(x) (x./grid_to_solver - PAD_SIZE) .* grid_to_data;
+data_to_grid = @(x) x./grid_to_data;
 
 % Compute confining force ------------------------------------------------
 dV = confiningForce(V, grid_spacing, grid_to_solver, options);
 
 % Get initial positions --------------------------------------------------
+
+BW = (V < options.Maximum_Initial_Potential) & (V > options.Minimum_Initial_Potential);
+rsGrid = getGridWignerSeitz(grid_to_data, grid_to_solver, options);
+
 if isempty(r0_set)
-    r0_set = computeInitialPoints_nd(V,options,N);
+    r0_set = computeInitialPoints(BW, options.Point_Selection_Method, rsGrid, [] ,N);
 else
     % Pad the initial posiitons if the were given
     r0_set = r0_set + options.Potential_Padding_Size;
@@ -61,7 +65,7 @@ if Use_Parallel
     warning('off','MATLAB:structOnObject')
     options = struct(options);
     warning('on','MATLAB:structOnObject')
-    
+
     parfor n = 1:N
         [r, Info_n{n}] = modelParticleDynamics(dV,r0_set{n},options); % r is in solver space
         [seedPoints_n{n}, clstSz] = extractClusterCenters(r,options);
@@ -97,7 +101,7 @@ else
     end
 end
 
-% Combine iterations and remove clusters with less than minClusterSize 
+% Combine iterations and remove clusters with less than minClusterSize
 % particles. -------------------------------------------------------------
 seedPoint_set = cat(1,seedPoints_n{:}); % This is in solver space
 
@@ -131,6 +135,7 @@ Info.iteration_info = Info_n;
 Info.seedPoint_set = solver_to_data(seedPoint_set);
 Info.cluster_sizes = clstSz;
 Info.solver_to_data = solver_to_data;
+Info.data_to_grid = data_to_grid;
 end
 
 function [dataType, r0_set, data_range, iterations, minClusterSize, verbose] = parse_inputs(inputData,data_range,varargin)
@@ -171,81 +176,77 @@ verbose = logical(p.Results.verbose);
 
 end
 
-function r0_set = computeInitialPoints_nd(V,options,N)
-
-if nargin < 3
-    N = 1;
-end
-sz = size(V);
-D = length(sz);
-
-% The lattice constant is the volume of a D-dimension ball to the (1/D)
-% power:
-a = pi^(1/2)/gamma(D/2+1)^(1/D) * options.Wigner_Seitz_Radius;
-
-switch options.Point_Selection_Method
-    
-    case 'random'
-        omega = (V < options.Maximum_Initial_Potential) & (V > options.Minimum_Initial_Potential); 
-        idx = find(omega);
-        
-        M = round(numel(idx)/a^D); % Number of particles to use
-        
-        idx = idx(randperm(size(idx,1),M));
-        r0_set = cell(1,D);
-        [r0_set{:}] = ind2sub(sz,idx);
-        
-        r0_set = cat(2,r0_set{:});
-        r0_set = repmat({r0_set},1,N); 
-        
-    case 'uniform'
-        a = round(a);
-        r0_set = cell(1,D);
-        
-        for i = 1:D
-            r0_set{i} = 1:a:sz(i);
-        end
-
-        [r0_set{:}] = ndgrid(r0_set{:});
-        r0_set = cellfun(@(x) x(:), r0_set,'UniformOutput',false);
-
-        ind = sub2ind(sz,r0_set{:});
-        remove = (V(ind) > options.Maximum_Initial_Potential) | (V(ind) < options.Minimum_Initial_Potential);
-
-        r0_set = cat(2,r0_set{:});
-        r0_set(remove,:) = [];
-        r0_set = repmat({r0_set},1,N);        
-        
-    case 'uniformRandom'
-        
-        omega = (V < options.Maximum_Initial_Potential) & (V > options.Minimum_Initial_Potential);        
-        
-        idx = find(omega);
-        locs = cell(1,D);
-        [locs{:}] = ind2sub(sz,idx);
-        
-        bin = zeros(numel(idx),D,'int8');
-        for i = D:-1:1
-            edges = 0 : a : (sz(i)+a);
-            bin(:,i) = discretize(locs{i},edges);
-        end
-        
-        locs = cat(2,locs{:});
-        
-        r0_set = cell(1,N);
-        for i = 1:N
-            r0_set_idx = accumarray(bin(all(bin>0,2),:), (1:numel(idx))', [], @(x) x(randi(numel(x),1)), 0);
-            r0_set_idx = r0_set_idx(logical(r0_set_idx));
-            r0_set{i} = locs(r0_set_idx,:);
-        end
-    otherwise
-        error('compute_seedPoints_nd:notValidSelectionMethod','The point selection method, %s, is either unknown or has not been programed from N-D data. Valid options are ''random'', ''uniform'', and ''uniformRandom''.',options.Point_Selection_Method)
-end
-
-end
+% function r0_set = computeInitialPoints_nd(BW,options,N)
+% 
+% if nargin < 3
+%     N = 1;
+% end
+% sz = size(BW);
+% D = length(sz);
+% 
+% % The lattice constant is the volume of a D-dimension ball to the (1/D)
+% % power:
+% a = pi^(1/2)/gamma(D/2+1)^(1/D) * getGridWignerSeitz(grid_to_data, grid_to_solver, options);
+% 
+% switch options.Point_Selection_Method
+% 
+%     case 'random'
+%         idx = find(BW);
+% 
+%         M = round(numel(idx)/a^D); % Number of particles to use
+% 
+%         r0_set = cell(1,N);
+%         for i = 1:N
+%             r0_set_i = cell(1,D);
+%             idx = idx(randperm(size(idx,1),M));
+%             [r0_set_i{:}] = ind2sub(sz,idx);
+%             r0_set{i} = cat(2,r0_set_i{:});
+%         end
+% 
+%     case 'uniform'
+%         r0_set = cell(1,D);
+% 
+%         for i = 1:D
+%             r0_set{i} = 1:a:sz(i);
+%         end
+% 
+%         [r0_set{:}] = ndgrid(r0_set{:});
+%         r0_set = cellfun(@(x) x(:), r0_set,'UniformOutput',false);
+% 
+%         ind = sub2ind(sz,round(r0_set{:}));
+%         remove = BW(ind) == 0
+% 
+%         r0_set = cat(2,r0_set{:});
+%         r0_set(remove,:) = [];
+%         r0_set = repmat({r0_set},1,N);
+% 
+%     case 'uniformRandom'
+% 
+%         idx = find(BW);
+%         locs = cell(1,D);
+%         [locs{:}] = ind2sub(sz,idx);
+% 
+%         bin = zeros(numel(idx),D,'int8');
+%         for i = D:-1:1
+%             edges = 0 : a : (sz(i)+a);
+%             bin(:,i) = discretize(locs{i},edges);
+%         end
+% 
+%         locs = cat(2,locs{:});
+% 
+%         r0_set = cell(1,N);
+%         for i = 1:N
+%             r0_set_idx = accumarray(bin(all(bin>0,2),:), (1:numel(idx))', [], @(x) x(randi(numel(x),1)), 0);
+%             r0_set_idx = r0_set_idx(logical(r0_set_idx));
+%             r0_set{i} = locs(r0_set_idx,:);
+%         end
+%     otherwise
+%         error('compute_seedPoints_nd:notValidSelectionMethod','The point selection method, %s, is either unknown or has not been programed from N-D data. Valid options are ''random'', ''uniform'', and ''uniformRandom''.',options.Point_Selection_Method)
+% end
+% 
+% end
 
 function Vi = interpolatePotential(V,r,grid_to_solver)
-
 
 sz = size(V);
 D = size(r,2);

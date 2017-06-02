@@ -1,13 +1,14 @@
 function [r, varargout] = modelParticleDynamics(dV,r0,options)
-% MODELPARTICLEDYNAMICS Model particles confined in potential V with
-% initial positions r0 and return their approximate equilibrium positions.
+% MODELPARTICLEDYNAMICS Model particles confined in potential with gradient
+% dV and initial positions r0 and return their approximate equilibrium
+% positions.
 %
-% r = modelParticleDynamics(V,r0,options)
-% [r, Info] = modelParticleDynamics(V,r0,options)
+% r = modelParticleDynamics(dV,r0,options)
+% [r, Info] = modelParticleDynamics(dV,r0,options)
 %
 % Input parameters:
 %
-% dV : Function handle taking in particle positions and returning the 
+% dV : Function handle taking in particle positions and returning the
 %   confining force (the gradient of the confining potential)
 % r0 : N x D array giving the initial position of the N particles.
 % options : Element of class seedPointOptions
@@ -18,12 +19,13 @@ function [r, varargout] = modelParticleDynamics(dV,r0,options)
 % Info : If options.Debug is true, then Info will be a structure with the
 %   following fields.
 %
-%   ode_solution : ode solution strucutre returned by ode23
-%   converged : logical flag, if true, then the solution converged before 
+%   ode_solution : ode solution structure returned by ode23
+%   converged : logical flag, if true, then the solution converged before
 %       stopping at maximum time
 %   solverTime : time to reach convergence
-%   SystemInputs : extra inputs for the solver, see the code for more 
-%       information about this
+%   SystemInputs : extra inputs for the solver, see the code for more
+%       information about this -- to actually output this, uncomment the
+%       code near the bottom; this takes a lot of space.
 %
 %
 % See also EXTRACTCLUSTERCENTERS COMPUTEOBJECTSEEDPOINTS PROCESSOBJECTS
@@ -172,17 +174,17 @@ while 1
         end
 
         failIdx = find(any(isnan(sol.y),1),1); % The time step at which the solution first failed.
-        
+
         if failIdx < RESTART_UNDER
             % Start completely over with a smaller initial time step
-            
+
 %             fprintf('start fail %d\n',quitIterations+1)
             ode_options.InitialStep = (sol.x(2)-sol.x(1))/2;
             hstry.hardreset(SOLVER_TIME_RANGE(1), y0);
         else
             % Go back ON_FAIL_BACKTRACK time steps and start again with a
             % smaller time step.
-            
+
 %             fprintf('large jump fail\n')
             returnTo = failIdx - ON_FAIL_BACKTRACK;
             startTime = sol.x(returnTo);
@@ -194,7 +196,7 @@ while 1
 
             start = max(returnTo - HISTORY_SIZE,1);
             stop = max(start,returnTo - 1);
-            
+
             hstry.rewrite(sol.x(start:stop), sol.y(:,start:stop))
             y0 = sol.y(:,returnTo);
 
@@ -236,7 +238,7 @@ r = y_end(rInds);
 if DEBUG
     Info.solverTime = solverTime;
     Info.ode_solution = sol;
-    Info.SystemInputs = SystemInputs;
+    % Info.SystemInputs = SystemInputs; % This takes up lots of space and does not really give much information that cannot be found or computed by other means.
     varargout{1} = Info;
 else
     varargout{1} = [];

@@ -1,4 +1,27 @@
 function overlap_factor = get_overlap_factor(BW)
+% GET_OVERLAP_FACTOR : compute the expected overlap factor of the
+% sub-objects for each object in the binary mask BW.
+%
+% overlap_factors = get_overlap_factor(BW)
+%
+% overlap_factors : Nx1 array. The i'th element is the overlap factor for
+%   the i'th object of BW (where objects are numbered using bwlabel()). N
+%   is the number of objects in BW.
+%
+% BW is a mask with many connected components (objects). Each object is
+% assumed to be made from several partially overlapping sub-objects. The
+% number of sub-objects is determined by the number of local maximum in
+% the distance transfrom of the object.
+% Assume each sub-object is an ellipse. Compute the expected area of each
+% sub-object and add to get expected object area without any overlapping.
+% Divide by the actual object area to compute an overlap_factor.
+%
+% The expected area of the ellipse is calculated by determining the average
+% radius along several angular bins (centered on a local max of the
+% distance transform). The minimum and the 75% value from these radii are
+% use as the semi-minor and semi-major lengths for the ellipse.
+
+% James Kapaldo
 
 % Padd mask
 BW = padarray(BW,[1 1]);

@@ -6,33 +6,7 @@ end
 
 % Read in image ----------------------------------------------------------
 
-% addpath('seed_point_detection_helpers')
-% [I,~,BW] = getDeclumpTestCase(1);
-% 
-% if ~endsWith(pwd,'seed_point_based_segmentation')
-%     cd('seed_point_based_segmentation')
-% end
-% % setup()
-% 
-% addpath('utilities','simulationFunctions','partitionFunctions');
-% 
-% options = declumpOptions();
-% options.Max_Radius = 35;
-% options.Min_Angle = 0.5;
-% options.Wigner_Seitz_Radius = 5;
-% options.Potential_Depth = -1;
-% options.Potential_Minimum_Location = 2;
-% options.Potential_Extent = 15;
-% options.Point_Selection_Method = 'curvatureUniformRandom';
-% options.Use_GPU = false;
-% options.Use_Parallel = false;
-% options.Debug = false;
-% declumpedBW = declumpNuclei(I,BW,options);
-% 
-% cd('..')
- 
-
-pth = '\exampleImages\';
+pth = 'exampleImages\';
 I = imread([pth, 'testNuclei_image.tif']);
 BW = imread([pth, 'testNuclei_mask.tif']);
 declumpedBW = imread([pth, 'testNuclei_segmentedMask.tif']);
@@ -79,10 +53,13 @@ Y = Y(:);
 Z = Z(:);
 
 % Take N numbers from the distribution -----------------------------------
-% N = 20000;
 rng('default') % make sure we use the same random numbers for testing each time.
 nP = rand(N,1);
-nIdx = nakeinterp1(CP, (1:numel(CP))', nP);
+try
+    nIdx = nakeinterp1(CP, (1:numel(CP))', nP);
+catch
+    nIdx = interp1(CP, (1:numel(CP))', nP);
+end
 nIdx = round(nIdx);
 
 dat = [X(nIdx),Y(nIdx),Z(nIdx)];

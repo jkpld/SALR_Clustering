@@ -1,4 +1,4 @@
-function [n, cents, sz] = prepare_ND_Example_Data(X, nbins, density_threshold, smooth_data, maintain_aspectRatio)
+function [n, cents, sz] = binData(X, nbins, density_threshold, smooth_data, maintain_aspectRatio)
 
 if nargin < 4
     smooth_data = false;
