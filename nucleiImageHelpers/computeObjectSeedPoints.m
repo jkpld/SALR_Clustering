@@ -61,14 +61,14 @@ try
     if ~isempty(M)
         options.Potential_Modifier = @(V) V .* M;
     end
-    
+
     % Compute confining force, initial points, and problem scales.
     [dV, r0, problem_scales, SetupInfo] = setup_problem(BW, [], options, r0set);
     solver_to_data = @(x) problem_scales.grid_to_data(x./problem_scales.grid_to_solver);
 
     % Model dynamics -----------------------------------------------------
     % If there was only one initial particle, then we do not simulate it,
-    % we will just return the centroid of the object. 
+    % we will just return the centroid of the object.
     %
     % Note: Since we can model the object several times, if all of the
     % iterations have less than 4 particles and at least 1 of them only has
@@ -81,18 +81,12 @@ try
         end % if
         return;
     end % if
-    
+
     R = options.Iterations;
     seedPoints_n = cell(R,1);
 
     if DEBUG
-        Info = struct('simulationInfo', cell(1,R), ...
-                      'r0', cell(1,R), ...
-                      'r_final', cell(1,R), ...
-                      'seedPoints_n', cell(1,R), ...
-                      'cluster_sizes_n', cell(1,R), ...
-                      'iteration_sizes', cell(1,R));
-        for n = 1:R
+        for n = R:-1:1
             [r, simInfo] = modelParticleDynamics(dV, r0{n}, options); % r_final is in solver space
             [seedPoints_n{n}, clstSz] = extractClusterCenters(r, options);
 
