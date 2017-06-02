@@ -176,9 +176,9 @@ function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cel
                                   'data_to_grid', @(r) r + PAD_SIZE, ...
                                   'grid_to_data', @(r) r - PAD_SIZE, ...
                                   'grid_to_solver', ones(1,D));
-                              
+
     addParameter(p,'problem_scales', defaultProblemScales, validateProblemScales)
-    addParameter(p,'r0set',[], @(t) validateattributes(t, {'double'}, {'2d'}))
+    addParameter(p,'r0set',[], @(t) validateattributes(t, {'double'}, {'size',[NaN, D],'finite','real'}))
     addParameter(p,'use_cellarray',true, @(t) t==0 || t==1)
 
     parse(p,varargin{:})
@@ -210,7 +210,7 @@ function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cel
     % $$V = \frac{\pi^{n/2}}{\Gamma(n/2+1)}\prod_k c_k$$
     %
     % where c_k are the axis lengths along each dimension.
-    
+
     particle_size = pi^(D/2)/gamma(D/2+1)*prod(rs);
     N = max(round( sum(BW(:)) / particle_size ), 1);
 
@@ -224,7 +224,7 @@ function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cel
         cell_size = prod(2*rs);
     end
     lattice_constant = 2 * rs * (particle_size/cell_size)^(1/D);
-    
+
     % Several methods use the points of the mask and the (offset) center of
     % the mask.
     [BWpts{1:D}] = ind2sub(sz,find(BW));
