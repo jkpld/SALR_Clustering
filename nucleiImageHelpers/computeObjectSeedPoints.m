@@ -84,22 +84,29 @@ try
     seedPoints_n = cell(R,1);
     cluster_sizes_n = cell(R,1);
 
+    % Create a progress monitor
+    progres = displayProgress(R, 10, verbose, Use_Parallel);
+    Que = progres.start();
+
     if DEBUG
         r_final_n = cell(R,1);
         iteration_sizes = zeros(R,2);
         simulationInfo = cell(1,R);
 
         if Use_Parallel
+
             parfor n = 1:R
                 [r_final_n{n}, simulationInfo{n}] = modelParticleDynamics(dV, r0{n}, options); % r_final is in solver space
                 [seedPoints_n{n}, cluster_sizes_n{n}] = extractClusterCenters(r_final_n{n}, options);
                 iteration_sizes(n,:) = [size(r_final_n{n},1), numel(cluster_sizes_n{n})];
+                if ~isempty(Que), send(Que, obj), end
             end
         else
             for n = 1:R
                 [r_final_n{n}, simulationInfo{n}] = modelParticleDynamics(dV, r0{n}, options); % r_final is in solver space
                 [seedPoints_n{n}, cluster_sizes_n{n}] = extractClusterCenters(r_final_n{n}, options);
                 iteration_sizes(n,:) = [size(r_final_n{n},1), numel(cluster_sizes_n{n})];
+                progres.iteration_end()
             end
         end
 
@@ -115,14 +122,18 @@ try
             parfor n = 1:R
                 r = modelParticleDynamics(dV, r0{n}, options); % r_final is in solver space
                 [seedPoints_n{n}, cluster_sizes_n{n}] = extractClusterCenters(r, options);
+                if ~isempty(Que), send(Que, obj), end
             end
         else
             for n = 1:R
                 r = modelParticleDynamics(dV, r0{n}, options); % r_final is in solver space
                 [seedPoints_n{n}, cluster_sizes_n{n}] = extractClusterCenters(r, options);
+                progres.iteration_end()
             end
         end
     end
+
+    delete(progress)
 
     % % Post-processing --------------------------------------------------
     % Remove any particles outide the object.
@@ -167,7 +178,6 @@ catch ME
             inputs.r0set = r0set;
             inputs.useCentroid = useCentroid;
             inputs.objNumber = objNumber;
-            inputs.verbose = verbose;
             inputs.errorCount = errorCount + 1;
             [seedPoints, Info] = computeObjectSeedPoints(binned_data, options, inputs);
         else
@@ -245,7 +255,7 @@ function [D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, U
     % Get input values
     p = inputParser;
     p.FunctionName = 'copmuteObjectSeedPoints';
-    
+
     function valid = validate_r0set(t)
         if ~isempty(t)
             validateattributes(t, {'double'}, {'size',[NaN, D],'finite','real'},'varName','r0set')
@@ -273,7 +283,6 @@ function [D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, U
     addParameter(p,'useCentroid',false, @(t) t==0 || t==1)
     addParameter(p,'objNumber',1, @(t) validateattributes(t, {'numeric'}, {'scalar','integer','positive'},'varName','objNumber'))
     addParameter(p,'errorCount',0, @(t) validateattributes(t, {'numeric'}, {'scalar','integer','positive'},'varName','errorCount'))
-    addParameter(p,'verbose',1, @(t) validateattributes(t, {'numeric'}, {'scalar'},'varName','verbose'))
 
     parse(p,varargin{:})
 
@@ -283,7 +292,7 @@ function [D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, U
     useCentroid = logical(p.Results.useCentroid);
     objNumber = p.Results.objNumber;
     errorCount = p.Results.errorCount;
-    verbose = logical(p.Results.verbose);
+    verbose = options.Verbose;
 
     % Using the centroid is only valid if the binned data is binary.
     % Silently turn useCentroid off if data is not binary.

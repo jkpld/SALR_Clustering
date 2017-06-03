@@ -45,6 +45,7 @@ r0set = cellfun(@(x,y) x - y, r0set, objOffset,'UniformOutput',false);
 
 % Compute the seed points.
 N = numel(pixelList);
+verbose = options.Verbose;
 Use_Parallel = options.Use_Parallel;
 if N == 1
     Use_Parallel = 0;
@@ -54,6 +55,9 @@ end
 Info = cell(N,1);
 seedPoints = cell(N,1);
 
+% Create a progress monitor
+progres = displayProgress(N, 10, verbose, Use_Parallel);
+
 if Use_Parallel
     % If we are computing in parallel, then first convert the options class
     % element to a structure to prevent reinitiallization on transfer to
@@ -62,25 +66,20 @@ if Use_Parallel
     options = struct(options);
     warning('on','MATLAB:structOnObject')
 
+    Que = progres.start();    
     parfor obj = 1:N
         [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, useCentroid(obj), obj, options);
-    end
+        if ~isempty(Que), send(Que, obj), end
+    end    
 else
-    % Display the progress of the calculation (we can do this since we are not computing the objects in parallel)
-    generateDisplayAt = unique(round(linspace(1,N,7)));
-    processTimes = zeros(1,N);
-    fprintf('Starting seed point calculation\n')
-
+    progres.start();
     for obj = 1:N
-        procTime = tic;
         [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, useCentroid(obj), obj, options);
-        processTimes(obj) = toc(procTime);
-        if any(obj == generateDisplayAt)
-            fprintf('%s >> %d/%d (%0.2f/%0.2f)...\n',datestr(now,31),obj,N,sum(processTimes(1:obj))/60,mean(processTimes(1:obj))*N/60)
-        end % if
-    end % for
-    fprintf('Finished!\n')
-end % if
+        progres.iteration_end()
+    end
+end
+
+delete(progres)
 
 % Offset seed points to image coordinates
 seedPoints = cellfun(@(x,y) [x(:,1:2) + y, x(:,3)], seedPoints, objOffset,'UniformOutput',false);

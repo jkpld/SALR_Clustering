@@ -156,6 +156,7 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         Use_Parallel                 = false;
 
         % Debug options
+        Verbose                      = false;
         Debug                        = false;
         Object_Of_Interest           = [];
 
@@ -278,7 +279,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
             end
 
             obj = setPotentialParameter(obj, value);
-
         end
 
         function obj = set.Potential_Parameters_Space(obj,value)
@@ -334,7 +334,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
             end
 
             obj.Max_Distance_Transform = value;
-
         end
 
         function obj = set.Max_Potential_Force(obj, value)
@@ -345,7 +344,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
             end
 
             obj.Max_Potential_Force = value;
-
         end
 
         function obj = set.Potential_Padding_Size(obj,value)
@@ -487,6 +485,13 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         function obj = set.Maximum_Memory(obj,value)
             validateattributes(value,{'double'},{'positive','scalar','real'})
             obj.Maximum_Memory = value;
+        end
+
+        function obj = set.Verbose(obj,value)
+            if (value ~= 0) && (value ~= 1)
+                error('seedPointOptions:badInput','Expected input to be logical.')
+            end
+            obj.Verbose = value;
         end
 
         function obj = set.Debug(obj,value)
