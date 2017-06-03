@@ -18,6 +18,9 @@ function problem_scales = computeProblemScales(options, grid_size, data_limits)
 %   *Note: If data_limits is not given or is empty, then data_limits will
 %   be set to data_limits = [zeros(1,D), grid_size]. This will give a
 %   grid_spacing of 1.
+%   *Note: If options is empty, then the Potential_Padding_Size will be
+%   considered to be 0, and the attractive extents will be considered to be
+%   1.
 %
 % Output parameters:
 % problem_scales : structure with four fields
@@ -33,6 +36,17 @@ function problem_scales = computeProblemScales(options, grid_size, data_limits)
 % See also SEEDPOINTOPTIONS
 
 % James Kapaldo
+
+% Options.
+if isempty(options)
+    PAD_SIZE = 0;
+    solver_ra = 1;
+    data_ra = 1;
+else
+    PAD_SIZE = options.Potential_Padding_Size;
+    solver_ra = options.ScaleInvarient_Potential_Extent;
+    data_ra = options.Potential_Parameters(3);
+end
 
 % Dimension
 D = length(grid_size);
@@ -51,7 +65,7 @@ data_range = diff(data_limits,1,1);
 grid_spacing = data_range ./ grid_size;
 
 % Compute grid <--> data conversions.
-PAD_SIZE = options.Potential_Padding_Size;
+
 data_to_grid = @(r) (r - data_limits(1,:))./grid_spacing + PAD_SIZE;
 grid_to_data = @(r) (r - PAD_SIZE).*grid_spacing + data_limits(1,:);
 
@@ -59,7 +73,7 @@ grid_to_data = @(r) (r - PAD_SIZE).*grid_spacing + data_limits(1,:);
 %   Note that solver space is simply the data space scaled by a factor. The
 %   factor should be such that the attractive extent in solver space is
 %   given by ScaleInvarient_Potential_Extent
-grid_to_solver = grid_spacing * options.ScaleInvarient_Potential_Extent / options.Potential_Parameters(3);
+grid_to_solver = grid_spacing * solver_ra / data_ra;
 
 % Form output structure
 problem_scales = struct('grid_spacing', grid_spacing, ...
