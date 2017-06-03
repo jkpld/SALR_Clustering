@@ -27,18 +27,11 @@ pixelList = CC.PixelIdxList;
 % Get object scales
 objectScale = compute_objectScale(BW, pixelList);
 
-% Create confining potential modifier -----------------------------------
-% I = imfilter(I, fspecial('gaussian',7,1)); % Smooth the image
-% H = homogenize_image(I, BW, CC, options); % Get homogenized image
-% H = 1 ./ H; % confining potential
-% H = cellfun(@(x) H(x), pixelList,'UniformOutput',false); % Slice potential
-H = cell(numel(pixelList),1);
-
 % Compute boundary information
 [B,~,K,r0set] = computeBoundaryInformation(BW, objectScale, options);
 
 % If there is an object of interest, remove all the others.
-[pixelList, B, K, r0set, H, objectScale] = getObjectOfInterest(options, pixelList, B, K, r0set, H, objectScale);
+[pixelList, B, K, r0set, objectScale] = getObjectOfInterest(options, pixelList, B, K, r0set, objectScale);
 
 % Use the object centroid as the seed point for any object that is convex
 % or smaller than the particle area
@@ -70,7 +63,7 @@ if Use_Parallel
     warning('on','MATLAB:structOnObject')
 
     parfor obj = 1:N
-        [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, H{obj}, useCentroid(obj), obj, options);
+        [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, useCentroid(obj), obj, options);
     end
 else
     % Display the progress of the calculation (we can do this since we are not computing the objects in parallel)
@@ -80,7 +73,7 @@ else
 
     for obj = 1:N
         procTime = tic;
-        [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, H{obj}, useCentroid(obj), obj, options);
+        [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, useCentroid(obj), obj, options);
         processTimes(obj) = toc(procTime);
         if any(obj == generateDisplayAt)
             fprintf('%s >> %d/%d (%0.2f/%0.2f)...\n',datestr(now,31),obj,N,sum(processTimes(1:obj))/60,mean(processTimes(1:obj))*N/60)
@@ -112,11 +105,11 @@ end
 
 end
 
-function [seedPoints, Info] = processObject(pixList, nRows, r0set, modifier, useCentroid, obj, options)
+function [seedPoints, Info] = processObject(pixList, nRows, r0set, useCentroid, obj, options)
 
     % Create mask and interior potential images for the object
-    [objBW,objM] = createObjectImages(pixList, nRows, true(numel(pixList),1), modifier);
-    [seedPoints, Info] = computeObjectSeedPoints(objBW, options, 'modifier', objM, 'r0set', r0set, 'useCentroid', useCentroid, 'objNumber', obj);
+    objBW = createObjectImages(pixList, nRows, true(numel(pixList),1));
+    [seedPoints, Info] = computeObjectSeedPoints(objBW, options, 'r0set', r0set, 'useCentroid', useCentroid, 'objNumber', obj);
 
     % Add object number as third column. (This is mostly just helpful when comparing against truth data, as the truth data is labeled by each object.)
     seedPoints = [seedPoints, obj*ones(size(seedPoints,1),1)];
