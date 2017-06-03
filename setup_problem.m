@@ -1,10 +1,10 @@
-function [dV, r0, problem_scales, Info] = setup_problem(binned_data, data_limits, options, r0set)
+function [dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_limits, options, r0set)
 % SETUP_PROBLEM Generate the confining force, the initial particle
 % locations, and the scaling factors for the simulation.
 %
-% [dV, r0, problem_scales] = setup_problem(binned_data, data_range, options)
-% [dV, r0, problem_scales] = setup_problem(binned_data, data_range, options, r0set)
-% [dV, r0, problem_scales, Info] = setup_problem(binned_data, data_range, options, ...)
+% [dV, r0, problem_scales, V] = setup_problem(binned_data, data_range, options)
+% [dV, r0, problem_scales, V] = setup_problem(binned_data, data_range, options, r0set)
+% [dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_range, options, ...)
 %
 % Input parameters:
 % binned_data : Binned data to be used for forming the confining potential
@@ -25,10 +25,10 @@ function [dV, r0, problem_scales, Info] = setup_problem(binned_data, data_limits
 % problem_scales : A structure with fields grid_spacing and grid_to_solver
 %   giving the size of each bin in data units and the scale factor to go
 %   from the grid to the solver space.
+% V : The confining potential
 % Info : A structure array of information that may be useful when debuging.
 %   If options.Debug is false, then Info will be empty; otherwise, it will
 %   have the following fields
-%       V : the confining potential
 %       ComputeInitialPointsInfo : A structure containing the debug
 %           information from the computeInitialPoints() function.
 %
@@ -74,7 +74,6 @@ BW = (V < options.Maximum_Initial_Potential) & (V > options.Minimum_Initial_Pote
 
 
 if DEBUG
-    Info.V = V;
     Info.ComputeInitialPointsInfo = InitPointsInfo;
 end
 
