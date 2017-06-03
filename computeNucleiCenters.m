@@ -51,9 +51,43 @@ objOffset = cellfun(@(x) min(x,[],1,'omitnan') - 1, B,'UniformOutput',false);
 r0set = cellfun(@(x,y) x - y, r0set, objOffset,'UniformOutput',false);
 
 % Compute the seed points.
-% Note, if you want to also use the seed points to segment the objects, then it would be a good choice to insert the segmentation code in this function "processObjects" and add in any additional input/outputs you need.
-[seedPoints, Info] = processObjects(pixelList, H, r0set, useCentroid, nRows, options);
+N = numel(pixelList);
+Use_Parallel = options.Use_Parallel;
+if N == 1
+    Use_Parallel = 0;
+end
 
+% Initialize sliced variables
+Info = cell(N,1);
+seedPoints = cell(N,1);
+
+if Use_Parallel
+    % If we are computing in parallel, then first convert the options class
+    % element to a structure to prevent reinitiallization on transfer to
+    % each worker.
+    warning('off','MATLAB:structOnObject')
+    options = struct(options);
+    warning('on','MATLAB:structOnObject')
+
+    parfor obj = 1:N
+        [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, H{obj}, useCentroid(obj), obj, options);
+    end
+else
+    % Display the progress of the calculation (we can do this since we are not computing the objects in parallel)
+    generateDisplayAt = unique(round(linspace(1,N,7)));
+    processTimes = zeros(1,N);
+    fprintf('Starting seed point calculation\n')
+
+    for obj = 1:N
+        procTime = tic;
+        [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, H{obj}, useCentroid(obj), obj, options);
+        processTimes(obj) = toc(procTime);
+        if any(obj == generateDisplayAt)
+            fprintf('%s >> %d/%d (%0.2f/%0.2f)...\n',datestr(now,31),obj,N,sum(processTimes(1:obj))/60,mean(processTimes(1:obj))*N/60)
+        end % if
+    end % for
+    fprintf('Finished!\n')
+end % if
 
 % Offset seed points to image coordinates
 seedPoints = cellfun(@(x,y) [x(:,1:2) + y, x(:,3)], seedPoints, objOffset,'UniformOutput',false);
@@ -76,4 +110,19 @@ if all(cellfun(@isempty, Info))
     Info = [];
 end
 
+end
+
+function [seedPoints, Info] = processObject(pixList, nRows, r0set, modifier, useCentroid, obj, options)
+
+    % Create mask and interior potential images for the object
+    [objBW,objM] = createObjectImages(pixList, nRows, true(numel(pixList),1), modifier);
+    [seedPoints, Info] = computeObjectSeedPoints(objBW, options, 'modifier', objM, 'r0set', r0set, 'useCentroid', useCentroid, 'objNumber', obj);
+
+    % Add object number as third column. (This is mostly just helpful when comparing against truth data, as the truth data is labeled by each object.)
+    seedPoints = [seedPoints, obj*ones(size(seedPoints,1),1)];
+
+    % ====================================================================
+    % This could be a good place to put object segmentation code. Just add
+    % any additional inputs/outputs you need.
+    % ====================================================================
 end
