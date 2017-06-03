@@ -57,6 +57,7 @@ seedPoints = cell(N,1);
 
 % Create a progress monitor
 progres = displayProgress(N, 10, verbose, Use_Parallel);
+Que = progres.start();
 
 if Use_Parallel
     % If we are computing in parallel, then first convert the options class
@@ -66,13 +67,11 @@ if Use_Parallel
     options = struct(options);
     warning('on','MATLAB:structOnObject')
 
-    Que = progres.start();    
     parfor obj = 1:N
         [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, useCentroid(obj), obj, options);
         if ~isempty(Que), send(Que, obj), end
-    end    
+    end
 else
-    progres.start();
     for obj = 1:N
         [seedPoints{obj}, Info{obj}] = processObject(pixelList{obj}, nRows, r0set{obj}, useCentroid(obj), obj, options);
         progres.iteration_end()
