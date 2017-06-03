@@ -1,4 +1,3 @@
-% function [seedPoints, Info] = computeObjectSeedPoints(binned_data, M, r0set, useCentroid, options, objNumber, errorCount)
 function [seedPoints, Info] = computeObjectSeedPoints(binned_data, options, varargin)
 % COMPUTEOBJECTSEEDPOINTS Compute the seed points for a single object
 %
@@ -15,21 +14,22 @@ function [seedPoints, Info] = computeObjectSeedPoints(binned_data, options, vara
 %
 % Output parameters:
 %   seedPoints : Lx2 array of computed seed points
-%   Info : If options.debug is False, then Info will be empty. If
-%       options.debug is True, then Info will be a structure with several
-%       fields:
-%           r0 : initial points used in simulation
-%           r_final : final location of simulated points
-%           V : confining potential
-%           ComputeInitialPointsInfo : structure of initial points
-%               information, see computeInitialPoints()
-%           message : integer giving an exit code
-%               0, everything is fine
-%               1, object is convex or too small (the center of the object
-%                   will be the seed point)
-%               2, less than 2 initial particles (the center of the object
-%                   will be the seed point)
-%               3, there was twice an error, object will be skipped
+%   Info : A structure that always containes a field named, problem_scales,
+%       which holds the problem_scales structure returned by
+%       computeProblemScales. If options.debug is ture, then Info will also
+%       have several other fields:
+%       r0 : initial points used in simulation
+%       r_final : final location of simulated points
+%       V : confining potential
+%       ComputeInitialPointsInfo : structure of initial points
+%           information, see computeInitialPoints()
+%       message : integer giving an exit code
+%           0, everything is fine
+%           1, object is convex or too small (the center of the object
+%               will be the seed point)
+%           2, less than 2 initial particles (the center of the object
+%               will be the seed point)
+%           3, there was twice an error, object will be skipped
 
 % See also MODELPARTICLEDYNAMICS EXTRACTCLUSTERCENTERS COMPUTEINITIALPOINTS
 % CREATE_SCALEINVAR_CONFINING_POTENTIAL COMPUTEGRIDSCALEFACTORS
@@ -45,7 +45,7 @@ Info = [];
 DEBUG = options.Debug;
 
 if useCentroid
-    [seedPoints, Info] = computeCentroid(binned_data,DEBUG,1);%'convex_or_tooSmall');
+    [seedPoints, Info] = computeCentroid(binned_data,data_limits,DEBUG,1);%'convex_or_tooSmall');
     return
 end
 
@@ -59,6 +59,7 @@ try
     % Compute confining force, initial points, and problem scales.
     [dV, r0, problem_scales, V, SetupInfo] = setup_problem(binned_data, data_limits, options, r0set);
     solver_to_data = @(x) problem_scales.grid_to_data(x./problem_scales.grid_to_solver);
+    Info.problem_scales = problem_scales; % save the problem scales.
 
     % Model dynamics -----------------------------------------------------
     % If there was only one initial particle, then we do not simulate it,
@@ -69,7 +70,7 @@ try
     % one particle, then we will not simulation it.
     num_r0 = cellfun(@(x) size(x,1), r0);
     if any(num_r0<2) && all(num_r0<4)
-        [seedPoints,Info] = computeCentroid(binned_data,DEBUG,2);%'lessThan_2_initial_particles');
+        [seedPoints,Info] = computeCentroid(binned_data,data_limits,DEBUG,2);%'lessThan_2_initial_particles');
         if DEBUG
             Info.ComputeInitialPoints = SetupInfo.ComputeInitialPointsInfo;
         end
@@ -200,7 +201,7 @@ end
 
 end
 
-function [seedPoint, Info] = computeCentroid(binned_data,DEBUG,reason)
+function [seedPoint, Info] = computeCentroid(binned_data,data_limits,DEBUG,reason)
 
 % Note, binned_data has not been padded and so the centroid is already in data
 % units.
@@ -210,11 +211,15 @@ D = numel(sz);
 BWpts = cat(2,BWpts{:});
 seedPoint = mean(BWpts,1);
 
-Info = [];
+problem_scales = computeProblemScales([], sz, data_limits);
+seedPoint = problem_scales.grid_to_data(seedPoint);
+
 if DEBUG
     Info = emptyInfo(D);
     Info.message = reason;
 end
+Info.problem_scales = problem_scales;
+
 end
 
 function Vi = interpolatePotential(V, r)
@@ -242,7 +247,8 @@ function Info = emptyInfo(D)
                   'cluster_sizes', NaN, ...
                   'V', [], ...
                   'solverTime', NaN, ...
-                  'message', NaN);
+                  'message', NaN, ...
+                  'problem_scales',struct());
 end
 
 
@@ -301,13 +307,13 @@ function [D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, U
     end
 
     currently_in_parallel = is_in_parallel();
-    
+
     if options.Use_Parallel && ~currently_in_parallel
         Use_Parallel = true;
     else
         Use_Parallel = false;
     end
-    
+
     if currently_in_parallel
         verbose = false;
     end
