@@ -29,7 +29,7 @@ function [seedPoints, Info] = processObjects(pixels, M, r0set, useCentroid, nRow
             
             % Create mask and interior potential images for the object
             [objBW,objM] = createObjectImages(pixels{obj}, nRows, true(numel(pixels{obj}),1), M{obj});
-            [seedPoints{obj}, Info{obj}] = computeObjectSeedPoints(objBW, objM, r0set{obj}, useCentroid(obj), options, obj)
+            [seedPoints{obj}, Info{obj}] = computeObjectSeedPoints(objBW, options, 'modifier', objM, 'r0set', r0set{obj}, 'useCentroid', useCentroid(obj), 'objNumber', obj)
 
             % Add object number as third column. (This is mostly just helpful when comparing against truth data, as the truth data is labeled by each object.)
             seedPoints{obj} = [seedPoints{obj}, obj*ones(size(seedPoints{obj},1),1)];
@@ -49,7 +49,7 @@ function [seedPoints, Info] = processObjects(pixels, M, r0set, useCentroid, nRow
 
             % Create mask and interior potential images for the object
             [objBW,objM] = createObjectImages(pixels{obj}, nRows, true(numel(pixels{obj}),1), M{obj});
-            [seedPoints{obj}, Info{obj}] = computeObjectSeedPoints(objBW, objM, r0set{obj}, useCentroid(obj), options, obj);
+            [seedPoints{obj}, Info{obj}] = computeObjectSeedPoints(objBW, options, 'modifier', objM, 'r0set', r0set{obj}, 'useCentroid', useCentroid(obj), 'objNumber', obj)
 
             % Add object number as third column. (This is mostly just helpful when comparing against truth data, as the truth data is labeled by each object.)
             seedPoints{obj} = [seedPoints{obj}, obj*ones(size(seedPoints{obj},1),1)];
