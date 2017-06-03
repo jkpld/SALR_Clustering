@@ -82,15 +82,6 @@ classdef displayProgress < handle
             end
             obj.timer = tic();
         end
-        
-        function Que = start_parallel(obj)
-            if ~obj.active || ~obj.is_parallel
-                Que = [];
-                return;
-            end
-            
-            obj.timer = tic();
-        end
 
         function iteration_end(obj,varargin)
             if ~obj.active
