@@ -133,7 +133,7 @@ try
         end
     end
 
-    delete(progress)
+    delete(progres)
 
     % % Post-processing --------------------------------------------------
     % Remove any particles outide the object.
@@ -300,9 +300,15 @@ function [D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, U
         useCentroid = false;
     end
 
-    if options.Use_Parallel && ~is_in_parallel()
+    currently_in_parallel = is_in_parallel();
+    
+    if options.Use_Parallel && ~currently_in_parallel
         Use_Parallel = true;
     else
         Use_Parallel = false;
+    end
+    
+    if currently_in_parallel
+        verbose = false;
     end
 end
