@@ -177,8 +177,15 @@ function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cel
                                   'grid_to_data', @(r) r - PAD_SIZE, ...
                                   'grid_to_solver', ones(1,D));
 
+    function valid = validate_r0set(t)
+        if ~isempty(t)
+            validateattributes(t, {'double'}, {'size',[NaN, D],'finite','real'},'varName','r0set')
+        end
+        valid = true;
+    end
+
     addParameter(p,'problem_scales', defaultProblemScales, validateProblemScales)
-    addParameter(p,'r0set',[], @(t) validateattributes(t, {'double'}, {'size',[NaN, D],'finite','real'}))
+    addParameter(p,'r0set',[], @validate_r0set)
     addParameter(p,'use_cellarray',true, @(t) t==0 || t==1)
 
     parse(p,varargin{:})
