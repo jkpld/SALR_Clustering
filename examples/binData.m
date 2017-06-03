@@ -1,4 +1,4 @@
-function [n, cents, sz] = binData(X, nbins, density_threshold, smooth_data, maintain_aspectRatio)
+function [n, cents, sz, data_limits] = binData(X, nbins, density_threshold, smooth_data, maintain_aspectRatio)
 
 if nargin < 4
     smooth_data = false;
@@ -24,12 +24,13 @@ minIdx = max(1,min(idx)-1);
 maxIdx = min(sz,max(idx)+1);
 
 for i = 1:D
-    boundEdges(:,i) = [cents{i}(minIdx(i)), cents{i}(maxIdx(i))];
+    d = [-1,1]*(cents{i}(2)-cents{i}(1))/2;
+    boundEdges(:,i) = [cents{i}(minIdx(i)), cents{i}(maxIdx(i))] + d;
 end
 
-% Re-discretize the data with the same number of bins across the region 
+% Re-discretize the data with the same number of bins across the region
 % above the density threshold. ------------------------------------------
-[n, cents, sz] = discretizeData(X, boundEdges, nbins, maintain_aspectRatio);
+[n, cents, sz, data_limits] = discretizeData(X, boundEdges, nbins, maintain_aspectRatio);
 
 if smooth_data
     n = smooth_nd(n, 0.5, 3, 1);
@@ -39,7 +40,7 @@ n(n<0) = 0;
 
 end
 
-function [n, cents, sz] = discretizeData(X, boundEdges, nbins, useMean)
+function [n, cents, sz, data_limits] = discretizeData(X, boundEdges, nbins, useMean)
 
 D = size(X,2);
 vS = diff(boundEdges,1)/nbins;
@@ -48,11 +49,13 @@ if useMean % Maintain data aspect ratio
 end
 
 cents = cell(1,D);
+data_limits = zeros(2,D);
 bin = zeros(size(X,1),D,'uint8');
 for i = D:-1:1
-    edges = (floor(boundEdges(1,i)/vS(i))*vS(i)-vS(i)) : vS(i)  : (ceil(boundEdges(2,i)/vS(i))*vS(i) + vS(i)); 
-    bin(:,i) = discretize(X(:,i),edges);    
+    edges = (floor(boundEdges(1,i)/vS(i))*vS(i)-vS(i)) : vS(i)  : (ceil(boundEdges(2,i)/vS(i))*vS(i) + vS(i));
+    bin(:,i) = discretize(X(:,i),edges);
     cents{i} = edges(1:end-1) + vS(i)/2;
+    data_limits(:,i) = [edges(1), edges(end)];
 end
 
 sz = cellfun(@length, cents);
@@ -68,11 +71,11 @@ function n = smooth_nd(dat, sigma, hsize, verbose)
     % Get the indices of the non-zero data
     sz = int16(size(dat));
     D = length(sz);
-    
+
     dat_lin_idx = find(dat);
     [dat_idx{1:D}] = ind2sub(sz,dat_lin_idx);
-    dat_idx = int16(cat(2,dat_idx{:}));   
-    
+    dat_idx = int16(cat(2,dat_idx{:}));
+
     % Create guassian filter and index arrays
     h = ndGaussianFilter(D,sigma,hsize);
     r = (hsize-1)/2; % filter radius
@@ -84,20 +87,20 @@ function n = smooth_nd(dat, sigma, hsize, verbose)
     end
     lin_idx = sub2ind(size(h),lin_idx{:});
 
-    
+
     % Initialize the output
     n = zeros(sz,'single');
-    
+
     if verbose
         fprintf('\nSmoothing data...   0%%\n')
     end
-    
+
     % Iterate over each element in the smoothing filter
     for ii = 1:hsize^D
         % Offset the data indices by filter index (filter indices are
         % centered on zero)
-        tmp = min(max(dat_idx + idx(ii,:),1),sz);        
-        
+        tmp = min(max(dat_idx + idx(ii,:),1),sz);
+
         % Compute the new linear indices
         tmp_lin = sub2ind_fast(sz, tmp);
 
@@ -109,7 +112,7 @@ function n = smooth_nd(dat, sigma, hsize, verbose)
             fprintf('\b\b\b\b\b%3.0f%%\n',100*ii/hsize^D)
         end
     end
-    
+
     if verbose
         fprintf('\b ...Finished!\n')
     end
