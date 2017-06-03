@@ -424,7 +424,7 @@ function [r0_set, varargout] = r0set_uniformRandom(r0set, sz, lattice_constant, 
         % Bin the data.
         for i = D:-1:1
             edges{i} = 0 : lattice_constant(i) : (sz(i)+lattice_constant(i));
-            bin(:,i) = discretize(r0set{i},edges);
+            bin(:,i) = discretize(r0set(:,i),edges{i});
         end
 
         if debug
