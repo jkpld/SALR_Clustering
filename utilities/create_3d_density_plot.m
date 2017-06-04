@@ -3,17 +3,8 @@ function Parent = create_3d_density_plot(n, dims, isoLvls, varargin)
 
 [n, dims, isoLvls, markers, color_scale, ticks, ticklabels, cmap, axisPlaneOffset,Parent] = parse_inputs(n,dims,isoLvls,varargin{:});
 
-
-% Project input data to the three dimensions given -------------------
-inds = find(~ismember(1:ndims(n), dims));
-for i = inds
-    n = sum(n,i);
-end
-
-n = squeeze(n);
 sz = size(n);
 n = permute(n,[2,1,3]);
-
 
 
 % Compute the isosurfaces and their bounds ----------------------------
@@ -38,7 +29,6 @@ if all(toRemove)
 end
 iso(toRemove) = [];
 isoLvls(toRemove) = [];
-
 
 
 % Create the figure --------------------------------------------------
@@ -147,8 +137,6 @@ ax.UserData.change_with_yz = change_with_yz;
 ax.UserData.change_with_zlbl = change_with_zlbl;
 
 
-
-
 % Set the default view ---------------------------------------------------
 daspect([1 1 1])
 view([135,35])
@@ -205,8 +193,8 @@ default_tick_spacing = 10 * ones(1,D);
 p = inputParser;
 p.FunctionName = 'create_3d_density_plot';
 
-addParameter(p,'bin_centers',default_bin_centers, @validate_bin_centers);
-addParameter(p,'tick_spacing',default_tick_spacing, @validate_tick_spacing);
+addParameter(p,'Bin_Centers',default_bin_centers, @validate_bin_centers);
+addParameter(p,'Tick_Spacing',default_tick_spacing, @validate_tick_spacing);
 addParameter(p,'Markers',[]);
 addParameter(p,'ColorScale',@(x) x, @(t) isempty(t) || isa(t,'function_handle'));
 addParameter(p,'Colormap',cmap, @(t) validateattributes(t,{'double'},{'2d','ncols',3,'real','finite','nonnegative','<=',1}));
@@ -215,25 +203,36 @@ addParameter(p,'Parent',[], @(t) isempty(t) || isa(t,'matlab.UI.Figure') || isa(
 
 parse(p,varargin{:})
 
-cents = p.Results.bin_centers;
-dt = p.Results.tick_spacing;
+cents = p.Results.Bin_Centers;
+dt = p.Results.Tick_Spacing;
 Markers = p.Results.Markers;
 ColorScale = p.Results.ColorScale;
-% Ticks = p.Results.Ticks;
-% TickLabels = p.Results.TickLabels;
 Colormap = p.Results.Colormap;
 AxisPlaneOffset = 10;%p.Results.AxisPlaneOffset;
 Parent = p.Results.Parent;
 
+% Project input data to the three dimensions given -------------------
+inds = find(~ismember(1:D, dims));
+for i = inds
+    n = sum(n,i);
+end
+n = squeeze(n);
+
+% Permute data to order given
+cents = cents(dims);
+dt = dt(dims);
+[~,inds] = sort(dims);
+n = ipermute(n,inds);
+sz = size(n);
+
 % Compute ticks and tick labels.
 for i = 3:-1:1
-    idx = dims(i);
-    c = cents{idx};
+    c = cents{i};
     c1 = fix(c(1));
     c2 = fix(c(end));
 
-    TickLabels{i} = round(c1/dt(idx))*dt(idx):dt(idx):(c2-dt(idx)/2);
-    Ticks{i} = interp1(c, 1:sz(idx), TickLabels{i});
+    TickLabels{i} = round(c1/dt(i))*dt(i):dt(i):(c2-dt(i)/2);
+    Ticks{i} = interp1(c, 1:sz(i), TickLabels{i});
 end
 
 
