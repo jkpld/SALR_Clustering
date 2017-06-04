@@ -14,15 +14,9 @@ function [seedPoints, Info] = computeObjectSeedPoints(binned_data, options, vara
 %
 % Output parameters:
 %   seedPoints : Lx2 array of computed seed points
-%   Info : A structure that always containes a field named, problem_scales,
-%       which holds the problem_scales structure returned by
-%       computeProblemScales. If options.debug is ture, then Info will also
-%       have several other fields:
-%       r0 : initial points used in simulation
-%       r_final : final location of simulated points
-%       V : confining potential
-%       ComputeInitialPointsInfo : structure of initial points
-%           information, see computeInitialPoints()
+%   Info : A structure that always containes two fields:, 
+%       problem_scales : the problem_scales structure returned by
+%           computeProblemScales. 
 %       message : integer giving an exit code
 %           0, everything is fine
 %           1, object is convex or too small (the center of the object
@@ -30,6 +24,15 @@ function [seedPoints, Info] = computeObjectSeedPoints(binned_data, options, vara
 %           2, less than 2 initial particles (the center of the object
 %               will be the seed point)
 %           3, there was twice an error, object will be skipped
+%
+%       Additionally, if options.debug is ture, then Info will also have
+%       several other fields:
+%        r0 : initial points used in simulation
+%        r_final : final location of simulated points
+%        V : confining potential
+%        ComputeInitialPointsInfo : structure of initial points
+%            information, see computeInitialPoints()
+
 
 % See also MODELPARTICLEDYNAMICS EXTRACTCLUSTERCENTERS COMPUTEINITIALPOINTS
 % CREATE_SCALEINVAR_CONFINING_POTENTIAL COMPUTEGRIDSCALEFACTORS
@@ -163,8 +166,8 @@ try
             Info.(to_combine{fn}) = cat(1, Info.(to_combine{fn}){:});
         end
         Info.solverTime = mean(cellfun(@(x) x.solverTime, Info.simulationInfo),'omitnan');
-        Info.message = 0;%'';
     end
+    Info.message = 0;%'';
 
 catch ME
     % It can be somtimes that there is an error in modelParticleDynamics
@@ -185,11 +188,9 @@ catch ME
             seedPoints = NaN(1,D);
             if DEBUG
                 Info = emptyInfo(D);
-                Info.message = 3;
-                Info.error = ME;
-            else
-                Info.error = ME;
             end
+            Info.message = 3;
+            Info.error = ME;
             fprintf('\nWarning! There was an error in object %d. Full error report stored in Info{%d}.error\n', objNumber, objNumber)
             fprintf(2,'%s\n', getReport(Info.error,'basic'))
             fprintf('\n')
@@ -216,8 +217,8 @@ seedPoint = problem_scales.grid_to_data(seedPoint);
 
 if DEBUG
     Info = emptyInfo(D);
-    Info.message = reason;
 end
+Info.message = reason;
 Info.problem_scales = problem_scales;
 
 end
