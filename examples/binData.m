@@ -92,7 +92,7 @@ function n = smooth_nd(dat, sigma, hsize, verbose)
     n = zeros(sz,'single');
 
     if verbose
-        fprintf('\nSmoothing data...   0%%\n')
+        fprintf('Smoothing data...   0%%\n')
     end
 
     % Iterate over each element in the smoothing filter
