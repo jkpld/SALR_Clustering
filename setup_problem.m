@@ -47,14 +47,19 @@ PAD_SIZE = options.Potential_Padding_Size;
 
 % Problem scales
 problem_scales = computeProblemScales(options, size(binned_data), data_limits);
-
+disp('problem_scales')
+disp(problem_scales)
 % Create confining potential
 switch options.Potential_Type
     case 'distance_transform'
         [V, scaleFactor, overlapFactor] = create_scaleInvar_confining_potential(binned_data, options); %#ok<ASGLU>
+        disp('scale_factor')
+        disp(scaleFactor)
         if ~isnan(options.Max_Distance_Transform)
             problem_scales = scale_object_for_distance_transform(problem_scales, scaleFactor);
         end
+        disp('problem_scales')
+        disp(problem_scales)
     case 'density'
         V = min(1.5,1./binned_data);
         V = padarray(V, PAD_SIZE*ones(1,D), 1.5);
@@ -101,8 +106,7 @@ gts = gts .* sqrt( D / (dg*dg')); % Scale solver space so that potential extent 
 
 % Now scale the grids for the object resize.
 gts = gts * scaleFactor; % Scale solver space so that potential extent is in units of Max_Distance_Transform
-dg = dg * scaleFactor; % Scale grid size for gradient calculation (This effectively resizes the object so that the object's maximum distance transform value is Max_Distance_Transform.)
-%     grid_spacing = ones(1,D)*scaleFactor;
+dg = ones(1,D)*scaleFactor; % Scale grid size for gradient calculation (This effectively resizes the object so that the object's maximum distance transform value is Max_Distance_Transform.)
 
 problem_scales.grid_spacing = dg;
 problem_scales.grid_to_solver = gts;
