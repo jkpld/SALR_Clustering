@@ -55,7 +55,7 @@ switch options.Potential_Type
         problem_scales = scale_object_for_distance_transform(problem_scales, scaleFactor);
     case 'density'
         V = min(1.5,1./binned_data);
-        V = padarray(V, PAD_SIZE*ones(1,D), 1.5);
+        V = padarray(V, PAD_SIZE*ones(1,ndims(binned_data)), 1.5);
 end
 
 % Apply potential modifier
