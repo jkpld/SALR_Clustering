@@ -239,6 +239,9 @@ end
 if isempty(Parent)
     Parent = figure('color','w');
     Parent.Units = 'inch';
+    Parent.PaperSize = Parent.Position(3:4);
+    Parent.PaperPosition = [0 0 Parent.Position(3:4)];
+    Parent.PaperUnits = 'inch';
 end
 end
 
