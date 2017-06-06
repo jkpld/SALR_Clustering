@@ -7,4 +7,4 @@
 *.mexmaci64
 *.p
 results*.mat
-internal*.mat
+internal*.m
