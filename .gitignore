@@ -6,4 +6,5 @@
 *.mexa64
 *.mexmaci64
 *.p
-r*.mat
+results*.mat
+internal*.mat
