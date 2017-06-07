@@ -23,6 +23,7 @@ C = textscan(fid,'%s','Delimiter','\n');
 fclose(fid);
 C = C{1};
 
+
 % Find the <INSERT FIGURE> tags
 fig_locs = find(startsWith(C,'% <INSERT FIGURE'));
 
@@ -59,26 +60,41 @@ if ~isempty(fig_locs) && reEvaluate
     fclose(fid);
 
     % Run the file - this should generate the figures we need.
-    evalc('run(file_copy)')
-    
-    % Delete the file copy
+    evalc('run(file_copy)');
+
+    % Clean up
     delete(file_copy)
+    close all
 end
 
-% Remove all empty lines at the start of the file.
+% Parse file into code sections -----------------------------------------
+% Get the empty lines
 emptyLine = cellfun(@isempty,C);
-if emptyLine(1) == 1
-    idx = find(~emptyLine,1,'first');
-    C(1:idx-1) = [];
+% Section heads
+section_heads = startsWith(C,'%%');
+% figure locations
+figures = startsWith(C,'% <INSERT FIGURE');
+thumb_fig = startsWith(C,'% <INSERT FIGURE, THUMB'); % figure to use for thumbnail image
+
+% Captions
+caption_starts = find(startsWith(C,'% <CAPTION>'));
+caption_ends = find(startsWith(C,'% </CAPTION>'));
+
+if numel(caption_starts) ~= numel(caption_ends)
+    error('publishExample:BadCaption','The number of caption start tags <CAPTION>, %d, is not the same as the number of caption end tags </CAPTION>, %d.', numel(caption_starts), numel(caption_ends))
+end
+if caption_ends(1) < caption_starts(1)
+    error('publishExample:BadCaption','A caption end </CAPTION> appears before a caption start <CAPTION>.')
+end
+captions = false(numel(C),1);
+for ii = 1:numel(caption_starts)
+    captions(caption_starts(ii):caption_ends(ii)) = true;
 end
 
-% Parse file into code sections
-section_heads = startsWith(C,'%%');
-figures = startsWith(C,'% <INSERT FIGURE');
-thumb_fig = startsWith(C,'% <INSERT FIGURE, THUMB');
-comments = startsWith(C,'%') & ~section_heads & ~figures;
+% Comments
+comments = startsWith(C,'%') & ~section_heads & ~figures & ~captions;
 
-line_type = [section_heads, comments, figures, emptyLine];
+line_type = [section_heads, comments, figures, captions, emptyLine];
 line_type(:,end+1) = ~any(line_type,2);
 line_type = line_type*(1:size(line_type,2))';
 
@@ -93,7 +109,7 @@ fig_name = @(ii) [filesep, 'images', filesep, file, sprintf('_%d.png', ii)];
 section_counter = 1;
 figure_counter = 0;
 while 1
-    sections(section_counter).title = C(1); % Feed        
+    sections(section_counter).title = C(1); % Feed
     line_type(1) = []; % Eat
     C(1) = []; % Eat
 
@@ -120,13 +136,28 @@ while 1
 
     % Add figures to section
     section_figures = line_type(1:end_idx-1) == 3;
-    for ii = sum(section_figures):-1:1
-        sections(section_counter).figure{ii} = fig_name(figure_counter + ii);
+    section_figures_idx = find(section_figures);
+    for ii = numel(section_figures_idx):-1:1
+        % Does the figure have a caption?
+        if line_type(section_figures_idx+1) == 4
+            cap_end_idx = section_figures_idx + find(line_type(section_figures_idx+1:end)~=4,1,'first') - 1;
+            if isempty(cap_end_idx)
+                cap_end_idx = numel(line_type);
+            end
+            caption = C(section_figures_idx+2:cap_end_idx-1);
+            caption = cellfun(@(x) strtrim(x(2:end)), caption, 'UniformOutput', 0);
+            caption = char(string(caption).join(' '));
+        else
+            caption = '';
+        end
+        sections(section_counter).figure{ii} = {fig_name(figure_counter + ii), caption};
     end
-    figure_counter = figure_counter + sum(section_figures);
 
-    % Remove figure lines from content and save content to section
-    sections(section_counter).content = C(~section_figures); % Feed
+    figure_counter = figure_counter + numel(section_figures_idx);
+
+    % Remove figure/caption lines from content and save content to section
+    section_captions = line_type(1:end_idx-1) == 4;
+    sections(section_counter).content = C(~section_figures & ~section_captions); % Feed
 
     line_type(1:end_idx-1) = []; % Eat
     C(1:end_idx-1) = []; % Eat
@@ -134,8 +165,7 @@ while 1
     if isempty(line_type), break; end
     section_counter = section_counter + 1;
 end
-
-
+% error('some error')
 if isempty(sections)
     error('publishExample:FoundNoSection', 'Found no sections in the code.')
 end
@@ -156,7 +186,7 @@ try
 
     write(fid, jekyll_header(sections(1).title, sections(1).info, thumb_fig_name))
     write(fid, code_section(sections(1)))
-    
+
     for i = 2:length(sections)
         write(fid, section_heading(sections(i)))
         write(fid, code_section(sections(i)))
@@ -168,53 +198,6 @@ catch ME
     fclose(fid);
     rethrow(ME)
 end
-
-
-
-% sections
-
-% ind = cellfun(@(x) ~isempty(startsWith(x,'% <INSERT FIGURE>')),C);
-
-% if isempty(fileLocation)
-%     error('publishExample:file_not_found','The file given, %s, was not found.', file_name)
-% end
-% 
-% pth = string(fileLocation).split(filesep);
-% pth(end) = [];
-% fileLocation = char(pth.join(filesep))
-% 
-% 
-% 
-% file_name
-% format = 'html';
-% options = struct('format',format,...
-%                  'evalCode',true,...
-%                  'showCode',false,...
-%                  'createThumbnail',false,...
-%                  'outputDir', [fileLocation, '\tmp_files\'],...
-%                  'figureSnapMethod', 'print',...
-%                  'imageFormat', 'png',...
-%                  'codeToEvaluate', file_name);
-%              
-% file = publish(file_name,options);
-% file
-% % Get the folder the files are located in
-%         folder = fileparts(file)
-%         
-%         % Get the file infomration from the folder
-%         file_data = dir(folder)
-%         
-%         % Get the names of the files in the folder and remove the first two
-%         % which are '.' and '..'.
-%         names = cell(length(file_data),1);
-%         [names{:}] = deal(file_data.name);
-%         names(1:2,:) = []
-%         
-% delete(file)
-% 
-% 
-
-        
 
 end
 
@@ -228,9 +211,11 @@ function C = section_heading(section)
     C = {};
     if ~isempty(section.title)
         title = strtrim(section.title{1}(3:end));
-        C{1} = sprintf('## %s', title);
+        if ~isempty(title)
+            C{1} = sprintf('## %s', title);
+        end
     end
-    
+
     if ~isempty(section.info)
         tmp = cellfun(@(x) x(2:end), section.info, 'UniformOutput', false);
         C = [C; tmp; ''];
@@ -240,17 +225,17 @@ end
 function C = code_section(section)
     C = {};
     stuff = [~is_content_empty(section.content), ~isempty(section.figure)];
-    
-    if ~any(stuff)    
+
+    if ~any(stuff)
         return;
     end
-    
+
     if stuff(1)
         content = section.content;
         isEmpty = cellfun(@isempty, content);
         start_idx = 1;
         end_idx = length(content);
-        
+
         if isEmpty(1)
             start_idx = find(~isEmpty,1,'first');
         end
@@ -258,17 +243,27 @@ function C = code_section(section)
             end_idx = find(~isEmpty,1,'last');
         end
         content = content(start_idx:end_idx);
-        
+        toIndent = startsWith(content,'''');
+        content(toIndent) = cellfun(@(x) ['    ' x], content(toIndent),'UniformOutput',false);
+
         content = [' ';'{% highlight matlab %}'; content; '{% endhighlight %}'; ' '];
     end
-    
+
     if stuff(2)
+        figure_code = {};
         for ii = length(section.figure):-1:1
-            figure_code{ii} = sprintf('<img src="%s">', section.figure{ii});
+            figure_code = [figure_code; {sprintf('<img src="%s">', section.figure{ii}{1})}];
+
+            if ~isempty(section.figure{ii}{2})
+                cap_code = {'<figcaption class="text-right">'; ...
+                    section.figure{ii}{2}; ...
+                    '</figcaption>'};
+                figure_code = [figure_code; cap_code];
+            end
         end
-        figure_code = [''; figure_code; ''];
+        figure_code = [' '; figure_code; ' '];
     end
-    
+
     if all(stuff)
         C = [{...
             '<div class="row">'; ...
@@ -285,14 +280,12 @@ function C = code_section(section)
             '</div>'}];
     elseif stuff(1)
         C = content;
-    else 
+    else
         C = figure_code;
     end
 end
 
 function C = jekyll_header(title, info, thumb_fig_name)
-
-
     title = strtrim(title{1}(3:end));
 
     C = {...
@@ -310,12 +303,12 @@ function C = jekyll_header(title, info, thumb_fig_name)
         info = string(info).join();
         C = [C; sprintf('teaser: "%s"', info)];
     end
-    
+
     if ~isempty(thumb_fig_name)
         C = [C; 'image:'; sprintf('    thumb: %s', thumb_fig_name)];
     end
-    
-    C = [C; '---'; ' '];      
+
+    C = [C; '---'; ' '];
 end
 
 
@@ -329,19 +322,3 @@ function out = is_content_empty(C)
         end
     end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
