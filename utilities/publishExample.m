@@ -9,13 +9,23 @@ end
 out_folder_img = 'K:\feeling-responsive-gh-pages\images';
 out_folder_file = ['K:\feeling-responsive-gh-pages\_posts\example\', datestr(now,29), '-'];
 
+% Parse file
+[sections, thumbNail] = parse_file(file);
+
+% Evaluate script to generate figures
+if reEvaluate
+    evaluate_code(file, out_folder_img)
+end
+
+% Write example
+write_example(sections, thumbNail, file, out_folder_file)
+
+end
+
+function [sections, image_thumbnail] = parse_file(file)
+
 % Get the path of the given file
 fileLocation = which(file);
-
-% Geth the path too the given file
-pth = string(fileLocation).split(filesep);
-pth(end) = [];
-pth = char(pth.join(filesep));
 
 % Read in the file text
 fid = fopen(fileLocation);
@@ -23,57 +33,11 @@ C = textscan(fid,'%s','Delimiter','\n');
 fclose(fid);
 C = C{1};
 
-
-% Find the <INSERT FIGURE> tags
-fig_locs = find(startsWith(C,'% <INSERT FIGURE'));
-
-% If there are any <INSERT_FIGURE> tags, then we need to replace them with
-% code to export the figures and then run the script to create the figures.
-if ~isempty(fig_locs) && reEvaluate
-    % Copy the file
-    file_copy = [pth, filesep, file, '_tempCopy.m'];
-    status = copyfile(fileLocation, file_copy);
-    if status ~= 1
-        error('publishExample:copyFailed','Error publishing file.')
-    end
-
-    % Determine how to export the figures.
-    %   Use export_fig() if installed (https://github.com/altmany/export_fig)
-    %   Otherwise use print()
-    if exist('export_fig','file') == 2
-        print_fun = @(output) ['export_fig(gcf, ''-png'',''-r200'',''-transparent'', ''', output, ''');'];
-    else
-        print_fun = @(output) ['print(gcf, ', output, '''-dpng'',''-r200'');'];
-    end
-
-    % Replace the lines with the INSER_FIGURE tag with the figure export
-    % command.
-    C_copy = C;
-    fig_name = @(ii) [out_folder_img, filesep, file, sprintf('_%d.png', ii)];
-    for ii = 1:length(fig_locs)
-        C_copy{fig_locs(ii)} = print_fun(fig_name(ii));
-    end
-
-    % Write the new text to the copied file.
-    fid = fopen(file_copy,'w');
-    cellfun(@(x) fprintf(fid,'%s\n',x),C_copy);
-    fclose(fid);
-
-    % Run the file - this should generate the figures we need.
-    evalc('run(file_copy)');
-
-    % Clean up
-    delete(file_copy)
-    close all
-end
-
 % Parse file into code sections -----------------------------------------
-% Get the empty lines
-emptyLine = cellfun(@isempty,C);
-% Section heads
-section_heads = startsWith(C,'%%');
-% figure locations
-figures = startsWith(C,'% <INSERT FIGURE');
+
+emptyLine = cellfun(@isempty,C); % Get the empty lines
+section_heads = startsWith(C,'%%'); % Section heads
+figures = startsWith(C,'% <INSERT FIGURE'); % figure locations
 thumb_fig = startsWith(C,'% <INSERT FIGURE, THUMB'); % figure to use for thumbnail image
 
 % Captions
@@ -98,6 +62,7 @@ line_type = [section_heads, comments, figures, captions, emptyLine];
 line_type(:,end+1) = ~any(line_type,2);
 line_type = line_type*(1:size(line_type,2))';
 
+% Remove everything before the first section start.
 header_idx = find(section_heads,1,'first');
 C(1:header_idx-1) = [];
 line_type(1:header_idx-1) = [];
@@ -165,22 +130,82 @@ while 1
     if isempty(line_type), break; end
     section_counter = section_counter + 1;
 end
-% error('some error')
+
 if isempty(sections)
     error('publishExample:FoundNoSection', 'Found no sections in the code.')
 end
 
-
 figures = cumsum(figures);
 thumb_fig_num = figures(thumb_fig);
 if ~isempty(thumb_fig_num)
-    thumb_fig_name = [file, sprintf('_%d.png', thumb_fig_num(1))];
+    image_thumbnail = [file, sprintf('_%d.png', thumb_fig_num(1))];
 else
-    thumb_fig_name = '';
+    image_thumbnail = '';
 end
 
-% Write example
-file_out = [out_folder_file, file, '.md'];
+end
+
+function evaluate_code(file, output_folder)
+% Get the path of the given file
+fileLocation = which(file);
+
+% Get the path too the given file
+pth = string(fileLocation).split(filesep);
+pth(end) = [];
+pth = char(pth.join(filesep));
+
+% Read in the file text
+fid = fopen(fileLocation);
+C = textscan(fid,'%s','Delimiter','\n');
+fclose(fid);
+C = C{1};
+
+% Find the <INSERT FIGURE> tags
+fig_locs = find(startsWith(C,'% <INSERT FIGURE'));
+
+% If there are any <INSERT_FIGURE> tags, then we need to replace them with
+% code to export the figures and then run the script to create the figures.
+if ~isempty(fig_locs)
+    % Copy the file
+    file_copy = [pth, filesep, file, '_tempCopy.m'];
+    status = copyfile(fileLocation, file_copy);
+    if status ~= 1
+        error('publishExample:copyFailed','Error publishing file.')
+    end
+
+    % Determine how to export the figures.
+    %   Use export_fig() if installed
+    %   (https://github.com/altmany/export_fig). Otherwise use print()
+    if exist('export_fig','file') == 2
+        print_fun = @(output) ['export_fig(gcf, ''-png'',''-r200'',''-transparent'', ''', output, ''');'];
+    else
+        print_fun = @(output) ['print(gcf, ', output, '''-dpng'',''-r200'');'];
+    end
+
+    % Replace the lines with the INSER_FIGURE tag with the figure export
+    % command.
+    C_copy = C;
+    fig_name = @(ii) [output_folder, filesep, file, sprintf('_%d.png', ii)];
+    for ii = 1:length(fig_locs)
+        C_copy{fig_locs(ii)} = print_fun(fig_name(ii));
+    end
+
+    % Write the new text to the copied file.
+    fid = fopen(file_copy,'w');
+    cellfun(@(x) fprintf(fid,'%s\n',x),C_copy);
+    fclose(fid);
+
+    % Run the file - this should generate the figures we need.
+    evalc('run(file_copy)');
+
+    % Clean up
+    delete(file_copy)
+    close all
+end
+end
+
+function write_example(sections, thumb_fig_name, file, output_folder)
+file_out = [output_folder, file, '.md'];
 fid = fopen(file_out,'w');
 try
 
@@ -192,133 +217,132 @@ try
         write(fid, code_section(sections(i)))
     end
 
-fclose(fid);
+    fclose(fid);
 
 catch ME
     fclose(fid);
     rethrow(ME)
 end
-
 end
 
 function write(fid, C)
-    if ~isempty(C)
-        cellfun(@(x) fprintf(fid,'%s\n',x),C);
-    end
+if ~isempty(C)
+    cellfun(@(x) fprintf(fid,'%s\n',x),C);
+end
 end
 
 function C = section_heading(section)
-    C = {};
-    if ~isempty(section.title)
-        title = strtrim(section.title{1}(3:end));
-        if ~isempty(title)
-            C{1} = sprintf('## %s', title);
-        end
+C = {};
+if ~isempty(section.title)
+    title = strtrim(section.title{1}(3:end));
+    if ~isempty(title)
+        C{1} = sprintf('## %s', title);
     end
+end
 
-    if ~isempty(section.info)
-        tmp = cellfun(@(x) x(2:end), section.info, 'UniformOutput', false);
-        C = [C; tmp; ''];
-    end
+if ~isempty(section.info)
+    tmp = cellfun(@(x) x(2:end), section.info, 'UniformOutput', false);
+    C = [C; tmp; ''];
+end
 end
 
 function C = code_section(section)
-    C = {};
-    stuff = [~is_content_empty(section.content), ~isempty(section.figure)];
+C = {};
+stuff = [~is_content_empty(section.content), ~isempty(section.figure)];
 
-    if ~any(stuff)
-        return;
+if ~any(stuff)
+    return;
+end
+
+if stuff(1)
+    content = section.content;
+    isEmpty = cellfun(@isempty, content);
+    start_idx = 1;
+    end_idx = length(content);
+
+    if isEmpty(1)
+        start_idx = find(~isEmpty,1,'first');
     end
+    if isEmpty(end)
+        end_idx = find(~isEmpty,1,'last');
+    end
+    content = content(start_idx:end_idx);
+    toIndent = startsWith(content,'''');
+    content(toIndent) = cellfun(@(x) ['    ' x], content(toIndent),'UniformOutput',false);
 
-    if stuff(1)
-        content = section.content;
-        isEmpty = cellfun(@isempty, content);
-        start_idx = 1;
-        end_idx = length(content);
+    content = [' ';'{% highlight matlab %}'; content; '{% endhighlight %}'; ' '];
+end
 
-        if isEmpty(1)
-            start_idx = find(~isEmpty,1,'first');
+if stuff(2)
+    figure_code = {};
+    for ii = length(section.figure):-1:1
+        figure_code = [figure_code; {sprintf('<img src="%s">', section.figure{ii}{1})}]; %#ok<AGROW>
+
+        if ~isempty(section.figure{ii}{2})
+            cap_code = {'<figcaption class="text-right">'; ...
+                section.figure{ii}{2}; ...
+                '</figcaption>'};
+            figure_code = [figure_code; cap_code]; %#ok<AGROW>
         end
-        if isEmpty(end)
-            end_idx = find(~isEmpty,1,'last');
-        end
-        content = content(start_idx:end_idx);
-        toIndent = startsWith(content,'''');
-        content(toIndent) = cellfun(@(x) ['    ' x], content(toIndent),'UniformOutput',false);
-
-        content = [' ';'{% highlight matlab %}'; content; '{% endhighlight %}'; ' '];
     end
+    figure_code = [' '; figure_code; ' '];
+end
 
-    if stuff(2)
-        figure_code = {};
-        for ii = length(section.figure):-1:1
-            figure_code = [figure_code; {sprintf('<img src="%s">', section.figure{ii}{1})}];
-
-            if ~isempty(section.figure{ii}{2})
-                cap_code = {'<figcaption class="text-right">'; ...
-                    section.figure{ii}{2}; ...
-                    '</figcaption>'};
-                figure_code = [figure_code; cap_code];
-            end
-        end
-        figure_code = [' '; figure_code; ' '];
-    end
-
-    if all(stuff)
-        C = [{...
-            '<div class="row">'; ...
-            '<div class="medium-7 columns t30" markdown="1">'; ...
-            };
-            content;
-            {...
-            '</div>'; ...
-            '<div class="medium-5 columns t30">'; ...
-            };
-            figure_code;
-            {...
-            '</div>'; ...
-            '</div>'}];
-    elseif stuff(1)
-        C = content;
-    else
-        C = figure_code;
-    end
+if all(stuff)
+    C = [{...
+        '<div class="row">'; ...
+        '<div class="medium-7 columns t30" markdown="1">'; ...
+        };
+        content;
+        {...
+        '</div>'; ...
+        '<div class="medium-5 columns t30">'; ...
+        };
+        figure_code;
+        {...
+        '</div>'; ...
+        '</div>'}];
+elseif stuff(1)
+    C = content;
+else
+    C = figure_code;
+end
 end
 
 function C = jekyll_header(title, info, thumb_fig_name)
-    title = strtrim(title{1}(3:end));
+title = strtrim(title{1}(3:end));
 
-    C = {...
-        '---'; ...
-        'layout: code-example'; ...
-        sprintf('title: "%s"',title); ...
-        'subheadline: "SALR clustering"'; ...
-        'categories:'; ...
-        '   - example'; ...
-        'show_meta: true'};
+C = {...
+    '---'; ...
+    'layout: code-example'; ...
+    sprintf('title: "%s"',title); ...
+    'subheadline: "SALR clustering"'; ...
+    'categories:'; ...
+    '   - example'; ...
+    'show_meta: true'};
 
 
-    if ~isempty(info)
-        info = cellfun(@(x) strtrim(x(2:end)), info, 'UniformOutput', false);
-        info = string(info).join();
-        C = [C; sprintf('teaser: "%s"', info)];
-    end
+if ~isempty(info)
+    info = cellfun(@(x) strtrim(x(2:end)), info, 'UniformOutput', false);
+    info = string(info).join();
+    C = [C; sprintf('teaser: "%s"', info)];
+end
 
-    if ~isempty(thumb_fig_name)
-        C = [C; 'image:'; sprintf('    thumb: %s', thumb_fig_name)];
-    end
+if ~isempty(thumb_fig_name)
+    C = [C; 'image:'; sprintf('    thumb: %s', thumb_fig_name)];
+end
 
-    C = [C; '---'; ' '];
+C = [C; '---'; ' '];
 end
 
 
 function out = is_content_empty(C)
-    out = false;
-    if isempty(C)
+out = false;
+if isempty(C)
+    out = true;
+elseif length(C) == 1
+    if isempty(C{1})
         out = true;
-    elseif length(C) == 1
-        if isempty(C{1})
-            out = true;
-        end
     end
+end
 end
