@@ -41,7 +41,7 @@ function [seedPoints, Info] = computeObjectSeedPoints(binned_data, options, vara
 
 % M : base potential modifier - should be 1 outside of nuclei.
 
-[D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, Use_Parallel, verbose] = ...
+[binned_data, D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, Use_Parallel, verbose] = ...
     parse_inputs(binned_data, options, varargin{:});
 
 Info = [];
@@ -60,6 +60,7 @@ try
     end
 
     % Compute confining force, initial points, and problem scales.
+    
     [dV, r0, problem_scales, V, SetupInfo] = setup_problem(binned_data, data_limits, options, r0set);
     solver_to_data = @(x) problem_scales.grid_to_data(x./problem_scales.grid_to_solver);
     Info.problem_scales = problem_scales; % save the problem scales.
@@ -253,7 +254,7 @@ function Info = emptyInfo(D)
 end
 
 
-function [D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, Use_Parallel, verbose] = parse_inputs(binned_data, options, varargin)
+function [binned_data, D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, Use_Parallel, verbose] = parse_inputs(binned_data, options, varargin)
 
     sz = size(binned_data); % Size
     D = numel(sz); % Dimension
@@ -317,5 +318,11 @@ function [D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, U
 
     if currently_in_parallel
         verbose = false;
+    end
+    
+    if D == 2
+        if ~isa(binned_data,'double')
+            binned_data = double(binned_data);
+        end
     end
 end

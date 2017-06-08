@@ -61,7 +61,7 @@ else
     
     % Normalize the gradient magnitude if required
     if ~isnan(MAX_FORCE)
-        M = zeros(size(V),'single');
+        M = zeros(size(V),'like',V);
         
         % Compute gradient magnitude
         for i = 1:D
