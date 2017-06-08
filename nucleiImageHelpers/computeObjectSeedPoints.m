@@ -178,7 +178,7 @@ catch ME
     if any(strcmp('modelParticleDynamics',{ME.stack.name}))
         if errorCount < 1
             inputs.data_limits = data_limits;
-            inputs.modifier = M;
+            inputs.modifier = modifier;
             inputs.r0set = r0set;
             inputs.useCentroid = useCentroid;
             inputs.objNumber = objNumber;
