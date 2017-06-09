@@ -8,3 +8,4 @@
 *.p
 results*.mat
 internal*.m
+internal/*
