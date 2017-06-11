@@ -99,20 +99,19 @@ Example of binning 2D data.
 
 ### Results
 
-We test our method on a 5D data set that represents healthy and damaged cells. To the right we show the count isosurfaces (the count is directly proportional to the data point density) of a projection of the data to 3d. You can see the data set has one dense region (which are the healthy cells) with three primary low density regions extending from it. Our method is able to locate all of the regions well, but k-means++ is not.
+We applied SALR clustering to a 5D data set that represents healthy and damaged cells. To the left, the <abbr title="the number of points in each bin">count</abbr> isosurfaces of a projection of the data to 3D are shown. The data set has one dense region (which are the healthy cells) with three primary low density regions extending from it. K-means does not work well and produces cluster centers too biased towards the high density region, but &raquo;SALR clustering is able to locate all regions well.&laquo;
 
 ### Method
 
-If the different locally convex regions of the image are approximately the same size along any direction (or they can be made to have the same size with a simple scaling of the axis), then the distance transform can again be used to create the confining potential. This could be the case for 3d images of cell nuclei; however, in general, this requirement is quite stringent and the distance transform cannot be used.
-
-Instead, one over the point density (the value of each pixel in our binned data) can be used as the confining potential. However, it is very important that the magnitude of the potential gradient \|∇V\| be scaled so that it is approximately of the same order of magnitude as the particle repulsion 1/rₐ².
+The method of applying SALR clustering to scatter-point data is very similar to locating the center of nuclei above[^fa], but there are a few differences.
+* The distance transform cannot be used to create the confining potential[^fb]; instead, one over the data density is used as the confining potential; however, it is very important that the magnitude of the potential gradient <nobr>|∇<em>V</em>|</nobr> is scaled so that it is approximately of the same order of magnitude as the particle repulsion 1/_r_<sub>a</sub><sup>2</sup>.
+* The distance metric between the particles is changed to a [Minkowski distance][Minkowski] with an exponent of 4. This can be though of as requiring the particles to be close in all dimensions before they are attracted to each other.
 
 </div><!-- /.medium-7.columns -->
 <div class="medium-5 medium-pull-7 columns t90">
 <img src="/images/animated5d.gif">
 </div><!-- /.medium-5.columns -->
 </div><!-- /.row -->
-
 
 
 [^1]: J. Kapaldo, X. Han, D. Mary, and S. Ptasinska. Nature Methods.
@@ -125,10 +124,27 @@ Instead, one over the point density (the value of each pixel in our binned data)
 [^Matas]: J. Matas, O. Chum, M. Urban, and T. Pajdla, [In British Machine Vision Conference , 384 (2002)](http://dx.doi.org/ 10.5244/C.16.36).
 [^Otsu]: N. Otsu, IEEE transactions on systems, man, and cybernetics 9, 62 (1979).
 [^BW]: SALR clustering does not handle this step as it can be very different depending on the type of image. However, the binary mask used in creating the results were generated using an adaptive Otsu threshold[^Otsu], and the manuscript[^1] shows that excellent results can also be obtained using the binary mask created by gLoG filtering followed by thresholding.
+[^fa]: Abstractly, the problems are almost the same: locate the center of partially overlapping convex regions.
+[^fb]: The distance transform will only work when the locally convex regions are about the same size in all directions. See **Supplemental Note 3** of the manuscript[^1].
 
 *[MPV]: Multi-pass voting
 *[SPV]: Single-pass voting
 *[gLoG]: Generalized Laplacian of Gaussian
 *[MSER]: Maximally stable extremal regions
 *[SBF]: Sliding-band filter
-*[SALR]: Short-range attractive long-range repulsive
+<!-- *[SALR]: Short-range attractive long-range repulsive -->
+
+
+[Minkowski]: https://en.wikipedia.org/wiki/Minkowski_distance
+
+<br>
+<br>
+
+<div d="post-nav" class="row">
+<div class="small-5 columns">
+<a class="button small radius prev" href="/theory/">&laquo; The theory</a>
+</div>
+<div class="small-5 text-right columns">
+<a class="button small radius next" href="/how-to-use/">Start use SALR clustering &raquo;</a>
+</div>
+</div>

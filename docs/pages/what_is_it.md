@@ -91,7 +91,23 @@ There are three primary advantages of using SALR clustering over other clusterin
 
 
 
-<div class="row">
+<div d="post-nav" class="row">
+<div class="small-12 text-center columns">
+<a class="button small radius next" href="/theory/">The theory &raquo;</a>
+</div>
+</div>
+<div d="post-nav" class="row">
+<div class="small-12 text-center columns">
+<a class="button small radius next" href="/applications/">Applications &raquo;</a>
+</div>
+</div>
+<div d="post-nav" class="row">
+<div class="small-12 text-center columns">
+<a class="button small radius next" href="/how-to-use/">Start use SALR clustering &raquo;</a>
+</div>
+</div>
+
+<!-- <div class="row">
 <div class="small-12 text-center columns">
 <a class="button small radius prev" href="/theory/">How the particles are modeled and why it works&raquo;</a>
 </div>
@@ -103,4 +119,4 @@ TODO: add buttons to go to 'application to location nuclei centers', 'applicatio
 <div class="small-12 text-center columns">
 <a class="button small radius prev" href="/example/scatterPoint_5D/">Example code: 5D scatter point data&raquo;</a>
 </div>
-</div>
+</div> -->
