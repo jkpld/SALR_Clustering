@@ -114,6 +114,11 @@ The method of applying SALR clustering to scatter-point data is very similar to 
 </div><!-- /.row -->
 
 
+{% include next-prev next-text='Start using SALR clustering' next-url='/how-to-use/' prev-text='The theory' prev-url='/theory/' %}
+
+
+
+
 [^1]: J. Kapaldo, X. Han, D. Mary, and S. Ptasinska. Nature Methods.
 [^Qi]:  X. Qi, F. Xing, D. J. Foran, and L. Yang, [IEEE Transactions on Biomedical Engineering 59, 754 (2012)](http://dx.doi.org/ 10.1109/TBME.2011.2179298).
 [^Zhang]: X. Zhang, H. Su, L. Yang, and S. Zhang, [Proceedings of the IEEE Computer Society Conference on Computer Vision and Pattern Recognition 07-12-June, 5361 (2015)](http://dx.doi.org/ 10.1109/CVPR.2015.7299174).
@@ -136,15 +141,3 @@ The method of applying SALR clustering to scatter-point data is very similar to 
 
 
 [Minkowski]: https://en.wikipedia.org/wiki/Minkowski_distance
-
-<br>
-<br>
-
-<div d="post-nav" class="row">
-<div class="small-5 columns">
-<a class="button small radius prev" href="/theory/">&laquo; The theory</a>
-</div>
-<div class="small-5 text-right columns">
-<a class="button small radius next" href="/how-to-use/">Start use SALR clustering &raquo;</a>
-</div>
-</div>

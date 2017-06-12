@@ -62,14 +62,4 @@ The answer comes by analyzing the force on the particles in the simulation: the 
 [1] J. Kapaldo, X. Han, D. Mary, and S. Ptasinska. Nature Methods. (submitted)
 
 
-<br>
-<br>
-
-<div d="post-nav" class="row">
-<div class="small-5 columns">
-<a class="button small radius prev" href="/what-is-it/">&laquo; What is SALR clustering</a>
-</div>
-<div class="small-5 text-right columns">
-<a class="button small radius next" href="/applications/">Applications &raquo;</a>
-</div>
-</div>
+{% include next-prev next-text='Applications' next-url='/applications/' prev-text='What is SALR clustering' prev-url='/what-is-it/' %}

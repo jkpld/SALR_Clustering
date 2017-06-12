@@ -1,0 +1,60 @@
+{% comment %}
+*
+*   Include buttons to go to next or previous pages. Supply the test to show in the buttons and the urls for the buttons.
+*   Example:
+*
+*       {% include next-prev next-text='Title1' next-url='url1' prev-text='Title2' prev-url='url2' %}
+*       {% include next-prev next-text='Title1' next-url='url1' %}
+*       {% include next-prev prev-text='Title2' prev-url='url2' %}
+*
+*    › entries
+*    › offset
+*    › category
+*    › tag
+*
+*   Example for Category: {% include list-posts entries='3' offset='1' category='design' %}
+*
+*   Example for Tag: {% include list-posts entries='5' tag='terminal' %}
+*
+*
+*   This loop works like this:
+*
+*   1. First we check if there was given a category for filtering › if include.categories == NULL
+*   2. If no category is given for filtering do a general loop.
+*   3. If a category/tag was given, assign category/tag to the variable category/tag › assign category = include.categories
+*
+{% endcomment %}
+
+
+{% assign prevText = include.prev-text %}
+{% assign prevURL = include.prev-url %}
+{% assign nextText = include.next-text %}
+{% assign nextURL = include.next-url %}
+
+{% if prevText != NULL or nextText != NULL %}
+<br>
+<br>
+
+<div class="row">
+    <div class="small-8 small-push-2 columns">
+        <!-- <hr>
+        <h4>Continue browsing</h4>
+        <br> -->
+        <div class="row">
+
+            <div class="small-6 columns">
+                {%if prevText %}
+                <a class="button small radius prev" href="{{ prevURL }}">&laquo; {{ prevText }}</a>
+                {% endif %}
+            </div>
+
+            <div class="small-6 text-right columns">
+                {%if nextText %}
+                <a class="button small radius next" href="{{ nextURL }}">{{ nextText }} &raquo;</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endif %}

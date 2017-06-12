@@ -103,7 +103,7 @@ There are three primary advantages of using SALR clustering over other clusterin
 </div>
 <div d="post-nav" class="row">
 <div class="small-12 text-center columns">
-<a class="button small radius next" href="/how-to-use/">Start use SALR clustering &raquo;</a>
+<a class="button small radius next" href="/how-to-use/">Start using SALR clustering &raquo;</a>
 </div>
 </div>
 
