@@ -2,7 +2,7 @@
   url: "/"
   side: left
 
-- title: Getting Started
+- title: "SALR Particle Clustering"
   url: "/what-is-it/"
   side: left
   dropdown:
@@ -14,6 +14,10 @@
     url: "/applications/"
   - title: "How to install"
     url: /how-to-use/
+
+- title: "Getting Started"
+  url: "/quick-start/"
+  side: left
 
 - title: "Code"
   url: "/design/"
