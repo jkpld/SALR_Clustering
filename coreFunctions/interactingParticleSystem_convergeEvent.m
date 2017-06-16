@@ -1,6 +1,9 @@
 function [value, isterminal, direction] = interactingParticleSystem_convergeEvent(t,y,m,hstry,D)
 % INTERACTINGPARTICLESYSTEM_CONVERGEEVENT  Determine if the particle system
-% has converged by checking if the mean speed is below some threshold.
+% has converged by checking if the mean particle speed is below some
+% threshold.
+%
+% [value, isterminal, direction] = interactingParticleSystem_convergeEvent(t,y,m,hstry,D)
 
 % James Kapaldo
 
@@ -42,7 +45,7 @@ if W > 0
 
     % ================  AVERAGE POSITION STABLE  ========================
     % if  hstry.iterationNumber < W
-    %     value(2) = 1;    
+    %     value(2) = 1;
     % else
     %     d = sum((r_hist - r).^2,2);
     %     value(2) = mean(d(:)) - 0.01;
@@ -52,10 +55,10 @@ if W > 0
 
     % ===============  AVERAGE VELOCITY STABLE =========================
     if  hstry.validEntries < W
-        value(1) = 1;    
+        value(1) = 1;
     else
         v = sum(mean(cat(3,p_hist,p),3).^2,2); % average speed of each particle over history
-        value(1) = mean(v(:))/m - 0.2e-3; % not sure what this threshold hsould be at the time of writing this code
+        value(1) = mean(v(:))/m - 0.2e-3; % mean(speed) < THRESHOLD_SPEED
     end
     isterminal(1) = 1;
     direction(1) = -1;

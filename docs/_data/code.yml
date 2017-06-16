@@ -24,17 +24,25 @@
     url: "/core-functions/"
     functions: 
     - title: "extractClusterCenters"
-      teaser: "Extract the center location of each cluster formed by the particles."
+      teaser: "Extract the center and the number of particles in particle cluster."
+      definitions: 
+      - def: "[clusterCenters, clusterSize] = extractClusterCenters(r_final,options)"
     - title: "interactingParticleSystem"
-      teaser: "Given particle position (r) and momentum (p) compute dr/dt and dp/dt."
+      teaser: "Compute the change in particle states dy=[dr/dt, dp/dt] from the current states y=[r, p]."
+      definitions: 
+      - def: "dy = interactingParticleSystem(t,y,extraInputs)"
     - title: "interactingParticleSystem_convergeEvent"
-      teaser: "Determine if the particle system has converged by checking if the mean speed is below some threshold."
+      teaser: "Determine if the particle system has converged by checking if the mean particle speed is below some threshold."
+      definitions: 
+      - def: "[value, isterminal, direction] = interactingParticleSystem_convergeEvent(t,y,m,hstry,D)"
     - title: "modelParticleDynamics"
       teaser: "Model particles confined in potential with gradient dV and initial positions r0 and return their approximate equilibrium positions."
       definitions: 
       - def: "r = modelParticleDynamics(dV,r0,options)\n[r, Info] = modelParticleDynamics(dV,r0,options)"
     - title: "ode_history"
-      teaser: "Handle based class for storing an ode solution at previous time steps while solving. Use the history in an events function to catch more complex behavior than can be determined with the current solution."
+      teaser: "A class for storing an ODE solution at previous time steps while solving. Use the history with an ODE 'Events' function to catch more complex behavior than can be determined with only the current solution."
+      definitions: 
+      - def: "history = ode_history(t0, y0, history_size)"
   - title: "Setup functions"
     url: "/setup-functions/"
     functions: 

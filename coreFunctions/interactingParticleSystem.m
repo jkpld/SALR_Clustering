@@ -1,38 +1,43 @@
 function dy = interactingParticleSystem(t,y,extraInputs)
-% INTERACTINGPARTICLESYSTEM  Given particle position (r) and momentum (p)
-% compute dr/dt and dp/dt.
+% INTERACTINGPARTICLESYSTEM Compute the change in particle states dy=[dr/dt,
+% dp/dt] from the current states y=[r, p].
+%
+% dy = interactingParticleSystem(t,y,extraInputs)
 %
 % The parameter vector y should have the form
+% y  = [ y1, y2, y3, ... , yn ]         % D*N x n matrix
+% yi = [ r1; p1; r2; p2; ...; rN; pN ]  % D*N x 1 array
+% ri = [ ri_x, ri_y, ..., ri_D ]'       % D x 1 array
+% pi = [ pi_x, pi_y, ..., pi_D ]'       % D x 1 array
 %
-% y  = [y1 | y2 | y3 | ... | yn];
-% y1 = [ rx1, ry1, ..., vx1, vy1, ..., rx2, ry2, ..., vx2, vy2, ... , rxN, ryN, ..., vxN, vyN, ... ]'
-% 
-% Where N is the number of particles and where n > 1 if the ode solver is
+% Where N is the number of particles and where if n > 1 the ode solver is
 % trying to compute multiple points at once.
 %
-% ExtraInputs - structure with the fields
-%       D : number of dimension
+% ExtraInputs : structure with the fields
+%       D : number of dimensions
 %       q : particle charges
 %       m : particle masses
 %       alpha : particle damping coefficients
 %       dV : confining potential gradient
 %       dVind : derivative of particle interaction potential
 %       pdistInds : indices of particle pairs
-%       N_to_NtNm1o2 : ( read as : N to N*(N-1)/2 ) sparse matrix that can
-%           create particle pair vectors from particle positions and 
-%           accumulate all of the forces on a particle from the particle 
+%       N_to_NtNm1o2 : ( read as, N to N*(N-1)/2 ) sparse matrix that can
+%           create particle pair vectors from particle positions and
+%           accumulate all of the forces on a particle from the particle
 %           pair forces.
 %
-% Notes: 
-% 
-% q, m, and alpha  :  arrays Nx1, a function handel taking in one paramter,
-% the time, or a griddedInterpolant taking in one paramter, the time.
+% Notes:
 %
-% dV  :  function handle or griddedInterpolant taking in 
-% particle position and outputing gradient along each dimension
+% q, m, and alpha : arrays Nx1, or a function handles taking in one
+%   parameter (the time), or a griddedInterpolant's taking in one parameter
+%   (the time).
 %
-% dVint  :  function handle taking in the distance between two particles
-% and outputing the force.
+% dV : function handle or griddedInterpolant taking in
+%   particle position and outputting the potential gradient at the
+%   positions.
+%
+% dVint : function handle taking in the distance between two particles
+%   and outputting the force.
 
 % James Kapaldo
 
@@ -43,8 +48,8 @@ dist_arg = extraInputs.dist_arg;
 
 % Particle properties
 q = extraInputs.q; % particle charges (This charge should also include the square root of the coupling constant -- k or 1/(4*pi*eps0).)
-m = extraInputs.m; % particle masses 
-alpha = extraInputs.alpha; % particle damping coefficients 
+m = extraInputs.m; % particle masses
+alpha = extraInputs.alpha; % particle damping coefficients
 
 if isa(q,'griddedInterpolant') || isa(q,'function_handle')
     q = q(t);
@@ -58,10 +63,10 @@ end
 
 % Field properties and particle interactions.
 dV = extraInputs.dV; % function handle taking in a location and giving dV/dx
-dVint_fun = extraInputs.dVint; % function handle for particle intercation - takes in distance between two particles an outputs a scalar
+dVint_fun = extraInputs.dVint; % function handle for particle interaction - takes in distance between two particles an outputs a scalar
 
 % Indices for particle pairs.
-pdistInds = extraInputs.pdistInds; % N*(N-1)/2 x 2 - indices linking each distance between two partices returned by pdist to the two particles.
+pdistInds = extraInputs.pdistInds; % N*(N-1)/2 x 2 - indices linking each distance between two particles returned by pdist to the two particles.
 N_to_NtNm1o2 = extraInputs.N_to_NtNm1o2;
 
 % Number of inputs
@@ -82,7 +87,7 @@ p = y(pInds(:),:);
 % r is now a matrix that looks like
 %  [ rx1_1, rx1_2, ..., rx1_M ;
 %  [ ry1_1, ry1_2, ..., ry1_M ;
-%  [   .  ,   .  , ...,   .   
+%  [   .  ,   .  , ...,   .
 %  [ rD1_1, rD1_2, ..., rD1_M ;
 %  [ rx2_1, rx2_2, ..., rx2_M ;
 %  [ ry2_1, ry2_2, ..., ry2_M ;
@@ -97,16 +102,16 @@ p = y(pInds(:),:);
 % and p looks the same
 
 % In order to calculate the potential at each nuclei position, we need the
-% position vectors to be in the form 
+% position vectors to be in the form
 %
 % [ x1,y1, ..., D1;            --> position vector of particle 1
 %   x2,y2, ..., D2;            --> position vector of particle 2
-%   x3,y3, ..., D3; 
-%    ... ; 
+%   x3,y3, ..., D3;
+%    ... ;
 %   xN*M,yN*M, ..., DN*M]      --> position vector of particle N*M
 %
 % (This is/(should be) the form expected by either a griddedInterpolant
-% function or any other function handle cretaed to give the potential
+% function or any other function handle created to give the potential
 % forces.)
 
 r = reshape(r,[D,N*M])';
@@ -119,7 +124,7 @@ dp = -dV(r);
 % In order to calculate the interaction between particles, we will reshape
 % each set of particles to a page. Thus it will have N rows with two
 % columns (x, y) and M pages
-% 
+%
 % Page 1
 % [ rx1_1 ry1_1 ...;
 % [ rx2_1 ry2_1 ...;
@@ -130,7 +135,7 @@ dp = -dV(r);
 %  .
 %  .
 %  .
-% 
+%
 % Page M
 % [ rx1_M ry1_M ...;
 % [ rx2_M ry2_M ...;
@@ -209,8 +214,3 @@ dy(rInds(:),:) = dr;
 dy(pInds(:),:) = dp;
 
 end
-
-
-
-
-

@@ -1,16 +1,18 @@
 function [clusterCenters, clusterSize] = extractClusterCenters(r_final,options)
-% EXTRACTCLUSTERCENTERS Extract the center location of each cluster formed
-% by the particles.
+% EXTRACTCLUSTERCENTERS Extract the center and the number of particles in
+% particle cluster.
+%
+% [clusterCenters, clusterSize] = extractClusterCenters(r_final,options)
 %
 % Input parameters:
-% r_final - The final locations of the particles, as returned by
+% r_final : The final locations of the particles, as returned by
 %           modelParticleDynamics
-% options - Element of class seedPointOptions
+% options : Element of class seedPointOptions
 %
 % Output parameters:
-% clusterCenters - N x size(r_final,D) array where each row is a cluster
-%                  center. (D is the dimension).
-% clusterSize - N x 1 array where the i'th element gives the number of
+% clusterCenters : N x D array where each row is a cluster center. (D is 
+%                  the dimension).
+% clusterSize : N x 1 array where the i'th element gives the number of
 %               particles in the i'th cluster
 %
 % See also MODELPARTICLEDYNAMICS

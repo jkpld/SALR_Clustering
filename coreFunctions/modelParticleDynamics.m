@@ -18,7 +18,6 @@ function [r, varargout] = modelParticleDynamics(dV,r0,options)
 % r : Final particle positions
 % Info : If options.Debug is true, then Info will be a structure with the
 %   following fields.
-%
 %   ode_solution : ode solution structure returned by ode23
 %   converged : logical flag, if true, then the solution converged before
 %       stopping at maximum time
@@ -46,8 +45,8 @@ DEBUG                       = options.Debug;
 
 % History parameters
 MAX_FAILS = 5;          % Maximum number of fails before quitting
-RESTART_UNDER = 5;      % Restart entire simulation if less than RESTART_UNDER time steps have occured before a fail.
-ON_FAIL_BACKTRACK = 2;  % Go back ON_FAIL_BACKTRACK time steps after fail occures (and if more than RESTART_UNDER time steps have already occured).
+RESTART_UNDER = 5;      % Restart entire simulation if less than RESTART_UNDER time steps have occurred before a fail.
+ON_FAIL_BACKTRACK = 2;  % Go back ON_FAIL_BACKTRACK time steps after fail occurs (and if more than RESTART_UNDER time steps have already occurred).
 HISTORY_SIZE = 5;       % The number of past time steps stored.
 
 % Number of particles, dimension, and potential size
@@ -88,7 +87,7 @@ alpha = @(t) zeros(N,1) + t * PARTICLE_DAMPING_RATE;
 % Get the particle pair indices.
 pdistInds = getPdistInds(N);
 
-% Create a sparse matrix that will take us between the seperate N*(N-1)/2
+% Create a sparse matrix that will take us between the separate N*(N-1)/2
 % particle pairs and the N particles.
 N_pair = N*(N-1)/2;
 
@@ -178,14 +177,12 @@ while 1
         if failIdx < RESTART_UNDER
             % Start completely over with a smaller initial time step
 
-%             fprintf('start fail %d\n',quitIterations+1)
             ode_options.InitialStep = (sol.x(2)-sol.x(1))/2;
             hstry.hardreset(SOLVER_TIME_RANGE(1), y0);
         else
             % Go back ON_FAIL_BACKTRACK time steps and start again with a
             % smaller time step.
 
-%             fprintf('large jump fail\n')
             returnTo = failIdx - ON_FAIL_BACKTRACK;
             startTime = sol.x(returnTo);
 
