@@ -9,6 +9,4 @@
 results*.mat
 internal*.m
 internal/*
-_*/
-_*.m
-_*.mat
+_internal/*
