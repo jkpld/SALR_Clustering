@@ -12,8 +12,6 @@
     url: "/theory/"
   - title: "Applications"
     url: "/applications/"
-  - title: "How to install"
-    url: /how-to-use/
 
 - title: "Getting Started"
   url: "/quick-start/"
@@ -66,8 +64,13 @@
 #     url: "/design/no-header-but-image/"
 
 - title: Documentation
-  url: "/code/"
+  url: /code/
   side: left
+  dropdown:
+  - title: Code
+    url: /code/
+  - title: Examples
+    url: /examples/
 
 # - title: Blog
 #   url: "/blog/"

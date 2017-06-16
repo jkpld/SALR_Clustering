@@ -3,9 +3,143 @@
 - title: "Code"
   url: "/code/"
   dropdown: 
+  - title: "Interface functions"
+    url: "/interface-functions/"
+    functions: 
+    - title: "computeNucleiCenters"
+      teaser: "Declump the nuclei in an image"
+      definitions: 
+      - def: "[BW,cuts,Info] = computeNucleiCenters(I,BW,options)"
+    - title: "computeObjectSeedPoints"
+      teaser: "Compute the seed points for a single object"
+      definitions: 
+      - def: "[seedPoints, Info] = computeObjectSeedPoints(binned_data, M, r0set, useCentroid, options, objNumber)"
+    - title: "seedPointOptions"
+      teaser: "Set options needed for computing seed point locations."
+    - title: "setup"
+      teaser: 
+    - title: "simplest_test"
+      teaser: "======================================================================"
   - title: "Core functions"
     url: "/core-functions/"
+    functions: 
+    - title: "extractClusterCenters"
+      teaser: "Extract the center location of each cluster formed by the particles."
+    - title: "interactingParticleSystem"
+      teaser: "Given particle position (r) and momentum (p) compute dr/dt and dp/dt."
+    - title: "interactingParticleSystem_convergeEvent"
+      teaser: "Determine if the particle system has converged by checking if the mean speed is below some threshold."
+    - title: "modelParticleDynamics"
+      teaser: "Model particles confined in potential with gradient dV and initial positions r0 and return their approximate equilibrium positions."
+      definitions: 
+      - def: "r = modelParticleDynamics(dV,r0,options)\n[r, Info] = modelParticleDynamics(dV,r0,options)"
+    - title: "ode_history"
+      teaser: "Handle based class for storing an ode solution at previous time steps while solving. Use the history in an events function to catch more complex behavior than can be determined with the current solution."
+  - title: "Setup functions"
+    url: "/setup-functions/"
+    functions: 
+    - title: "computeInitialPoints"
+      teaser: "Generate a set of initial particle locations for modeling."
+      definitions: 
+      - def: "r0 = computeInitialPoints(BW,options)\n[r0,Info] = computeInitialPoints(BW,options,'r0set',r0set,'problem_scales',problem_scales)"
+    - title: "confiningForce"
+      teaser: "CONINFINGFORCE : Return function handle that takes in particle positions and returns the force from the confining potential."
+      definitions: 
+      - def: "dV = confiningForce(V, problem_scales, options)"
+    - title: "create_scaleInvar_confining_potential"
+      teaser: "Take the binary mask of the image and create the base confining potential"
+      definitions: 
+      - def: "V = create_scaleInvar_confining_potential(BW,options)"
+    - title: "setup_problem"
+      teaser: "Generate the confining force, the initial particle locations, and the scaling factors for the simulation."
+      definitions: 
+      - def: "[dV, r0, problem_scales, V] = setup_problem(binned_data, data_range, options)\n[dV, r0, problem_scales, V] = setup_problem(binned_data, data_range, options, r0set)\n[dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_range, options, ...)"
   - title: "Utilities"
     url: "/utility-functions/"
+    functions: 
+    - title: "binData"
+      teaser: 
+    - title: "cart2hex"
+      teaser: "Convert from cartesian points to hexagon center points. Hexagons will have a lattice constant of A and a aspect ratio of B. Output will be an array of the same size as cp with the hexagonal centers of each point. Hexagon center 0,0 is at cartesian point 0,0."
+      definitions: 
+      - def: "[hx,hy] = cart2hex(cp,a,b)"
+    - title: "computeBoundaryInformation"
+      teaser: "Compute the boundary contours, inward pointing normal vectors, curvature, and curvature centers."
+      definitions: 
+      - def: "[B,n,kappa,curvatureCenters] = computeBoundaryInformation(BW,objectScale,options)"
+    - title: "computeGridScaleFactors"
+      teaser: 
+      definitions: 
+      - def: "[grid_spacing, grid_to_solver, grid_to_data] = computeGridScaleFactors(options, grid_range, data_range)"
+    - title: "computePotentialParameters"
+      teaser: "Solve for the potential parameters that give all combinations of the DEPTHS, MINIMUM_LOCATIONS, and EXTENTS given. Save the paramters in FILE"
+    - title: "computeProblemScales"
+      teaser: "Compute the scale factors and data transformations for the problem."
+      definitions: 
+      - def: "problem_scales = computeGridScaleFactors(options, grid_size, data_limits)"
+    - title: "compute_objectScale"
+      teaser: ": return the maximum distance transform value for each object"
+      definitions: 
+      - def: "objectScale = compute_objectScale(BW, pixelList, options)"
+    - title: "createObjectImages"
+      teaser: "Create the mask, edge, and intensity image for the object with pixels given by pixelList from an image with N number of rows."
+    - title: "create_3d_density_plot"
+      teaser: 
+    - title: "create_test_3D_object"
+      teaser: 
+    - title: "decimateData"
+      teaser: "Bin 2D spatial data and return a single value for each bin."
+      definitions: 
+      - def: "dcmt = decimateData(x,y,z) will take spatial data -scatter data- (x,y,z)"
+    - title: "displayProgress"
+      teaser: "obj = displayProgress(number_of_iterations, number_of_displays, active) Reference page in Doc Center doc displayProgress"
+      definitions: 
+      - def: "obj = displayProgress(number_of_iterations, number_of_displays, active)"
+    - title: "frequencyGaussianFilter"
+      teaser: "This function is a modified form of the function by the same name in imgaussfilt3"
+    - title: "getCurvatureAndCenters"
+      teaser: "Compute boundary curvature and centers."
+      definitions: 
+      - def: "[kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,kappaSmoothingSigma,maxRadius,useConvexHull)"
+    - title: "getGridWignerSeitz"
+      teaser: 
+    - title: "getObjectOfInterest"
+      teaser: "Return the elements in the cell arrays input in varargin that coorespond to options.Object_Of_Interest"
+      definitions: 
+      - def: "varargout = getObjectOfInterest(options,varargin)\n[A,B,C,...] = getObjectOfInterest(options,A_in,B_in,C_in,...)"
+    - title: "getPdistInds"
+      teaser: "Get the indices of the pairs formed by pdist."
+    - title: "get_minimum_uint_class"
+      teaser: 
+    - title: "get_overlap_factor"
+      teaser: ": compute the expected overlap factor of the sub-objects for each object in the binary mask BW."
+      definitions: 
+      - def: "overlap_factors = get_overlap_factor(BW)"
+    - title: "hex2cart"
+      teaser: "Convert from hexagon center points to cartesian points. The hexagons will have a lattice constant of A and a aspect ratio of B. Output will be an array of the same size as hp with the cartesian coordiantes of each hexagon center. Hexagon center 0,0 is at cartesian point 0,0."
+      definitions: 
+      - def: "[cpx,cpy] = hex2cart(hx,a,b)"
+    - title: "hexplot"
+      teaser: "Create a hexagonal scatter plot. Hexagons with lattice constant A and aspect ratio B will be plotted at each cartesian center given. Hexagon coloring and relative size can be controled through parameters in options."
+      definitions: 
+      - def: "ph = hexplot(cartCents,a,b,varargin)"
+    - title: "homogenize_image"
+      teaser: "Get the edges between sub-objects in an object"
+      definitions: 
+      - def: "S = homogenize_image(I,BW,CC,options)"
+    - title: "is_in_parallel"
+      teaser: "Determine if function is being run in parallel."
+    - title: "ndGaussianFilter"
+      teaser: "Compute filter size from sigma if filter size is not given"
+    - title: "publishDocumentation"
+      teaser: 
+    - title: "publishExample"
+      teaser: 
+    - title: "removePadding"
+      teaser: 
+    - title: "setTheme"
+      teaser: 
+    - title: "sizeof"
+      teaser: 
 - title: "Examples"
   url: "/examples/"

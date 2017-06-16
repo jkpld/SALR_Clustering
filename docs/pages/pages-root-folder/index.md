@@ -51,8 +51,3 @@ homepage: true
   </div>
   <a class="close-reveal-modal">&#215;</a>
 </div>
-
-
-<-- video for widget
-video: '<a href="#" data-reveal-id="videoModal"><img src="http://phlow.github.io/feeling-responsive/images/start-video-feeling-responsive-302x182.jpg" width="302" height="182" alt=""/></a>'
--->

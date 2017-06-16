@@ -17,7 +17,7 @@ SALR particle clustering is a simple technique for finding the centers of object
 
 ## Installation
 
-1. Download the [GitHub repository](https://github.com/jkpld/seed_point_detection.git).
+1. Download the repository.
 2. Open Matlab on your computer, and change the current folder to the downloaded repository.
 3. Run `setup.m`. This function will
     * Add the necessary files to your Matlab path.

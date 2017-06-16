@@ -36,15 +36,16 @@
 				      <a {% if link.class %}class="{{link.class}}"{% endif %} href="{{ domain }}{{ site.baseurl }}{{ link.url }}"{% if link.url contains 'http' %} target="_blank"{% endif %}>{{ link.title | escape }}</a>
 
 				        <ul class="dropdown">
-				          {% for dropdown_link in link.dropdown %}
+				          {% for dlink in link.dropdown %}
 
-				            {% if dropdown_link.url contains 'http' %}
+				            {% if dlink.url contains 'http' %}
 				              {% assign domain = '' %}
 				              {% else %}
 				              {% assign domain = site.url %}
 				            {% endif %}
 
-				            <li><a {% if dropdown_link.class %}class="{{dropdown_link.class}}"{% endif %} href="{{ domain }}{{ site.baseurl }}{{ dropdown_link.url }}"{% if dropdown_link.url contains 'http' %} target="_blank"{% endif %}>{{ dropdown_link.title | escape }}</a></li>
+							<li{% if dlink.url == page.url %} class="active"{% elsif page.homepage == true and dlink.url == '/' %} class="active"{% endif %}><a {% if dlink.class %}class="{{dlink.class}}"{% endif %} href="{{ domain }}{{ site.baseurl }}{{ dlink.url }}"{% if dlink.url contains 'http' %} target="_blank"{% endif %}>{{ dlink.title | escape }}</a></li>
+				            <!-- <li><a {% if dlink.class %}class="{{dlink.class}}"{% endif %} href="{{ domain }}{{ site.baseurl }}{{ dlink.url }}"{% if dlink.url contains 'http' %} target="_blank"{% endif %}>{{ dlink.title | escape }}</a></li> -->
 				          {% endfor %}
 				        </ul>
 

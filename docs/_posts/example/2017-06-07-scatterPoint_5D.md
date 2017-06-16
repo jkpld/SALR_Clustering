@@ -8,10 +8,12 @@ show_meta: true
 teaser: "This example works with a real 5D dataset that describes the amount of cell nuclei damage. The distance transform cannot be used to create the confining potential for this data set; so, the data density will be used and the confining force scaled. In addition, the distance metric when modeling the particles will be changed to a Minkowski distance and the solver space will be isotropically scaled. Finally, this example will compare the results of SALR clustering with k-means and show that SALR clustering produces seed-points that locate the region centers better."
 image:
     thumb: scatterPoint_5D_3.png
+tags:
+    - data clustering
 ---
- 
+
 ## Load data
- 
+
 {% highlight matlab %}
 dat = load('exampleImages\damage_data_5D.mat');
 dat = dat.dat;
@@ -20,7 +22,7 @@ dat = dat.dat;
 dat_std = std(dat);
 dat = dat./dat_std;
 {% endhighlight %}
- 
+
 ## Compute data density
  In this step the data is discretized to a grid (binned). The data is
  initially binned so that the grid completely covers the data range. Using
@@ -30,7 +32,7 @@ dat = dat./dat_std;
  filter. The grid is set to have approximately `nbins` along each
  dimension. The actual number of bins will be chosen so that the grid has
  the same aspect ratio as the data.
- 
+
 {% highlight matlab %}
 nbins = 30;
 density_threshold = 20;
@@ -38,7 +40,7 @@ smooth_data = true; % Gaussian filter: sigma=0.5, kernal_size=3
 
 [n, cents, sz, data_limits] = binData(dat, nbins, density_threshold, smooth_data, 1);
 {% endhighlight %}
- 
+
 ## Explore/Visualize the data
  Plot isosurfaces of the data density (count). Since the data is 5D, it
  must be projected down to 3D. Here, dimensions 1, 3, and 4 will be show.
@@ -46,7 +48,7 @@ smooth_data = true; % Gaussian filter: sigma=0.5, kernal_size=3
  density regions extending outwards (and one very low density region).
 <div class="row">
 <div class="medium-7 columns t30" markdown="1">
- 
+
 {% highlight matlab %}
 dimensions = [1,3,4];
 isoLevels = [20,150,500,2000];
@@ -63,12 +65,12 @@ fig = create_3d_density_plot(n, dimensions, isoLevels,...
 
 view([50,35])
 {% endhighlight %}
- 
+
 </div>
 <div class="medium-5 columns t30">
- 
+
 <img src="\images\scatterPoint_5D_1.png">
- 
+
 </div>
 </div>
 ## Setup SALR clustering parameters
@@ -76,11 +78,11 @@ view([50,35])
  using the class `seedPointOptions`. This class handles parameter
  validation as well as computing/visualizing the SALR particle interaction
  parameters/potential.
- 
+
 {% highlight matlab %}
 options = seedPointOptions();
 {% endhighlight %}
- 
+
 #### Set the particle initialization parameters.
 
  * Use a uniform random point distribution. This will overlay a
@@ -89,7 +91,7 @@ options = seedPointOptions();
  `Wigner_Seitz_Radius`. From each lattice cell, a point is then randomly
  selected from the grid where the confining potential is between
  `Minimum_Initial_Potential` and `Maximum_Initial_Potential`
- 
+
 {% highlight matlab %}
 options.Point_Selection_Method = 'uniformRandom';
 options.Wigner_Seitz_Radius = 5;
@@ -97,19 +99,19 @@ options.Wigner_Seitz_Radius_Space = 'grid';
 options.Maximum_Initial_Potential = 1/4;
 options.Minimum_Initial_Potential = 1/6;
 {% endhighlight %}
- 
+
 #### Set confining potential parameters.
 
  * Use a confining potential based on the data density, and scale the
    confining force to be 0.4 at its 90% value.
- 
+
 {% highlight matlab %}
 options.Potential_Type = 'density';
 options.Max_Potential_Force = 0.4;
 options.Potential_Padding_Size = 0;
 options.Maximum_Memory = 2; % Allow 2 GB for potential gradients per worker.
 {% endhighlight %}
- 
+
 #### Set the particle interaction parameter values.
 
  * _Note_ the `Potential_Parameters` are given in data units.
@@ -121,23 +123,23 @@ options.Maximum_Memory = 2; % Allow 2 GB for potential gradients per worker.
    data boundaries.
  * Use a [Minkowski distance][5] with an exponent of 4. This will help
    require that the particles are close to each other in all dimensions.
- 
+
 {% highlight matlab %}
 options.Solver_Space_Attractive_Extent = 12;
 options.Potential_Parameters = [-1, 0.15*2, 2];
 options.Distance_Metric = {'min',4}; % Minkowski distance with exponent 4
 {% endhighlight %}
- 
+
 #### Set up replicates and minimum cluster size.
 
  * Here we use 5 replicates and we keep any seed-point that at least 3 of
    the replicates produce.
- 
+
 {% highlight matlab %}
 options.Iterations = 5;
 options.Minimum_Cluster_Size = 3;
 {% endhighlight %}
- 
+
 #### Set parameters controlling execution.
 
  * Verbose will output information on the current iteration and the
@@ -148,22 +150,22 @@ options.Minimum_Cluster_Size = 3;
  computer with 4 cores needs 4 times as much memory. Unless you are
  running many iterations, it is likely faster to not use parallel
  computation due to overhead.
- 
+
 {% highlight matlab %}
 options.Verbose = true;
 options.Debug = true;
 options.Use_Parallel = false;
 {% endhighlight %}
- 
+
 ## Compute seed points
  The seed-points are simply computed by passing the binned data, the
  `seedPointOptions`, and the data limits.
- 
+
 {% highlight matlab %}
 rng('shuffle') % Ensure in random state
 [seedPoints,Info] = computeObjectSeedPoints(n, options, 'data_limits', data_limits);
 {% endhighlight %}
- 
+
 ## Plot the results
  Plot the the final seed-points as large red dots and the seed-points from
  each repetition as small black dots. This can be done by creating the
@@ -176,7 +178,7 @@ rng('shuffle') % Ensure in random state
  _grid units_.
 <div class="row">
 <div class="medium-7 columns t30" markdown="1">
- 
+
 {% highlight matlab %}
 dimensions = [1,3,4];
 isoLevels = [20,150,500,2000];
@@ -206,15 +208,15 @@ create_3d_density_plot(n, dimensions, isoLevels,...
 
 view([50,35])
 {% endhighlight %}
- 
+
 </div>
 <div class="medium-5 columns t30">
- 
+
 <img src="\images\scatterPoint_5D_2.png">
 <figcaption class="text-right">
 Small black markers represent the seed-points calculated by each repetition. Large red markers represent the final seed-points.
 </figcaption>
- 
+
 </div>
 </div>
 ## Locate seed-points with [k-means][6]
@@ -224,7 +226,7 @@ Small black markers represent the seed-points calculated by each repetition. Lar
  SALR clustering results.
 <div class="row">
 <div class="medium-7 columns t30" markdown="1">
- 
+
 {% highlight matlab %}
 K = 4;
 kmeans_options = [];
@@ -252,15 +254,15 @@ create_3d_density_plot(n, dimensions, isoLevels,...
 
 view([50,35])
 {% endhighlight %}
- 
+
 </div>
 <div class="medium-5 columns t30">
- 
+
 <img src="\images\scatterPoint_5D_3.png">
 <figcaption class="text-right">
 Large red markers represent the final seed-points of SALR particle clustering. Large blue markers represent the results of k-means clustering. <b>SALR clustering better locates region centers.</b>
 </figcaption>
- 
+
 </div>
 </div>
 ## Data set description
@@ -276,15 +278,15 @@ Large red markers represent the final seed-points of SALR particle clustering. L
  * The other four features are the first four principle components
  ([PCA][3]) of texture and granularity features from the [DSB][1] image
  channel
- 
+
  _The images giving showing [DSB][1]s are not provided with the example
  data of this work._
- 
+
  *[DSB]: double-strand break
  *[DNA]: Deoxyribonucleic acid
  *[PCA]: Principal component analysis
  *[DAPI]: 4',6-diamidino-2-phenylindole
- 
+
  [1]: https://en.wikipedia.org/wiki/DNA_repair#Double-strand_breaks
  [2]: https://en.wikipedia.org/wiki/DNA
  [3]: https://en.wikipedia.org/wiki/Principal_component_analysis

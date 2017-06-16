@@ -1,0 +1,43 @@
+{% comment %}
+List all of the functions for a folder given in the code.yml _data
+
+Example:
+{% include list-functions folder='core-functions' %}
+
+{% endcomment %}
+
+{% assign folder = include.folder %}
+
+<div class="row">
+<div class="small-12 columns t30">
+
+    {% for link in site.data.code limit:1000 %}
+        {% if link.dropdown != nil %}
+            {% for dlink in link.dropdown %}
+                {% if dlink.functions != nil %}
+                    {% if dlink.url contains folder %}
+                        {% for func in dlink.functions %}
+
+                            <strong>{{ func.title }}()</strong>:<br>
+                            {% if func.teaser %}{{ func.teaser | strip_html | escape }}<br>{% endif %}
+                            {% if func.definitions != nil %}
+
+{% highlight matlab %}
+{% for definition in func.definitions %}
+{{ definition.def }}
+{% endfor %}
+{% endhighlight %}
+                            {% else %}
+                                <br>
+                            {% endif %}
+
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+
+
+</div><!-- /.small-12.columns -->
+</div>

@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: documentation
 sidebar: left
 title:  "Quick start guide"
 subheadline:  "Installation and requirements"
