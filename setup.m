@@ -55,7 +55,8 @@ fprintf('...added pdistmex\n')
 % Add subfolders of current location to path -----------------------------
 % (but do not include any .git repositories
 pths = split(string(genpath(path)),';');
-pths = pths(~pths.contains('.git')).join(';');
+toIgnore = {'.git','docs'};
+pths = pths(~pths.contains(toIgnore)).join(';');
 addpath(pths.char());
 fprintf('...added subfolders to path\n')
 
