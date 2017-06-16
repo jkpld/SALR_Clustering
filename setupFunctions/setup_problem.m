@@ -2,9 +2,8 @@ function [dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_lim
 % SETUP_PROBLEM Generate the confining force, the initial particle
 % locations, and the scaling factors for the simulation.
 %
-% [dV, r0, problem_scales, V] = setup_problem(binned_data, data_range, options)
-% [dV, r0, problem_scales, V] = setup_problem(binned_data, data_range, options, r0set)
-% [dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_range, options, ...)
+% [dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_range, options)
+% [dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_range, options, r0set)
 %
 % Input parameters:
 % binned_data : Binned data to be used for forming the confining potential
@@ -18,17 +17,17 @@ function [dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_lim
 %   'r0set_uniformRandom'.
 %
 % Output parameters:
-% dV : Function handle taking in an NxD array of locations and outputing
+% dV : Function handle taking in an NxD array of locations and outputting
 %   the potential gradient (also an NxD array) at those locations.
 % r0 : A cell array (of length options.Iterations) where each element
-%   containts the initial positions to be used for the simulation.
+%   contains the initial positions to be used for the simulation.
 % problem_scales : A structure with fields grid_spacing and grid_to_solver
 %   giving the size of each bin in data units and the scale factor to go
 %   from the grid to the solver space.
 % V : The confining potential
-% Info : A structure array of information that may be useful when debuging.
-%   If options.Debug is false, then Info will be empty; otherwise, it will
-%   have the following fields
+% Info : A structure array of information that may be useful when
+%   debugging. If options.Debug is false, then Info will be empty;
+%   otherwise, it will have the following fields
 %       ComputeInitialPointsInfo : A structure containing the debug
 %           information from the computeInitialPoints() function.
 %
@@ -51,7 +50,7 @@ problem_scales = computeProblemScales(options, size(binned_data), data_limits);
 % Create confining potential
 switch options.Potential_Type
     case 'distance_transform'
-        [V, scaleFactor, overlapFactor] = create_scaleInvar_confining_potential(binned_data, options); %#ok<ASGLU>
+        [V, scaleFactor] = create_scaleInvar_confining_potential(binned_data, options);
         problem_scales = scale_object_for_distance_transform(problem_scales, scaleFactor);
     case 'density'
         V = min(1.5,1./binned_data);
@@ -87,7 +86,7 @@ D = numel(dg);
 % Check data and grid aspect ratios
 mdg = mean(dg);
 if ~all( abs(dg - mdg)/mdg < 1e-2 )
-    warning('compute_ScaleFactors_and_Grid:nonEqualAspectRatios','The aspect ratio of the data and the descretized grid are not equal. This could lead to unexpected or wrong results.')
+    warning('compute_ScaleFactors_and_Grid:nonEqualAspectRatios','The aspect ratio of the data and the discretized grid are not equal. This could lead to unexpected or wrong results.')
 end
 
 % We need to scale the solver space to be relative to the distance

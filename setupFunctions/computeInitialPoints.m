@@ -9,7 +9,7 @@ function [r0,Info] = computeInitialPoints(BW,options,varargin)
 % BW : A binary mask of a single object
 % options : An instance of class seedPointOptions
 %
-% Optional input parameters (parameter/value paris):
+% Optional input parameters (parameter/value pairs):
 % r0 : A set of possible initial points *in data space*. This parameter is
 %   required if options.Point_Selection_Method is either 'r0set_random' or
 %   'r0set_uniformRandom'.
@@ -20,8 +20,8 @@ function [r0,Info] = computeInitialPoints(BW,options,varargin)
 % r0 : Cell array of length options.Iterations where each element is an
 %   NxD array of initial positions (D is the dimension of the data, N is
 %   the number of points returned).
-% Info : A structure array giving information that may be off help when
-%        debuging. This is only output when options.Debug is true. The
+% Info : A structure array giving information that may be of help when
+%        debugging. This is only output when options.Debug is true. The
 %        fields of Info are
 %           N : The number of particles returned (number of rows in r0).
 %
@@ -79,7 +79,7 @@ function [r0,Info] = computeInitialPoints(BW,options,varargin)
 %
 % * All initial points returned will be located inside of the binary mask.
 %
-% See also DECIMATEDATA COMPUTEBOUNDARYINFORMATION
+% See also DECIMATEDATA
 
 % James Kapaldo
 
@@ -212,7 +212,7 @@ function [sz, lattice_constant, N, r0set, BWpts, offset, problem_scales, use_cel
     end
 
     % Get the expected number of particles. Note that the volume of an
-    % n-ellipsiod is
+    % n-ellipsoid is
     %
     % $$V = \frac{\pi^{n/2}}{\Gamma(n/2+1)}\prod_k c_k$$
     %
@@ -373,7 +373,7 @@ function r0_set = r0set_random(r0set, N, repetitions)
 end
 
 function [r0_set, varargout] = r0set_uniformRandom(r0set, sz, lattice_constant, repetitions, offset)
-    % Get the number of posibile initial points and the dimension of the
+    % Get the number of possible initial points and the dimension of the
     % problem.
     [N,D] = size(r0set);
     debug = nargout > 1;
@@ -390,7 +390,7 @@ function [r0_set, varargout] = r0set_uniformRandom(r0set, sz, lattice_constant, 
             Info = [];
         end
 
-        % Offset the initial points (can be usefull with the hexagonal discretization.)
+        % Offset the initial points (can be useful with the hexagonal discretization.)
         r0set = r0set - offset;
 
         for i = repetitions:-1:1

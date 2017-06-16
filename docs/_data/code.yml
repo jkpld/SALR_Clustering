@@ -51,17 +51,17 @@
       definitions: 
       - def: "r0 = computeInitialPoints(BW,options)\n[r0,Info] = computeInitialPoints(BW,options,'r0set',r0set,'problem_scales',problem_scales)"
     - title: "confiningForce"
-      teaser: "CONINFINGFORCE : Return function handle that takes in particle positions and returns the force from the confining potential."
+      teaser: "Compute the potential force and return a function handle that takes in particle positions and returns the potential force at those positions."
       definitions: 
       - def: "dV = confiningForce(V, problem_scales, options)"
     - title: "create_scaleInvar_confining_potential"
-      teaser: "Take the binary mask of the image and create the base confining potential"
+      teaser: "Compute the confining potential based on the distance transform of a binary mask."
       definitions: 
-      - def: "V = create_scaleInvar_confining_potential(BW,options)"
+      - def: "[V, scaleFactor] = create_scaleInvar_confining_potential(BW,options)"
     - title: "setup_problem"
       teaser: "Generate the confining force, the initial particle locations, and the scaling factors for the simulation."
       definitions: 
-      - def: "[dV, r0, problem_scales, V] = setup_problem(binned_data, data_range, options)\n[dV, r0, problem_scales, V] = setup_problem(binned_data, data_range, options, r0set)\n[dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_range, options, ...)"
+      - def: "[dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_range, options)\n[dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_range, options, r0set)"
   - title: "Utilities"
     url: "/utility-functions/"
     functions: 
