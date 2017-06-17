@@ -1,7 +1,21 @@
 function varargout = createObjectImages(pixelList,N,varargin)
-% CREATEOBJECTIMAGES  Create the mask, edge, and intensity image for the
-% object with pixels given by pixelList from an image with N number
-% of rows.
+% CREATEOBJECTIMAGES  Create full images with N rows from a pixel list and
+% sets of values.
+% 
+% varargout = createObjectImages(pixelList, N, varargin)
+% [Aimg, Bimg] = createObjectImages(pixelList, N, A, B)
+%
+% Input parameters:
+% pixelList : locations of non-zero pixels in the image
+% N : number of rows in the image
+% varargin : list of arrays with same size as pixelList
+%
+% Output parameters:
+% varargout : list of images with values inserted at pixel locations
+
+% Example:
+% Aimg = zeros(N,M)
+% Aimg(pixelList) = A;
 
 % James Kapaldo
 

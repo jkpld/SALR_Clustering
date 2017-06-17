@@ -1,7 +1,26 @@
-function [kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,kappaSmoothingSigma,maxRadius,useConvexHull)
-% GETCURVATUREANDCENTERS  Compute boundary curvature and centers.
+function [kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,sigma,maxRadius,useConvexHull)
+% GETCURVATUREANDCENTERS  Compute boundary curvature and centers of curvature.
 %
-% [kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,kappaSmoothingSigma,maxRadius,useConvexHull)
+% [kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,sigma,maxRadius,useConvexHull)
+%
+% Input parameters:
+% BWperim : boundary of object
+% imSize : size of image the boundary came from
+% sigma : Sigma value used when filtering the curvature
+% maxRadius : The maximum radius, used for determining the minimum
+%   curvatures.
+% useConvexHull : logical flag. If true, then the curvature will pass
+%   through a convex-hull filter before the centers of curvature are
+%   computed.
+%
+% Ouput parameters:
+% kappa : the boundary curvature
+% CoC_linIdx : the linear indices of the centers of curvature
+% negkappaInds : (Not used)
+% d_bndry : boundary tangents
+% CoC : centers of curvature
+% kappa_s : convex hull smoothed curvature if useConvexHull is true,
+%   boundary curvature if it is false
 
 % James Kapaldo
 
@@ -9,9 +28,9 @@ function [kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCe
 % kappaSmoothingSigma = 4;
 negativeMADKappaMultiplier = 2;
 
-% kappaSmoothingSigma is the std of the gaussian smoothing filter applied
-% to the boundary before the derivatives are calculted. The derivatives
-% will be calculated using the derivative of the gaussian with this same
+% kappaSmoothingSigma is the std of the Gaussian smoothing filter applied
+% to the boundary before the derivatives are calculated. The derivatives
+% will be calculated using the derivative of the Gaussian with this same
 % std.
 
 % negativeMADKappaMultiplier sets the threshold for determining if a point
@@ -37,11 +56,11 @@ cntr = mean(bndry,1);
 bndry = bsxfun(@minus,bndry,cntr);
 
 % Create filters for getting derivatives
-filtSize = round(7*kappaSmoothingSigma);
+filtSize = round(7*sigma);
 x = -floor(filtSize/2):ceil(filtSize/2);
-G = exp(-(x).^2/(2*kappaSmoothingSigma^2))/(kappaSmoothingSigma*sqrt(2*pi));
-dG = -(x) .* G / kappaSmoothingSigma^2;
-ddG = - G / kappaSmoothingSigma^2 + (x).^2 .* G / kappaSmoothingSigma^4;
+G = exp(-(x).^2/(2*sigma^2))/(sigma*sqrt(2*pi));
+dG = -(x) .* G / sigma^2;
+ddG = - G / sigma^2 + (x).^2 .* G / sigma^4;
 
 G = G(:);
 dG = dG(:);
@@ -129,8 +148,8 @@ if ~isempty(shiftInd)
 
 end
 
-% Get the indices of the positive curvature peaks for use with delunay
-% triagulation.
+% Get the indices of the positive curvature peaks for use with deluanay
+% triangulation.
 % negKappaInds = find((kappa_s == imdilate(kappa_s,ones(5,1))) & kappa_s > max((negativeMADKappaMultiplier*mad(kappa_s,1)+median(kappa_s)),0));
 negKappaInds = [];
 

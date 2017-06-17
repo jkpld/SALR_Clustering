@@ -1,4 +1,32 @@
 function [n, cents, sz, data_limits] = binData(X, nbins, density_threshold, smooth_data, maintain_aspectRatio)
+% BINDATA Bin N-D scatter point data.
+%
+% [n, cents, sz, data_limits] = binData(X, nbins, density_threshold, smooth_data, maintain_aspectRatio)
+%
+% Input parameters:
+% X : NxD array (D is the dimension) of data points
+% nbins : 1x1, The number of bins to use along each dimension
+% density_threshold : The number of points in each bin used to truncate the
+%   data range.
+% smooth_data : Logical flag. If true, the data will be smoothed with a
+%   slowish, but more memory efficient Gaussian filter.
+% maintain_aspectRatio : Logical flag. If true, then the size of each bin
+%   in data units will be equal for all dimensions. In this case, the
+%   number of bins along each dimension will be approximately nbins.
+%
+% Output parameters:
+% n : The binned data
+% cents : The center of each bin in data coordinates.
+% sz : The size of n
+% data_limits : 2xD array where the first and second rows give the minimum
+%   and maximum data values, respectively, of the binned data.
+%
+% The data is initially binned so that the grid completely covers the data
+% range. Using this information the grid range is limited so that the bins
+% have at least `density_threshold` points; this is to help remove
+% outliers. The data is then re-binned using this limited data range.
+
+% James Kapaldo
 
 if nargin < 4
     smooth_data = false;
@@ -76,7 +104,7 @@ function n = smooth_nd(dat, sigma, hsize, verbose)
     [dat_idx{1:D}] = ind2sub(sz,dat_lin_idx);
     dat_idx = int16(cat(2,dat_idx{:}));
 
-    % Create guassian filter and index arrays
+    % Create Gaussian filter and index arrays
     h = ndGaussianFilter(D,sigma,hsize);
     r = (hsize-1)/2; % filter radius
 

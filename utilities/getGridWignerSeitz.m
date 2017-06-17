@@ -1,4 +1,16 @@
 function rs = getGridWignerSeitz(problem_scales, options)
+% GETGRIDWIGNERSEITZ Convert the Wigner-Seitz radius to grid space.
+%
+% rs = getGridWignerSeitz(problem_scales, options)
+%
+% Input parameters:
+% problem_scales : The structure returned by computeProblemScales()
+% options : An instance of class seedPointOptions
+%
+% Output parameters:
+% rs : The Wigner-Seitz radius in grid space
+
+% James Kapaldo
 
 grid_to_data = problem_scales.grid_spacing;
 grid_to_solver = problem_scales.grid_to_solver;

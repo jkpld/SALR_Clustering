@@ -1,7 +1,9 @@
 function parameterStruct = computePotentialParameters(depths,minimum_Locations,extents,file)
-% COMPUTEPOTENTIALPARAMETERS  Solve for the potential parameters that give
-% all combinations of the DEPTHS, MINIMUM_LOCATIONS, and EXTENTS given.
-% Save the paramters in FILE
+% COMPUTEPOTENTIALPARAMETERS  Solve for the potential parameters that
+% result in the potential depth, potential minimum location, and potential
+% attractive extent given.
+%
+% parameterStruct = computePotentialParameters(depths,minimum_Locations,extents,file)
 
 % James Kapaldo
 % 2016-10-11

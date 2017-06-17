@@ -1,4 +1,12 @@
 function publishDocumentation
+% PUBLISHDOCUMENTATION  Function to create the documentation data used in
+% creating the website.
+%
+% publishDocumentation()
+%
+% This function is used to create the code.yml file in docs/_data
+
+% James Kapaldo
 
 fileLocation = mfilename('fullpath');
 path = fileparts(fileparts(fileLocation));
@@ -17,27 +25,27 @@ try
     writeLine(fid, 'title', 'Code', 0);
     writeLine(fid, 'url', '/code/', 0);
     writeLine(fid, 'dropdown', '', 0);
-    
+
     writeLine(fid, 'title', 'Interface functions', 1);
     writeLine(fid, 'url', '/interface-functions/', 1);
     addDirFunctions(fid, path, 1)
-    
+
     writeLine(fid, 'title', 'Core functions', 1);
     writeLine(fid, 'url', '/core-functions/', 1);
     addDirFunctions(fid, fullfile(path, 'coreFunctions'), 1)
-    
+
     writeLine(fid, 'title', 'Setup functions', 1);
     writeLine(fid, 'url', '/setup-functions/', 1);
     addDirFunctions(fid, fullfile(path, 'setupFunctions'), 1)
-    
+
     writeLine(fid, 'title', 'Utilities', 1);
     writeLine(fid, 'url', '/utility-functions/', 1);
     addDirFunctions(fid, fullfile(path, 'utilities'), 1)
-    
+
     writeLine(fid, 'title', 'Examples', 0);
     writeLine(fid, 'url', '/examples/', 0);
-    
-    
+
+
 catch ME
     fclose(fid);
     rethrow(ME);
@@ -107,7 +115,8 @@ str = cellfun(@(x) strtrim(x),str,'UniformOutput',0);
 % [] = foo3()
 %    [a,b] = foo(c) lkj
 
-pattern1 = '^[ ]*(\[\w+.*?\]|\w+)[ ]*=[ ]*\w+(\([\w\.]+.*?\))\;*[ ]*(|\%.*)$';
+% pattern1 = '^[ ]*(\[\w+.*?\]|\w+)[ ]*=[ ]*\w+(\([\w\.]+?.*?\))\;*[ ]*(|\%.*)$';
+pattern1 = '^[ ]*(|((\[\w+.*?\]|\w+)[ ]*=[ ]*))\w+(\([^\)]*?\))\;*[ ]*(|\%.*)$';
 % can start with any amount of spaces: ^[ ]*
 % has either square brackets enclosing at least one word or a single
 %    word: (\[\w+.*?\]|\w+)

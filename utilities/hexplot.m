@@ -1,20 +1,22 @@
 function ph = hexplot(cartCents,a,b,varargin)
-% HEXPLOT  Create a hexagonal scatter plot. 
-% Hexagons with lattice constant A and aspect ratio B will be plotted at
-% each cartesian center given. Hexagon coloring and relative size can be
-% controled through parameters in options.
+% HEXPLOT Create a hexagonal scatter plot.
 %
-% ph = hexplot(cartCents,a,b,varargin)
+% p = hexplot(cartCents,a,b)
+% p = hexplot(cartCents,a,b,'colorData',cd,'sizeData',sd,'colorScale',cs,'sizeScale',ss,'maxHexSize',mhs,'orientation',o,'parent',p)
+%
+% Hexagons with lattice constant a and aspect ratio b will be plotted at
+% each Cartesian center given. Hexagon coloring and relative size can be
+% controlled through parameters in options.
 %
 % Input parameters:
-% 
+%
 % cartCents - Nx2 array where each row gives the x,y location of a hexagon
 %             center. (This data would normally be returned by hex2cart().)
 %
 % a - lattice constant of hexagons.
 %
-% b - aspect ratio of hexagons. (This will streach out hexagons along the
-%     second dimenstion (y).)
+% b - aspect ratio of hexagons. (This will stretch out hexagons along the
+%     second dimension (y).)
 %
 % Optional parameters:
 %
@@ -34,7 +36,7 @@ function ph = hexplot(cartCents,a,b,varargin)
 % colorScale - Scale applied to the color data. Options are 'linear' or
 %              'log'. Default is 'linear'.
 %
-% sizeScale - Scale applied to the size data. Options are 'linear', 'log', 
+% sizeScale - Scale applied to the size data. Options are 'linear', 'log',
 %             or 'none'. Default is 'none' if sizeData is not given and
 %             'linear' if sizeData is given. Note, if 'none' is specified
 %             then sizeData will be ignored.
@@ -123,7 +125,7 @@ hexVerts = [ 0,  S;
 
 R = [cosd(orientation), -sind(orientation); sind(orientation), cosd(orientation)];
 hexVerts = (R*hexVerts')';
-         
+
 if ~isempty(sizeData) && ~strcmp(sizeScale,'none')
     switch sizeScale
         case 'linear'
@@ -133,7 +135,7 @@ if ~isempty(sizeData) && ~strcmp(sizeScale,'none')
     end
     nS = nS/max(nS);
     hexVerts = hexVerts .* permute(nS,[3,2,1]);
-end     
+end
 
 N = size(cartCents,1);
 

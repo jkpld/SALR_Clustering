@@ -1,4 +1,13 @@
 function setTheme(fig,darkLight)
+% SETTHEME Set a figure theme to light or dark.
+%
+% setTheme(fig,darkLight)
+%
+% Input parameters:
+% fig : The handle of the figure to modify
+% darkLight : string with the value 'dark' or 'light'.
+%
+% James Kapaldo
 
 switch darkLight
     case 'dark'

@@ -1,8 +1,8 @@
 function objectScale = compute_objectScale(BW, pixelList)
-% COMPUTE_OBJECTSCALE : return the maximum distance transform value for
-% each object
+% COMPUTE_OBJECTSCALE Compute the maximum distance transform value for
+% each object in a binary mask.
 %
-% objectScale = compute_objectScale(BW, pixelList, options)
+% objectScale = compute_objectScale(BW, pixelList)
 
 % James Kapaldo
 

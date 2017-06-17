@@ -1,5 +1,20 @@
 function inds = getPdistInds(N)
-% GETPDISTINDS  Get the indices of the pairs formed by pdist.
+% GETPDISTINDS Get the indices of the pairs formed by pdist().
+%
+% inds = getPdistInds(N)
+%
+% Input parameters:
+% N : The number of objects.
+%
+% Output parameters:
+% inds : N*(N-1)/2 x 2 array where the ith row gives the indices of the
+%   objects for the ith distance returned by pdist().
+
+% Ex.
+% x = rand(4,2);
+% d = pdist(x);
+% inds = getPdistInds(4);
+% fprintf('The distance between point %d and %d is %f\n',inds(3,1),inds(3,2),d(3))
 
 % James Kapaldo
 % 2016-09-27

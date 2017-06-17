@@ -1,11 +1,17 @@
 function varargout = getObjectOfInterest(options,varargin)
-% GETOBJECTOFINTEREST  Return the elements in the cell arrays input in
-% varargin that coorespond to options.Object_Of_Interest
+% GETOBJECTOFINTEREST  Return the options.Object_Of_Interest elements of
+% the input arrays.
 %
-% varargout = getObjectOfInterest(options,varargin)
-% [A,B,C,...] = getObjectOfInterest(options,A_in,B_in,C_in,...)
+% varargout = getObjectOfInterest(options, varargin)
+% [A, B, C] = getObjectOfInterest(options, A_in, B_in, C_in)
+% A = A_in(options.Object_Of_Interest)
 %
-% where A = A_in(options.Object_Of_Interest), ...
+% Input parameters:
+% options : An instance of class seedPointOptions
+% varargin : Any number of arrays or cell arrays
+%
+% Output parameters:
+% varargout : The options.Object_Of_Interest element of each input.
 
 % James Kapaldo
 

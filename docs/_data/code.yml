@@ -16,6 +16,8 @@
       - def: "[seedPoints, Info] = computeObjectSeedPoints(binned_data, M, r0set, useCentroid, options, objNumber)"
     - title: "seedPointOptions"
       teaser: "Set options needed for computing seed point locations."
+      definitions: 
+      - def: "defaultValues = seedPointOptions()"
     - title: "setup"
       teaser: 
     - title: "simplest_test"
@@ -66,88 +68,120 @@
     url: "/utility-functions/"
     functions: 
     - title: "binData"
-      teaser: 
+      teaser: "Bin N-D scatter point data."
+      definitions: 
+      - def: "[n, cents, sz, data_limits] = binData(X, nbins, density_threshold, smooth_data, maintain_aspectRatio)"
     - title: "cart2hex"
-      teaser: "Convert from cartesian points to hexagon center points. Hexagons will have a lattice constant of A and a aspect ratio of B. Output will be an array of the same size as cp with the hexagonal centers of each point. Hexagon center 0,0 is at cartesian point 0,0."
+      teaser: "Convert from cartesian points to hexagon center points."
       definitions: 
       - def: "[hx,hy] = cart2hex(cp,a,b)"
     - title: "computeBoundaryInformation"
-      teaser: "Compute the boundary contours, inward pointing normal vectors, curvature, and curvature centers."
+      teaser: "Compute the boundary contours, inward pointing normal vectors, curvature, and centers of curvature."
       definitions: 
-      - def: "[B,n,kappa,curvatureCenters] = computeBoundaryInformation(BW,objectScale,options)"
-    - title: "computeGridScaleFactors"
-      teaser: 
-      definitions: 
-      - def: "[grid_spacing, grid_to_solver, grid_to_data] = computeGridScaleFactors(options, grid_range, data_range)"
+      - def: "[B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,objectScale,options)"
     - title: "computePotentialParameters"
-      teaser: "Solve for the potential parameters that give all combinations of the DEPTHS, MINIMUM_LOCATIONS, and EXTENTS given. Save the paramters in FILE"
+      teaser: "Solve for the potential parameters that result in the potential depth, potential minimum location, and potential attractive extent given."
+      definitions: 
+      - def: "parameterStruct = computePotentialParameters(depths,minimum_Locations,extents,file)"
     - title: "computeProblemScales"
       teaser: "Compute the scale factors and data transformations for the problem."
       definitions: 
-      - def: "problem_scales = computeGridScaleFactors(options, grid_size, data_limits)"
+      - def: "problem_scales = computeProblemScales(options, grid_size, data_limits)"
     - title: "compute_objectScale"
-      teaser: ": return the maximum distance transform value for each object"
+      teaser: "Compute the maximum distance transform value for each object in a binary mask."
       definitions: 
-      - def: "objectScale = compute_objectScale(BW, pixelList, options)"
+      - def: "objectScale = compute_objectScale(BW, pixelList)"
     - title: "createObjectImages"
-      teaser: "Create the mask, edge, and intensity image for the object with pixels given by pixelList from an image with N number of rows."
-    - title: "create_3d_density_plot"
-      teaser: 
+      teaser: "Create full images with N rows from a pixel list and sets of values."
+      definitions: 
+      - def: "varargout = createObjectImages(pixelList, N, varargin)\n[Aimg, Bimg] = createObjectImages(pixelList, N, A, B)"
     - title: "create_test_3D_object"
-      teaser: 
+      teaser: "Create a fake set of 3D data for testing based off of the example nuclei image, testNuclei_mask."
+      definitions: 
+      - def: "dat = create_test_3D_object(N)"
     - title: "decimateData"
       teaser: "Bin 2D spatial data and return a single value for each bin."
       definitions: 
-      - def: "dcmt = decimateData(x,y,z) will take spatial data -scatter data- (x,y,z)"
+      - def: "dcmt = decimateData(x,y,z)\ndcmt = decimateData(x,y,z,'binSize',vS,'gridType',type,'reductionMethod',method,'cleanHexagonData',tf,'generatePlots',tf)"
     - title: "displayProgress"
-      teaser: "obj = displayProgress(number_of_iterations, number_of_displays, active) Reference page in Doc Center doc displayProgress"
+      teaser: "Class to help with displaying progress during calculation."
       definitions: 
-      - def: "obj = displayProgress(number_of_iterations, number_of_displays, active)"
+      - def: "progress = displayProgress(num_iterations, num_updates, active, is_parallel)"
     - title: "frequencyGaussianFilter"
-      teaser: "This function is a modified form of the function by the same name in imgaussfilt3"
+      teaser: "Filter data with a Gaussian filter in frequency space."
+      definitions: 
+      - def: "A = frequencyGaussianFilter(A, sigma, hsize, padding)"
     - title: "getCurvatureAndCenters"
-      teaser: "Compute boundary curvature and centers."
+      teaser: "Compute boundary curvature and centers of curvature."
       definitions: 
-      - def: "[kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,kappaSmoothingSigma,maxRadius,useConvexHull)"
+      - def: "[kappa,CoC_linIdx,negKappaInds,d_bndry,CoC,kappa_s] = getCurvatureAndCenters(BWperim,imSize,sigma,maxRadius,useConvexHull)"
     - title: "getGridWignerSeitz"
-      teaser: 
-    - title: "getObjectOfInterest"
-      teaser: "Return the elements in the cell arrays input in varargin that coorespond to options.Object_Of_Interest"
+      teaser: "Convert the Wigner-Seitz radius to grid space."
       definitions: 
-      - def: "varargout = getObjectOfInterest(options,varargin)\n[A,B,C,...] = getObjectOfInterest(options,A_in,B_in,C_in,...)"
+      - def: "rs = getGridWignerSeitz(problem_scales, options)"
+    - title: "getObjectOfInterest"
+      teaser: "Return the options.Object_Of_Interest elements of the input arrays."
+      definitions: 
+      - def: "varargout = getObjectOfInterest(options, varargin)\n[A, B, C] = getObjectOfInterest(options, A_in, B_in, C_in)\nA = A_in(options.Object_Of_Interest)"
     - title: "getPdistInds"
-      teaser: "Get the indices of the pairs formed by pdist."
+      teaser: "Get the indices of the pairs formed by pdist()."
+      definitions: 
+      - def: "inds = getPdistInds(N)"
     - title: "get_minimum_uint_class"
-      teaser: 
+      teaser: "Return the class name for the smallest unsigned integer class that will hold the input without overflow."
+      definitions: 
+      - def: "class_name = get_minimum_uint_class(A)"
     - title: "get_overlap_factor"
-      teaser: ": compute the expected overlap factor of the sub-objects for each object in the binary mask BW."
+      teaser: "Compute the expected overlap factor of the sub-objects for each object in the binary mask BW."
       definitions: 
       - def: "overlap_factors = get_overlap_factor(BW)"
     - title: "hex2cart"
-      teaser: "Convert from hexagon center points to cartesian points. The hexagons will have a lattice constant of A and a aspect ratio of B. Output will be an array of the same size as hp with the cartesian coordiantes of each hexagon center. Hexagon center 0,0 is at cartesian point 0,0."
+      teaser: "Convert from hexagon center points to Cartesian points."
       definitions: 
       - def: "[cpx,cpy] = hex2cart(hx,a,b)"
     - title: "hexplot"
-      teaser: "Create a hexagonal scatter plot. Hexagons with lattice constant A and aspect ratio B will be plotted at each cartesian center given. Hexagon coloring and relative size can be controled through parameters in options."
+      teaser: "Create a hexagonal scatter plot."
       definitions: 
-      - def: "ph = hexplot(cartCents,a,b,varargin)"
-    - title: "homogenize_image"
-      teaser: "Get the edges between sub-objects in an object"
+      - def: "p = hexplot(cartCents,a,b)\np = hexplot(cartCents,a,b,'colorData',cd,'sizeData',sd,'colorScale',cs,'sizeScale',ss,'maxHexSize',mhs,'orientation',o,'parent',p)"
+    - title: "interp2mex"
+      teaser: "Fast 2-D bilinear interpolation"
       definitions: 
-      - def: "S = homogenize_image(I,BW,CC,options)"
+      - def: "Zi = interp2mex(Z, Xi, Yi)"
     - title: "is_in_parallel"
       teaser: "Determine if function is being run in parallel."
+      definitions: 
+      - def: "answer = is_in_parallel()"
+    - title: "isosurfaceProjectionPlot"
+      teaser: "Plot isosurfaces of N-D data (N>2) projected down to 3-D, and plot the 2-D projections of the isosurfaces to the three axis planes."
+      definitions: 
+      - def: "fig = isosurfaceProjectionPlot(n, dims, isoLvls)"
+    - title: "nakeinterp1"
+      teaser: "Fast 1D interpolation using a dichotomy search of indices."
+      definitions: 
+      - def: "idx = nakeinterp1(x, y, xi);"
     - title: "ndGaussianFilter"
-      teaser: "Compute filter size from sigma if filter size is not given"
+      teaser: "Create an N-D Gaussian filter."
+      definitions: 
+      - def: "h = ndGaussianFilter(N,sigma,hsize)"
     - title: "publishDocumentation"
-      teaser: 
+      teaser: "Function to create the documentation data used in creating the website."
+      definitions: 
+      - def: "publishDocumentation()"
     - title: "publishExample"
-      teaser: 
+      teaser: "Function to publish an example script to markdown for the website."
+      definitions: 
+      - def: "publishExample(file)\npublishExample(file, reEvaluate)"
     - title: "removePadding"
-      teaser: 
+      teaser: "Remove padding from and N-D matrix."
+      definitions: 
+      - def: "A = removePadding(A, pad_size)"
     - title: "setTheme"
-      teaser: 
+      teaser: "Set a figure theme to light or dark."
+      definitions: 
+      - def: "setTheme(fig,darkLight)"
     - title: "sizeof"
-      teaser: 
+      teaser: "Get the size in bytes of the input numeric class."
+      definitions: 
+      - def: "out = sizeof(in)"
 - title: "Examples"
   url: "/examples/"

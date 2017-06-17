@@ -1,17 +1,27 @@
 function [cpx,cpy] = hex2cart(hx,a,b)
-% HEX2CART  Convert from hexagon center points to cartesian points.
-% The hexagons will have a lattice constant of A and a aspect ratio of B.
-% Output will be an array of the same size as hp with the cartesian
-% coordiantes of each hexagon center. Hexagon center 0,0 is at cartesian
-% point 0,0.
+% HEX2CART  Convert from hexagon center points to Cartesian points.
 %
 % [cpx,cpy] = hex2cart(hx,a,b)
 %
+% Input parameters:
+% hx : Hexagon centers, Nx2
+% a : Hexagon lattice constant
+% b : Hexagon aspect ratio
+%
+% Output parameters:
+% cpx, cpy : Cartesian points, Nx2
+%
+% Note:
+% Hexagon center 0,0 is at Cartesian point 0,0.
+%
 % See also CART2HEX, HEXPLOT
 
-% Ref: 
+% James Kapaldo
+
+% Ref:
 % http://playtechs.blogspot.co.uk/2007/04/hex-grids.html
 % https://gist.github.com/egradman/583180
+
 
 
 R = a/2;

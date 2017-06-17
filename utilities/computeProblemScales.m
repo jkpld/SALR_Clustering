@@ -2,7 +2,7 @@ function problem_scales = computeProblemScales(options, grid_size, data_limits)
 % COMPUTEPROBLEMSCALES Compute the scale factors and data transformations
 % for the problem.
 %
-% problem_scales = computeGridScaleFactors(options, grid_size, data_limits)
+% problem_scales = computeProblemScales(options, grid_size, data_limits)
 %
 % Input parameters:
 % options : An instance of class seedPointOptions.
@@ -15,23 +15,25 @@ function problem_scales = computeProblemScales(options, grid_size, data_limits)
 %       computed using
 %           data_limits = [min(dat,1); max(dat,1)];
 %
-%   *Note: If data_limits is not given or is empty, then data_limits will
-%   be set to data_limits = [zeros(1,D), grid_size]. This will give a
-%   grid_spacing of 1.
-%   *Note: If options is empty, then the Potential_Padding_Size will be
-%   considered to be 0, and the attractive extents will be considered to be
-%   1.
-%
 % Output parameters:
 % problem_scales : structure with four fields
-%   grid_spacing - 1xD array giving the size of each grid bin in terms of
+%   grid_spacing : 1xD array giving the size of each grid bin in terms of
 %       the data. D is the dimension of the data.
-%   data_to_grid - A function handle that converts from data space to grid
+%   data_to_grid : A function handle that converts from data space to grid
 %       space, while also taking the Potential_Padding into account.
-%   grid_to_data - A function handle that is the inverse transform of
+%   grid_to_data : A function handle that is the inverse transform of
 %       data_to_grid.
-%   grid_to_solver - 1xD array giving the conversion factors to go from
+%   grid_to_solver : 1xD array giving the conversion factors to go from
 %       grid space to solver space.
+%
+% Notes: 
+% * If data_limits is not given or is empty, then data_limits will
+%   be set to data_limits = [zeros(1,D), grid_size]. This will give a
+%   grid_spacing of 1.
+%
+% * If options is empty, then the Potential_Padding_Size will be
+%   considered to be 0, and the attractive extents will be considered to be
+%   1.
 %
 % See also SEEDPOINTOPTIONS
 

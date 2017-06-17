@@ -1,4 +1,16 @@
 function dat = create_test_3D_object(N)
+% CREATE_TEST_3D_OBJECT Create a fake set of 3D data for testing based off
+% of the example nuclei image, testNuclei_mask.
+%
+% dat = create_test_3D_object(N)
+%
+% Input parameters:
+% N : number of points to generate
+%
+% Output parameters:
+% dat : Nx3 array of points
+
+% James Kapaldo
 
 if nargin < 1
     N = 20000;

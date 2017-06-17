@@ -1,7 +1,44 @@
-function Parent = create_3d_density_plot(n, dims, isoLvls, varargin)
+function Parent = isosurfaceProjectionPlot(n, dims, isoLvls, varargin)
+% ISOSURFACEPROJECTIONPLOT Plot isosurfaces of N-D data (N>2) projected
+% down to 3-D, and plot the 2-D projections of the isosurfaces to the three
+% axis planes.
+%
+% fig = isosurfaceProjectionPlot(n, dims, isoLvls)
+% fig = isosurfaceProjectionPlot(n, dims, isoLvls, 'Bin_Centers', bc, 'Tick_Spacing', ts, 'Markers', m, 'ColorScale', @(x)x, 'Colormap', cmap, 'Parent', [])
+%
+% Input parameters:
+% n : N-D binned data
+% dims : 1x3 array with the three dimensions the N-D data should be
+%	projected down to.
+% isoLvls : Array of isolevels to be plotted
+%
+% Optional parameter/value pairs:
+% 'Bin_Centers' : 1xD cell array where the i'th element holds the bin
+%                 centers of the data along the i'th dimension.
+% 'Tick_Spacing' : 1xD array with the tick spacing (in data units) along
+%                  each dimension.
+% 'Markers' : A structure array with markers to be plotted. Fields,
+%   dat : NxD array of data points to be plotted.
+%   options : A structure of linespec options that will be passed to the
+%             line() function.
+%   project : A logical flag. If true, then the marker data will be
+%             projected to the 3 axis planes.
+% 'ColorScale' : A function handle that takes in the isoLevels normalized
+%                from 0 to 1 and outputs a new value between 0 and 1 that
+%                indicates the position along the colormap.
+% 'Colormap' : Nx3 array describing the colormap.
+% 'Parent' : The container to which a new axis will be added and the plot
+%            created. (Normally, this will be a figure handle.) If empty,
+%            then a new figure will be created.
+%
+% Output parameters:
+% Parent : The container holding the axis where the plot was created.
+
+% James Kapaldo
 
 
-[n, dims, isoLvls, markers, color_scale, ticks, ticklabels, cmap, axisPlaneOffset,Parent] = parse_inputs(n,dims,isoLvls,varargin{:});
+
+[n, dims, isoLvls, markers, color_scale, ticks, ticklabels, cmap, axisPlaneOffset, Parent] = parse_inputs(n,dims,isoLvls,varargin{:});
 
 sz = size(n);
 n = permute(n,[2,1,3]);
@@ -176,22 +213,22 @@ default_tick_spacing = 10 * ones(1,D);
 
     function validate_bin_centers(t)
         if ~iscell(t) || length(t)~=D
-            error('create_3d_density_plot:badInput', 'Expected ''bin_centers'' to be a cell array of size 1xD, where D is the dimension of the input data.')
+            error('isosurfaceProjectionPlot:badInput', 'Expected ''bin_centers'' to be a cell array of size 1xD, where D is the dimension of the input data.')
         end
         if any((cellfun(@numel, t) - sz) ~= 0)
-            error('create_3d_density_plot:badInput', 'Expected each element of ''bin_centers'' to have a length corresponding to the size of the input data.')
+            error('isosurfaceProjectionPlot:badInput', 'Expected each element of ''bin_centers'' to have a length corresponding to the size of the input data.')
         end
     end
 
     function validate_tick_spacing(t)
         if numel(t) ~= D
-            error('create_3d_density_plot:badInput', 'Expected ''tick_spacing'' to have D elements, where D is the dimension of the input data.')
+            error('isosurfaceProjectionPlot:badInput', 'Expected ''tick_spacing'' to have D elements, where D is the dimension of the input data.')
         end
     end
 
 % Parse extra inputs ---------------------------
 p = inputParser;
-p.FunctionName = 'create_3d_density_plot';
+p.FunctionName = 'isosurfaceProjectionPlot';
 
 addParameter(p,'Bin_Centers',default_bin_centers, @validate_bin_centers);
 addParameter(p,'Tick_Spacing',default_tick_spacing, @validate_tick_spacing);

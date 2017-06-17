@@ -1,4 +1,17 @@
 function h = ndGaussianFilter(N,sigma,hsize)
+% NDGAUSSIANFILTER Create an N-D Gaussian filter.
+%
+% h = ndGaussianFilter(N,sigma,hsize)
+%
+% Input parameters:
+% N : number of dimensions
+% sigma : Gaussian sigma
+% hsize : filter size
+%
+% Output parameters:
+% h : N-D array with hsize elements along each dimension
+
+% James Kapaldo
 
 % Compute filter size from sigma if filter size is not given
 if nargin < 3
@@ -24,7 +37,7 @@ end
 
 h = exp(-h);
 
-% Suppress near-zero components	
+% Suppress near-zero components
 h(h<eps*max(h(:))) = 0;
 
 % Normalize

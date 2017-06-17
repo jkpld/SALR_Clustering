@@ -1,4 +1,15 @@
 function out = sizeof(in)
+% SIZEOF Get the size in bytes of the input numeric class.
+%
+% out = sizeof(in)
+%
+% Input parameters:
+% in : The name of a numeric type
+%
+% Output parameters:
+% out : The size of the input type in bytes.
+
+% James Kapaldo
 
 numclass = {'double'; 'single'; 'int8'; 'int16'; 'int32'; 'int64'; 'uint8'; 'uint16'; 'uint32'; 'uint64'};
 numbytes = [8;4;1;2;4;8;1;2;4;8];

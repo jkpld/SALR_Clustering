@@ -1,6 +1,9 @@
 function dcmt = decimateData(x,y,z,varargin)
 % DECIMATEDATA  Bin 2D spatial data and return a single value for each bin.
-% 
+%
+% dcmt = decimateData(x,y,z)
+% dcmt = decimateData(x,y,z,'binSize',vS,'gridType',type,'reductionMethod',method,'cleanHexagonData',tf,'generatePlots',tf)
+%
 % dcmt = decimateData(x,y,z) will take spatial data -scatter data- (x,y,z)
 % and decimate it to a single xy rectangular grid with grid spacing
 % binSize. Specifically, the x-y data will be binned and the z data in each
@@ -21,13 +24,13 @@ function dcmt = decimateData(x,y,z,varargin)
 %
 % binSize - Size of the spatial bin to bin x and y data. Default is 0.25.
 %
-% gridType - The type of the grid uesed. Available grids are 'rectangular'
+% gridType - The type of the grid used. Available grids are 'rectangular'
 % and 'hexagonal'. In 'rectangular', binSize(1) and binSize(2) give the
 % side lengths of the rectangle. In 'hexagonal', binSize(1) gives the
 % lattice constant of the hexagonal grid and binSize(2) gives the aspect
 % ratio of the hexagons. Ex. if binSize(1) = 0.5 then hexagons with a
 % lattice constant of 0.5 are created. After creation, the hexagons are all
-% streatched along the second dimension (y) by a factor of binSize(2).
+% stretched along the second dimension (y) by a factor of binSize(2).
 % Default is 'rectangular'.
 %
 % reductionMethod - The method of reducing all data in one spatial bin to a
@@ -35,29 +38,29 @@ function dcmt = decimateData(x,y,z,varargin)
 % 'percentile', 'std', 'mad', 'density', or a custom function handle that
 % takes in an array and outputs a single number. If mode is selected, then
 % the data is first rounded to the nearest MAD/50, where MAD ('mad') is the
-% median abosolute deviation. If percentile is selected then,
+% median absolute deviation. If percentile is selected then,
 % prctile(z,PRCNT), will be used. You can set PRCNT with the optional
 % parameter 'percentValue'. If density is selected then the z array is not
 % used and the density of the x, y data is computed. Default is median.
 %
-% cleanHexagonData - boolian, only applicable if 'gridType' is 'hexagonal'.
+% cleanHexagonData - boolean, only applicable if 'gridType' is 'hexagonal'.
 %                    If true, then hexagons without any data points inside
 %                    will be removed. Default is false.
-%                     
+%
 %                    This option is only given for hexagonal, since the
 %                    data will need to be interpolated with a scattered
 %                    interpolant anyway. In rectangular grids, you cannot
 %                    remove points and still use a griddedInterpolant.
 %
-% generatePlots - boolian. If true, then the decimated data will be
+% generatePlots - boolean. If true, then the decimated data will be
 % plotted. Default is false.
 %
 % Output parameters:
 % dcmt - a structure with fields X, Y, and Z. x and y will be the grid
 % over which the data is evaluated and z will be the decimated data fit on
-% that grid. 
+% that grid.
 %
-% Notes: 
+% Notes:
 %
 % If gridType is 'rectangular', then the Z data will be symmetrically
 % padded by on all sides and the X and Y data extended by on all sides.
@@ -68,7 +71,7 @@ function dcmt = decimateData(x,y,z,varargin)
 % arrays where the i'th hexagon will have a center of (X(i),Y(i)) and a
 % value of Z(i). Hexagonal grids will not by symmetrically padded like the
 % rectangular grids. Hexagonal grids will need to be interpolated with a
-% scatteredInterpolant, or you will need to creat a delaunay triangulation
+% scatteredInterpolant, or you will need to create a delaunay triangulation
 % and then use that to do linear interpolation.
 %
 % See also CART2HEX HEX2CART
@@ -130,12 +133,12 @@ switch gridType
 
         bin(:,2) = discretize(y,yEdges);
         bin(:,1) = discretize(x,xEdges);
-        
+
     case 'hexagonal'
         if numel(voxelSizes)==1
             voxelSizes(2) = 1;
         end
-        
+
         hx = cart2hex([x,y],voxelSizes(1),voxelSizes(2));
 
         xEdges = min(hx(:,1))-0.5:max(hx(:,1))+0.5;
@@ -182,12 +185,12 @@ switch gridType
         Z(:,end) = Z(:,end-1);
         Z(end,:) = Z(end-1,:);
     case 'hexagonal'
-        
+
         Z = Z(:);
         sizeX = size(X);
         [X,Y] = hex2cart([X(:),Y(:)],voxelSizes(1),voxelSizes(2));
-        
-        
+
+
         if cleanHexagonData
             if strcmp(reductionMethod,'density')
                 toRemove = ~Z;
@@ -216,7 +219,7 @@ if generatePlots
         case 'hexagonal'
             hexplot([X,Y],voxelSizes(1),voxelSizes(2),'colorData',Z,'sizeData','sameAsColor','colorScale','linear','sizeScale','none','maxHexSize',1);
     end
-    
+
     if ischar(reductionMethod)
         if strcmp(reductionMethod,'percentile')
             title([reductionMethod ' ' sprintf('%0.1f',percentValue) '%'])

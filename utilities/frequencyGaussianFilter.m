@@ -1,8 +1,11 @@
 function A = frequencyGaussianFilter(A, sigma, hsize, padding)
+% FREQUENCYGAUSSIANFILTER Filter data with a Gaussian filter in frequency
+% space.
+%
+% A = frequencyGaussianFilter(A, sigma, hsize, padding)
 
-
-% This function is a modified form of the function by the same name in
-% imgaussfilt3
+% This function is a modified form of the function by the same name
+% in imgaussfilt3.
 
 dtype = class(A);
 outSize = size(A);

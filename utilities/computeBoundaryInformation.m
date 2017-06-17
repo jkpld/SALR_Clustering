@@ -1,37 +1,37 @@
 function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,objectScale,options)
 % COMPUTEBOUNDARYINFORMATION  Compute the boundary contours, inward
-% pointing normal vectors, curvature, and curvature centers.
+% pointing normal vectors, curvature, and centers of curvature.
 %
-% [B,n,kappa,curvatureCenters] = computeBoundaryInformation(BW,objectScale,options)
+% [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,objectScale,options)
 %
 % Take in a binary image BW and compute the boundaries with holes using
 % bwboundaries(). Compute the curvature of each boundary contour, compute
-% the "curvature centers" (see output parameters below for description),
-% and compute the inward pointing boundary normals. Finally, combine outer
-% contours and holes into a single array using a row of NaN delimiters to
-% seperate individual contours. Any hole with an circumference less than
-% the circumference of a circle with area MINHOLEAREA will be removed.
+% the centers of curvature, and compute the inward pointing boundary
+% normals. Finally, combine outer contours and holes into a single array
+% using a row of NaN delimiters to separate individual contours. Any hole
+% with an circumference less than the circumference of a circle with area
+% MINHOLEAREA will be removed.
 %
 % Input parameters:
-% BW - binary mask from which the boundaries will be computed
-% objectScale - an array of size n x 1 where n is the number of connected
+% BW : binary mask from which the boundaries will be computed
+% objectScale : an array of size n x 1 where n is the number of connected
 %               components in BW. The value of each element should be the
 %               maximum distance transform value of that object.
-% options - must have the fields
-%           Curvature_Smoothing_Size - The size of the smoothing filter
+% options : must have the fields
+%           Curvature_Smoothing_Size : The size of the smoothing filter
 %           used to compute the curvatures. Use integer values. Perhaps try
 %           2 too see how it works first.
 %
-%           Curvature_Max_Radius - This value will set a threshold for what
+%           Curvature_Max_Radius : This value will set a threshold for what
 %           is considered positive curvature (regions of positive curvature
 %           are concave regions of the boundary). The threshold will be set
 %           as 1/(2*Curvature_Max_Radius).
 %
-%           Use_Parallel - logical. If true, then a parallel loop will be
+%           Use_Parallel : logical. If true, then a parallel loop will be
 %           used to calculate the curvature information.
 %
 % Output parameters:
-% B - A cell array where each element (Mx2 array) has a parent (outer)
+% B : A cell array where each element (Mx2 array) has a parent (outer)
 %     boundary followed bay any holes with a row of NaN delimiters.
 %       Example. If the i'th parent boundary has N holes, then B{i} will
 %       have the form:
@@ -45,15 +45,14 @@ function [B,n,curvature,curvatureCenters] = computeBoundaryInformation(BW,object
 %                      NaN, NaN;
 %                      childContourN ];
 %
-% n - A cell array where each element (Mx2 array) has the inward pointing
+% n : A cell array where each element (Mx2 array) has the inward pointing
 %     boundary normals for the contours. n has the same format as B.
 %
-% curvature - A cell array where each element (Mx1 array) has the
+% curvature : A cell array where each element (Mx1 array) has the
 %             curvatures for the contours. kappa has the same format as B.
 %
-% curvatureCenters - A cell array where each element contains the centers
-%                    of the circles computed from the curvatures and the
-%                    inward pointing boundary normals.
+% curvatureCenters : A cell array where each element contains the centers
+%                    of curvature.
 %
 % Notes:
 % Parent contours will be oriented clockwise, children contours (holes)
@@ -82,7 +81,7 @@ MAX_RADIUS = round( 2* objectScale );
 useConvexHull = options.Use_ConvexHull;
 % useConvexHull = true;
 
-% Get the boundaries and parant-child matrix
+% Get the boundaries and parent-child matrix
 [tmpB,~,numObjs,bndryTplgy] = bwboundaries(BW,8);
 
 if numel(KAPPA_SMOOTHING_SIGMA) == 1
@@ -99,7 +98,7 @@ n = cell(numObjs,1);
 curvatureCenters = cell(numObjs,1);
 curvature = cell(numObjs,1);
 
-% Iterate over each object finding the curatures, normals, and curvature
+% Iterate over each object finding the curvatures, normals, and curvature
 % centers of the object and its children (if any).
 for i = 1:numObjs
 
@@ -180,7 +179,7 @@ N = numel(B_full);
 % Get the image size
 imSize = size(BW);
 
-% Oriente the boundaries, get the boundary curvatures, and get the centers
+% Orient the boundaries, get the boundary curvatures, and get the centers
 % of curvature
 curvatureCenters_full = cell(1,N);
 curvature_full = cell(1,N);
@@ -214,7 +213,7 @@ n = cell(numObjs,1);
 curvatureCenters = cell(numObjs,1);
 curvature = cell(numObjs,1);
 
-% Iterate over each object finding the curatures, normals, and curvature
+% Iterate over each object finding the curvatures, normals, and curvature
 % centers of the object and its children (if any).
 for i = 1:numObjs
     % Find any children

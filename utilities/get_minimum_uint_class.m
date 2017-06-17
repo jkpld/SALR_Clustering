@@ -1,5 +1,10 @@
 function class_name = get_minimum_uint_class(A)
+% GET_MINIMUM_UINT_CLASS Return the class name for the smallest unsigned
+% integer class that will hold the input without overflow.
+%
+% class_name = get_minimum_uint_class(A)
 
+% James Kapaldo
 maxValue = max(A(:));
 
 if maxValue <= intmax('uint8')

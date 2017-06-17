@@ -1,4 +1,13 @@
 classdef displayProgress < handle
+    % DISPLAYPROGRESS Class to help with displaying progress during
+    % calculation. 
+    %
+    % progress = displayProgress(num_iterations, num_updates, active, is_parallel)
+    % 
+    % If Matlab version is R2017a or newer, then the progress can be
+    % displayed even when using parallel computing. If the Matlab version
+    % is not this new, then progress cannot be monitored when using
+    % parallel computing.
     properties (SetAccess = public)
         active = true
         is_parallel = false
@@ -25,8 +34,8 @@ classdef displayProgress < handle
 
             addRequired(p,'number_of_iterations', @(t) validateattributes(t,{'numeric'},{'integer','scalar','positive'}))
             addOptional(p,'number_of_displays', 5, @(t) validateattributes(t,{'numeric'},{'integer','scalar','positive'}))
-            addOptional(p,'active', obj.active, @(t) validateattributes(t,{'logical'},{'scalar'}))
-            addOptional(p,'is_parallel', obj.is_parallel, @(t) validateattributes(t,{'logical'},{'scalar'}))
+            addOptional(p,'active', obj.active, @(t) t==0 || t==1)
+            addOptional(p,'is_parallel', obj.is_parallel, @(t) t==0 || t==1)
             parse(p,varargin{:})
 
             N = p.Results.number_of_iterations;
@@ -48,7 +57,9 @@ classdef displayProgress < handle
         end
         
         function set.is_parallel(obj,value)
-            validateattributes(value,{'logical'},{'scalar'})
+            if value~=0 && value~=1
+                error('displayProgress:invalidValue','is_parallel should be 0 or 1 or logical.')
+            end
             obj.is_parallel = value;
             
             if obj.active && value && verLessThan('matlab','9.2') %#ok<MCSUP>
@@ -101,7 +112,7 @@ classdef displayProgress < handle
 
             if any(obj.iteration == obj.generate_display_at)
                 str = sprintf('%s >> Iteration %d/%d (%0.2f/%0.2f)...\n',datestr(now,31),obj.iteration,obj.number_of_iterations,currentTime,expectedTime);
-                fprintf('%s', str);
+%                 fprintf('%s', str);
                 
                 % Comment out the above fprintf statement and uncomment the
                 % below code to have iteration lines print on the same
@@ -110,15 +121,15 @@ classdef displayProgress < handle
                 % new line.) The code works well as long as there is no
                 % other output (like error messages) during the iterations.
                 
-%                 if obj.first_print == 0
-%                     obj.num_chars_written = length(str);
-%                     obj.first_print = 1;
-%                     fprintf('%s', str);
-%                 else
-%                     fprintf(repmat('\b',1,obj.num_chars_written))
-%                     fprintf('%s', str);
-%                     obj.num_chars_written = length(str);
-%                 end
+                if obj.first_print == 0
+                    obj.num_chars_written = length(str);
+                    obj.first_print = 1;
+                    fprintf('%s', str);
+                else
+                    fprintf(repmat('\b',1,obj.num_chars_written))
+                    fprintf('%s', str);
+                    obj.num_chars_written = length(str);
+                end
             end
         end
     end

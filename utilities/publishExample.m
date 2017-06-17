@@ -1,4 +1,17 @@
 function publishExample(file,reEvaluate)
+% PUBLISHEXAMPLE Function to publish an example script to markdown for the
+% website.
+%
+% publishExample(file)
+% publishExample(file, reEvaluate)
+%
+% Input parameters:
+% file : name of example file
+% reEvaluate : (optional) logical value, if true, then the example will be
+%   run to generate the images. If false, then the code will not be run,
+%   but the markdown file will be re-written
+
+% James Kapaldo
 
 if nargin < 2
     reEvaluate = true;
