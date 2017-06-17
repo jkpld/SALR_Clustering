@@ -1,16 +1,21 @@
-function [seedPoints, Info] = computeNucleiCenters(I,BW,options)
-% COMPUTENUCLEICENTERS Declump the nuclei in an image
+function [seedPoints, Info] = computeNucleiCenters(BW,options)
+% COMPUTENUCLEICENTERS Find the nuclei centers in a binary image of nuclei.
 %
-% [BW,cuts,Info] = computeNucleiCenters(I,BW,options)
+% [seedPoints, Info] = computeNucleiCenters(BW,options)
 %
-% I - input image
-% BW - object mask for image
-% options - declumpOptions class object
+% For each object in the image, compute the centers of curvature to use as
+% initial points, then find the seed-points for each object.
 %
-% BW - object mask after partitioning clumps
-% cuts - Nx4 array. cuts(i,1:2) and cuts(i,3:4) give the two vertices of
-%        the i'th cut
-% Info - cell array of structures giving information
+% Input parameters:
+% BW : Binary mask of nuclei image.
+% options : An instance of class seedPointOptions.
+%
+% Output parameters:
+% seedPoints : Nx3 array where the first two columns give the x,y location
+%   of a nuclei center and the third column gives the object number to
+%   which the nuclei belongs.
+% Info : Cell array with a length equal to the number of objects. Each
+%   element is the Info structure returned by computeObjectSeedPoints().
 
 % James Kapaldo
 

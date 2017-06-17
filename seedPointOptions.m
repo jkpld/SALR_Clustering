@@ -1,5 +1,5 @@
 classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
-    % SEEDPOINTOPTIONS  Set options needed for computing seed point locations.
+    % SEEDPOINTOPTIONS  Set options needed for computing seed-point locations.
     %
     % Input can be structure array or parameter value pairs. Options not set
     % will be given default values. To see the default values, look at the
@@ -8,50 +8,83 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
     %
     % seedPointOptions Properties:
     %
+    % Point_Selection_Method - The method used to initialize the particle
+    %   locations.
+    %     'random' : Select N random locations from the binary mask where N
+    %       is the area of the mask divided by the effective (hyper-)volume
+    %       of a particle (pi*rs^2 in 2D), where rs is the
+    %       Wigner_Seitz_Radius.
+    %     'uniform' : A lattice is overlaid on the binary mask, and the
+    %       centers of each lattice cell that are inside the binary mask
+    %       are used as the initial points.
+    %     'uniformRandom' : A lattice is overlaid on the binary mask, and
+    %       from each lattice cell a random point from the mask is used as
+    %       an initial point.
+    %     'r0set_random' : From a set of possible initial positions, N
+    %       random points are chosen, where N is the area of the mask
+    %       divided by the effective volume of a particle (pi*rs^2 in 2D).
+    %     'r0set_uniformRandom' : A lattice is overlaid on the binary mask,
+    %       and from each lattice cell a random point from a set of
+    %       possible initial positions is chosen.
+    %   See computeInitialPoints() for more details.
+    %   {'random', 'uniform', 'uniformRandom', 'r0set_random',
+    %   'r0set_uniformRandom'}
+    %
     % Wigner_Seitz_Radius - The effective size of each particle in the
     %   simulation. This sets the density of the particles used. The
     %   approximate number of particles used in a particular object will be
-    %   area(object)/(pi* r_s^2), where r_s is the Wigner_Seitz_Radius.
+    %   object_size/particle_size.
     %   (0, Inf)
     %
-    % Potential_Depth - The depth of the potential.
-    %   (-Inf,0]
+    % Wigner_Seitz_Radius_Space - The coordinate space where the
+    %   Wigner_Seitz_Radius is defined. For images of nuclei, 'data' space
+    %   is the same thing as 'grid' space.
+    %   {'data', 'grid', 'solver'}
     %
-    % Potential_Minimum_Location - The location of the potential minimum.
-    %   (0, Inf)
-    %
-    % Potential_Extent - The radius at which the potential goes from attractive
-    %   to repulsive.
-    %   (0, Inf) & > Potential_Minimum_Location
-    %
-    % Potential_Padding_Size - The size of the padding to apply to an object
-    %   mask. This is important so that the potential is defined some distance
-    %   away from the object when running the simulation.
-    %   (1, Inf)
-    %
-    % Maximum_Initial_Potential - The maximum confining potential value that a
-    %   particle can have as its initial position. Any possible initial
-    %   position with a confining potential larger than this value will not be
-    %   used as an initial particle position.
+    % Maximum_Initial_Potential - The maximum allowed confining potential
+    %   value for particles at their initial positions. Any possible
+    %   initial position with a confining potential larger than this value
+    %   will not be used as an initial position.
     %   (-Inf, Inf]
     %
-    % Minimum_Initial_Potential - The minimum confining potential value that a
-    %   particle can have as its initial position. Any possible initial
-    %   position with a confining potential smaller than this value will not be
-    %   used as an initial particle position.
-    %   (-Inf, Inf]
-    %
-    % Potential_Scale - Value used to set the depth of the confining potential
-    %   well. Set to NaN to use the natural depth.
-    %   {(0, Inf), NaN}
-    %
-    % Distance_Metric - The metric used for measuring distance between
-    %   particles. If metric is Minkowski, then an extra agrument can be given
-    %   with the exponent.
-    %   {'euclidean'; 'cityblock'; 'chebychev'; {'minkowski', exponent}}
+    % Minimum_Initial_Potential - The minimum allowed confining potential
+    %   value for particles at their initial positions. Any possible
+    %   initial position with a confining potential smaller than this value
+    %   will not be used as an initial position.
+    %   [-Inf, Inf)
     %
     % Initial_Speed - The initial speed of the particles in the simulation.
     %   (-Inf, Inf)
+    %
+    %
+    %
+    % Potential_Parameters - [d0, r0, ra] The parameters describing the
+    %   particle interaction potential: d0, the potential depth; r0, the
+    %   location of the potential minimum; and ra, the attractive extent,
+    %   which is the distance at which the potential goes from attractive
+    %   to repulsive.
+    %   [(-Inf,0], (0,Inf), (0,Inf) & > r0]
+    %
+    % Potential_Parameters_Space - The coordinate space where the
+    %   Potential_Parameters are defined. (This value is not used.)
+    %   {'data', 'solver'}
+    %
+    % Distance_Metric - The metric used for measuring distance between
+    %   particles. If metric is Minkowski, then an extra agrument can be
+    %   given with the exponent.
+    %   {'euclidean'; 'cityblock'; 'chebychev'; {'minkowski', exponent}}
+    %
+    % Solver_Space_Attractive_Extent - The attractive extent of the
+    %   particle interaction potential used when modeling the particle
+    %   dynamics. If set to 'Attractive_Extent', then the attractive extent
+    %   from the Potential_Parameters will be used. If set to a value, then
+    %   the solver space will be isotropically scaled by a factor
+    %   Solver_Space_Attractive_Extent/Potential_Parameters(3). Setting
+    %   this parameter can give fine-tune control over the particle
+    %   interaction.
+    %   {'Attractive_Extent', (scalar, finite, real, positive)}
+    %
+    %
     %
     % Mass - The mass of the particles.
     %   (0, Inf)
@@ -59,23 +92,82 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
     % Coupling_Constant - The coupling constant value, k.
     %   (0, Inf)
     %
-    % Particle_Damping_Rate - The rate at which the damping of the particles
-    %   increases with simulation time.
-    %   [0, Inf)
-    %
-    % Charge_Normalization_Beta - The beta exponent for charge normalization
-    %   based on number of particles.
+    % Charge_Normalization_Beta - The beta exponent for charge
+    %   normalization based on number of particles.
     %   (-Inf, Inf)
     %
-    % Solver_Time_Range - Range over which the particles are simulated.
+    %
+    %
+    % Potential_Type - The type of the confining potential used.
+    %   {'distance_transform', 'density'}
+    %
+    % Potential_Modifier - A function handle that takes in the confining
+    %   potential and outputs a modified potential with the same size. If
+    %   empty, then it is ignored.
+    %   {function_handle, []}
+    %
+    % Max_Distance_Transform - The maximum distance transform value. If
+    %   set, then the object will be scaled so that the objects maximum
+    %   distance transform is equal to this parameter. If NaN, or if
+    %   Potential_Type is 'density', then this parameter is ignored.
+    %   {(0, Inf), NaN}
+    %
+    % Max_Potential_Force - The maximum potential force. If set, then the
+    %   potential force will be scaled so that its 99% value is equal to
+    %   this parameter. If NaN, then it is ignored.
+    %   {(0, Info), NaN}
+    %
+    % Potential_Padding_Size - The size of the padding to apply to an
+    %   object mask. This is important to ensure the potential is defined
+    %   some distance away from the object when running the simulation.
+    %   (1, Inf)
+    %
+    %
+    %
+    % Iterations - The number of times to run the particle simulation. Each
+    %   simulation will use a different set of initial positions. After
+    %   running all iterations, the seed-points from each iteration will be
+    %   clustered together. Using several iterations together with the
+    %   Minimum_Cluster_Size can result in more stable/reproducable
+    %   seed-points.
+    %   [0, Inf), integer
+    %
+    % Minimum_Cluster_Size - The minimum number of particles in each
+    %   particle cluster to be considered valid. The use of this parameter
+    %   depends on the number of Iterations.
+    %       If Iterations > 1, then the particles are the seed-points from
+    %       each iteration. Therefore, any seed-point produced by less than
+    %       Minimum_Cluster_Size iterations, will be removed. In this case,
+    %       a good value of Minimum_Cluster_Size may be Iterations/3.
+    %
+    %       If Iterations = 1, then the particles are the particles of the
+    %       the iteration. This means that each cluster of particles could
+    %       potentially have N/C particles in them, if all particles were
+    %       divided equally and where N is the number of particles in the
+    %       simulation and C is the number of particle clusters
+    %       (seed-points).
+    %   [1, Inf), integer
+    %
+    % Particle_Damping_Rate - The rate at which the damping of the
+    %   particles increases with simulation time.
     %   [0, Inf)
     %
-    % Point_Selection_Method - The method used to initialize the particle
-    %   locations.
-    %   {'random','uniform','uniformRandom','r0set_random','r0set_uniformRandom'}
+    % Solver_Time_Range - Range over which the particles are simulated.
+    %   This is passed to the ODE solver as the `tspan` parameter.
+    %   [0, Inf)
+    %
+    % Maximum_Memory - The maximum amount of memory (per worker) that can
+    %   be used to store the gradients of the confining potential. If the
+    %   amount of space needed is above this limit, then a slower method
+    %   will be used that does not take up as much memory.
+    %   [0, Inf], [Gb]
+    %
+    %
     %
     % Minimum_Hole_Size - The minimum hole size (area) allowed in the mask.
     %   [0, Inf)
+    %
+    %
     %
     % Use_GPU - Determines if a GPU will be used to speed up calculation.
     %   logical
@@ -84,22 +176,14 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
     %   calculation.
     %   logical
     %
-    % Maximum_Memory - The maximum amount of memory that can be used to store
-    %   the gradients of the confining potential. The of the amount of space
-    %   needed is above this limit, then a slower method will be used that does
-    %   not take up memory.
-    %   [0, Inf], [Gb]
-    %
-    % Debug -
-    %   Determines if additional information will be returned from each
-    %   function.
+    % Verbose - Output information about progress of calculation.
     %   logical
     %
-    % Object_Of_Interest - The index of an object of interest to declump. If an
-    %   object is giving an error. Then set this property to the object index
-    %   and set Debug to true. Plots showing intermediate steps of the
-    %   calculation will be shown that should help you debug the problem. Leave
-    %   this property empty for normal use.
+    % Debug - Output extra information about each iteration that may be
+    %   helpful for debugging.
+    %   logical
+    %
+    % Object_Of_Interest - The index of an object of interest. 
 
 
     % NOT USED ===============================================================
@@ -117,17 +201,17 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
 
         % Particle initialization
         Point_Selection_Method       = 'r0set_uniformRandom';
-        Wigner_Seitz_Radius          = 10; % {'data','grid','solver'}
+        Wigner_Seitz_Radius          = 10;
         Wigner_Seitz_Radius_Space    = 'grid'
         Maximum_Initial_Potential    = 1;
         Minimum_Initial_Potential    = -Inf;
         Initial_Speed                = 0.01;
 
         % Particle interaction
-        Potential_Parameters         = [-1 2 15];% 1x3 array with depth, minimum location, extent
-        Potential_Parameters_Space   = 'data'; % {'data', 'solver'}
+        Potential_Parameters         = [-1 2 15];
+        Potential_Parameters_Space   = 'data'; 
         Distance_Metric              = 'euclidean';
-        Solver_Space_Attractive_Extent = 'Attractive_Extent'; % {'Attractive_Extent', (scalar, finite, real, positive)}
+        Solver_Space_Attractive_Extent = 'Attractive_Extent';
 
         % Particle parameters
         Mass                         = 1;
@@ -135,15 +219,15 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         Charge_Normalization_Beta    = 1/3;
 
         % Confining potential parameters
-        Potential_Type               = 'distance_transform'; % {'distance_transform','density'}
-        Potential_Modifier           = []; % function handle should take in potential and return a modified potential with same size.
-        Max_Distance_Transform       = NaN; % If not NaN, the object will be scaled so that its maximum distance transform value is equal to this parameter.
-        Max_Potential_Force          = NaN; % Potential force at 99% percentile. Ignored if NaN
+        Potential_Type               = 'distance_transform'; 
+        Potential_Modifier           = [];
+        Max_Distance_Transform       = NaN;
+        Max_Potential_Force          = NaN;
         Potential_Padding_Size       = 5;
 
         % Solver parameters
         Iterations                   = 1;
-        Minimum_Cluster_Size         = 1; % minimum number of particles allowed in each particle cluster.
+        Minimum_Cluster_Size         = 1;
         Particle_Damping_Rate        = 5e-4;
         Solver_Time_Range            = 0:10:1500;
         Maximum_Memory               = 1;
@@ -305,9 +389,9 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
             idx = find(strncmpi(value, validOptions, length(value)));
 
             if isempty(idx)
-                error('seedPointOptions:unknownPtntlType','The Potential_Parameters_Space, %s, is not valid. Valid options are ''distance_transform'' and ''density''.',value)
+                error('seedPointOptions:unknownPtntlType','The Potential_Type, %s, is not valid. Valid options are ''distance_transform'' and ''density''.',value)
             elseif length(idx)>1
-                error('seedPointOptions:unknownPtntlType','The Potential_Parameters_Space, %s, is ambiguous. Please be more specific.',value)
+                error('seedPointOptions:unknownPtntlType','The Potential_Type, %s, is ambiguous. Please be more specific.',value)
             end
 
             obj.Potential_Type = validOptions{idx};

@@ -1,45 +1,60 @@
 function [seedPoints, Info] = computeObjectSeedPoints(binned_data, options, varargin)
-% COMPUTEOBJECTSEEDPOINTS Compute the seed points for a single object
+% COMPUTEOBJECTSEEDPOINTS Compute the seed-points of an object.
 %
-% [seedPoints, Info] = computeObjectSeedPoints(binned_data, M, r0set, useCentroid, options, objNumber)
+% [seedPoints, Info] = computeObjectSeedPoints(binned_data, options)
+% [seedPoints, Info] = computeObjectSeedPoints(binned_data, options, 'data_limits',dl,'r0set',r0,'modifier',m,'useCentroid',uc,'objNumber',on)
 %
 % Input parameters:
-%   binned_data : binned data of a single object
-%   M : base potential modifier, should be 1 outside of object
-%   r0set : Nx2 array, set of initial positions
-%   useCentroid : logical, if true, then the centroid of the mask is
-%       returned.
-%   objNumber : Optional. The object number of this object (this is used
-%       for creating error messages only)
+% binned_data : Binned data of a single object.
+% options : An instance of class seedPointOptions.
+%
+% Optional parameters/value pairs:
+% 'data_limits' : A 2xD array where the first row gives the minimum values 
+%   of the data and the second row gives the maximum values of the data. D
+%   is the dimension of the data. If 'data_limits' is not given, then the
+%   size of each data bin will be assumed to be 1.
+%       Ex. If the data is given by an array, dat, where each row is a
+%       point and columns are dimensions, then the data_limits could be
+%       computed using
+%           data_limits = [min(dat,1); max(dat,1)];
+% 'r0set' : NxD array of possible initial positions. Default is empty.
+% 'modifier' : A matrix with size (size(binned_data) +
+%   options.Potential_Padding_Size) that will be multiply the confining
+%   potential before computing the confining force. If empty, then it is
+%   ignored. Default is empty.
+% 'useCentroid' : Logical flag. If true, then particles will not be
+%   modeled, and the centroid of the binary mask will be returned as the
+%   seed-point. (This is only useful in the context of locating nuclei
+%   centers.) Default is false.
+% 'objNumber' : The number of the current object. This is used with
+%   computeNucleiCenters() for more usefull debug information.
 %
 % Output parameters:
-%   seedPoints : Lx2 array of computed seed points
-%   Info : A structure that always containes two fields:, 
-%       problem_scales : the problem_scales structure returned by
-%           computeProblemScales. 
-%       message : integer giving an exit code
-%           0, everything is fine
-%           1, object is convex or too small (the center of the object
-%               will be the seed point)
-%           2, less than 2 initial particles (the center of the object
-%               will be the seed point)
-%           3, there was twice an error, object will be skipped
+% seedPoints : Nx2 array of computed seed points
+% Info : A structure that always containes two fields, 
+%   problem_scales : the problem_scales structure returned by
+%     computeProblemScales(). 
+%   message : integer giving an exit code
+%     0 : everything is fine
+%     1 : object is convex or too small (the center of the object
+%       will be the seed point)
+%     2 : less than 2 initial particles (the center of the object
+%       will be the seed point)
+%     3 : there was twice an error, object will be skipped
 %
-%       Additionally, if options.debug is ture, then Info will also have
-%       several other fields:
-%        r0 : initial points used in simulation
-%        r_final : final location of simulated points
-%        V : confining potential
-%        ComputeInitialPointsInfo : structure of initial points
-%            information, see computeInitialPoints()
+%   If options.debug is true, then Info will also have several other
+%   fields:
+%    r0 : initial points used in simulation
+%    r_final : final location of simulated points
+%    V : confining potential
+%    ComputeInitialPointsInfo : structure of initial points information, 
+%      see computeInitialPoints()
 
 
 % See also MODELPARTICLEDYNAMICS EXTRACTCLUSTERCENTERS COMPUTEINITIALPOINTS
 % CREATE_SCALEINVAR_CONFINING_POTENTIAL
 
 % James Kapaldo
-
-% M : base potential modifier - should be 1 outside of nuclei.
 
 [binned_data, D, data_limits, r0set, modifier, useCentroid, objNumber, errorCount, Use_Parallel, verbose] = ...
     parse_inputs(binned_data, options, varargin{:});

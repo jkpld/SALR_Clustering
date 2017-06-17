@@ -1,7 +1,13 @@
 function setup
+% SETUP Add required files to the path and try to compile .c functions for
+% increased speed.
+%
+% setup()
+
+% James Kapaldo
 
 if verLessThan('matlab','9.1')
-    error('ceclumpNuclei:setup','The seed_point_detection code requires at least Matlab 2016b because implicit expansion is heavily used.')
+    error('seed_point_detection:setup','The seed_point_detection code requires at least Matlab 2016b because implicit expansion is heavily used.')
 end
 
 fprintf('\nStarting setup...\n')

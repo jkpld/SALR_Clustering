@@ -7,9 +7,13 @@ function [dV, r0, problem_scales, V, Info] = setup_problem(binned_data, data_lim
 %
 % Input parameters:
 % binned_data : Binned data to be used for forming the confining potential
-% data_range : 1xD array giving the range of the actual data along each
-%   dimension. Alternatively data_range can be empty, in which case the
-%   size of each bin is assumed to be 1.
+% data_limits : A 2xD array where the first row gives the minimum values of
+%   the data and the second row gives the maximum values of the data. D is
+%   the dimension of the data.
+%       Ex. If the data is given by an array, dat, where each row is a
+%       point and columns are dimensions, then the data_limits could be
+%       computed using
+%           data_limits = [min(dat,1); max(dat,1)];
 % options : An instance of class seedPointOptions.
 % r0set : (optional) A NxD array giving a set of possible initial
 %   positions *in data space*. This is required if

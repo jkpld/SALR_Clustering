@@ -7,19 +7,21 @@
     url: "/interface-functions/"
     functions: 
     - title: "computeNucleiCenters"
-      teaser: "Declump the nuclei in an image"
+      teaser: "Find the nuclei centers in a binary image of nuclei."
       definitions: 
-      - def: "[BW,cuts,Info] = computeNucleiCenters(I,BW,options)"
+      - def: "[seedPoints, Info] = computeNucleiCenters(BW,options)"
     - title: "computeObjectSeedPoints"
-      teaser: "Compute the seed points for a single object"
+      teaser: "Compute the seed-points of an object."
       definitions: 
-      - def: "[seedPoints, Info] = computeObjectSeedPoints(binned_data, M, r0set, useCentroid, options, objNumber)"
+      - def: "[seedPoints, Info] = computeObjectSeedPoints(binned_data, options)\n[seedPoints, Info] = computeObjectSeedPoints(binned_data, options, 'data_limits',dl,'r0set',r0,'modifier',m,'useCentroid',uc,'objNumber',on)"
     - title: "seedPointOptions"
-      teaser: "Set options needed for computing seed point locations."
+      teaser: "Set options needed for computing seed-point locations."
       definitions: 
       - def: "defaultValues = seedPointOptions()"
     - title: "setup"
-      teaser: 
+      teaser: "Add required files to the path and try to compile .c functions for increased speed."
+      definitions: 
+      - def: "setup()"
     - title: "simplest_test"
       teaser: "======================================================================"
   - title: "Core functions"
