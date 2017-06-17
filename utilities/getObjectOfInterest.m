@@ -1,13 +1,13 @@
-function varargout = getObjectOfInterest(options,varargin)
+function varargout = getObjectOfInterest(Object_Of_Interest,varargin)
 % GETOBJECTOFINTEREST  Return the options.Object_Of_Interest elements of
 % the input arrays.
 %
-% varargout = getObjectOfInterest(options, varargin)
-% [A, B, C] = getObjectOfInterest(options, A_in, B_in, C_in)
-% A = A_in(options.Object_Of_Interest)
+% varargout = getObjectOfInterest(Object_Of_Interest, varargin)
+% [A, B, C] = getObjectOfInterest(Object_Of_Interest, A_in, B_in, C_in)
+% A = A_in(Object_Of_Interest)
 %
 % Input parameters:
-% options : An instance of class seedPointOptions
+% Object_Of_Interest : Index of the object of interest
 % varargin : Any number of arrays or cell arrays
 %
 % Output parameters:
@@ -19,7 +19,7 @@ if nargout > (nargin - 1)
     error('getObjectOfInterest:badInput','More outputs requested than input pixel lists given.')
 end
 
-if ~isempty(options.Object_Of_Interest)
+if ~isempty(Object_Of_Interest)
     varargout = cell(1,numel(varargin));
     for i = 1:numel(varargin)
         if isempty(varargin{i})
