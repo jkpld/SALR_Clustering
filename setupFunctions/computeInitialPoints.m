@@ -405,8 +405,8 @@ function [r0_set, varargout] = r0set_uniformRandom(r0set, sz, lattice_constant, 
 
                 r0_set{i} = r0set(dcmt.Z,:) + offset;
                 if debug
-                    dcmt.X = dcmt.X + mu(1);
-                    dcmt.Y = dcmt.Y + mu(2);
+                    dcmt.X = dcmt.X + offset(1);
+                    dcmt.Y = dcmt.Y + offset(2);
                     Info.r0setHexData(i) = dcmt;
                 end
             catch ME
