@@ -163,12 +163,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
     %   [0, Inf], [Gb]
     %
     %
-    %
-    % Minimum_Hole_Size - The minimum hole size (area) allowed in the mask.
-    %   [0, Inf)
-    %
-    %
-    %
     % Use_GPU - Determines if a GPU will be used to speed up calculation.
     %   logical
     %
@@ -182,8 +176,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
     % Debug - Output extra information about each iteration that may be
     %   helpful for debugging.
     %   logical
-    %
-    % Object_Of_Interest - The index of an object of interest. 
 
 
     % NOT USED ===============================================================
@@ -232,9 +224,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         Solver_Time_Range            = 0:10:1500;
         Maximum_Memory               = 1;
 
-        % 2D mask clean up
-        Minimum_Hole_Size            = 15;
-
         % Computation options
         Use_GPU                      = false;
         Use_Parallel                 = false;
@@ -242,7 +231,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         % Debug options
         Verbose                      = false;
         Debug                        = false;
-        Object_Of_Interest           = [];
 
     end
 
@@ -523,11 +511,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
 
         end
 
-        function obj = set.Minimum_Hole_Size(obj,value)
-            validateattributes(value,{'double'},{'scalar','nonnegative','real','finite'})
-            obj.Minimum_Hole_Size = value;
-        end
-
         function obj = set.Curvature_Smoothing_Size(obj,value)
             validateattributes(value,{'double'},{'scalar','nonnegative','integer','real','finite'})
             obj.Curvature_Smoothing_Size = value;
@@ -583,15 +566,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
                 error('seedPointOptions:badInput','Expected input to be logical.')
             end
             obj.Debug = value;
-        end
-
-        function obj = set.Object_Of_Interest(obj,value)
-            if isempty(value)
-                obj.Object_Of_Interest = value;
-            else
-                validateattributes(value,{'double'},{'scalar','integer','nonnegative','real','finite'})
-                obj.Object_Of_Interest = value;
-            end
         end
 
         function obj = set.Solver_Time_Range(obj,value)
