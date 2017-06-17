@@ -72,7 +72,7 @@ MAX_RADIUS = round( 2* objectScale );
 % KAPPA_SMOOTHING_SIGMA = options.Curvature_Smoothing_Size;
 % MAX_RADIUS = options.Curvature_Max_Radius;
 
-% -- parallel version is not faster
+% -- parallel version not faster durning testing
 % if USE_PARALLEL
 %     [B,n,curvature,curvatureCenters] = computeBoundaryInformation__parallel(BW,KAPPA_SMOOTHING_SIGMA,MAX_RADIUS);
 %     return;
@@ -104,7 +104,7 @@ for i = 1:numObjs
 
     % Get parent contour and oriented it clockwise
     Prnt = tmpB{i};
-    if ~ispolycw(tmpB{i}(:,1),tmpB{i}(:,2))
+    if ~isPolyCW(tmpB{i})
         Prnt = flip(Prnt,1);
     end
 
@@ -129,7 +129,7 @@ for i = 1:numObjs
         for j = 1:numChildren
 
             child{j} = tmpB{children(j)};
-            if ispolycw(child{j}(:,1),child{j}(:,2))
+            if isPolyCW(child{j})
                 child{j} = flip(child{j});
             end
 
@@ -188,11 +188,11 @@ normals_full = cell(1,N);
 
 parfor contour = 1:N
     if contour <= numObjs
-        if ~ispolycw(B_full{contour}(:,1),B_full{contour}(:,2))
+        if ~isPolyCW(B_full{contour})
             B_full{contour} = flip(B_full{contour},1);
         end
     else
-        if ispolycw(B_full{contour}(:,1),B_full{contour}(:,2))
+        if isPolyCW(B_full{contour})
             B_full{contour} = flip(B_full{contour},1);
         end
     end
@@ -232,5 +232,26 @@ for i = 1:numObjs
     n{i}(end,:) = [];
 end % for
 
+
+end
+
+function tf = isPolyCW(xy)
+
+if sum((xy(1,:) - xy(end,:)).^2) < 1e-3
+    xy(end,:) = [];
+end
+
+dups = [false; any(diff(xy,1,1)==0,2)];
+xy(dups,:) = [];
+
+xy(:,1) = xy(:,1) - mean(xy(:,1));
+n = size(xy,1);
+if n < 3
+    tf = true;
+    return;
+else
+    a = sum( xy([2:n,1],1) .* (xy([3:n,1,2],2) - xy(:,2)) );
+    tf = (a <= 0); 
+end
 
 end
