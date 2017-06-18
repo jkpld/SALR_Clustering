@@ -1,10 +1,8 @@
 classdef (ConstructOnLoad) seedPointOptions
-    % SEEDPOINTOPTIONS  Set options needed for computing seed-point locations.
+    % SEEDPOINTOPTIONS  Set options needed for computing seed-point
+    % locations.
     %
-    % Input can be structure array or parameter value pairs. Options not set
-    % will be given default values. To see the default values, look at the
-    % output with no inputs:
-    %   defaultValues = seedPointOptions()
+    % options = seedPointOptions()
     %
     % seedPointOptions Properties:
     %
@@ -56,8 +54,6 @@ classdef (ConstructOnLoad) seedPointOptions
     % Initial_Speed - The initial speed of the particles in the simulation.
     %   (-Inf, Inf)
     %
-    %
-    %
     % Potential_Parameters - [d0, r0, ra] The parameters describing the
     %   particle interaction potential: d0, the potential depth; r0, the
     %   location of the potential minimum; and ra, the attractive extent,
@@ -70,7 +66,7 @@ classdef (ConstructOnLoad) seedPointOptions
     %   {'data', 'solver'}
     %
     % Distance_Metric - The metric used for measuring distance between
-    %   particles. If metric is Minkowski, then an extra agrument can be
+    %   particles. If metric is Minkowski, then an extra argument can be
     %   given with the exponent.
     %   {'euclidean'; 'cityblock'; 'chebychev'; {'minkowski', exponent}}
     %
@@ -84,8 +80,6 @@ classdef (ConstructOnLoad) seedPointOptions
     %   interaction.
     %   {'Attractive_Extent', (scalar, finite, real, positive)}
     %
-    %
-    %
     % Mass - The mass of the particles.
     %   (0, Inf)
     %
@@ -95,8 +89,6 @@ classdef (ConstructOnLoad) seedPointOptions
     % Charge_Normalization_Beta - The beta exponent for charge
     %   normalization based on number of particles.
     %   (-Inf, Inf)
-    %
-    %
     %
     % Potential_Type - The type of the confining potential used.
     %   {'distance_transform', 'density'}
@@ -122,13 +114,11 @@ classdef (ConstructOnLoad) seedPointOptions
     %   some distance away from the object when running the simulation.
     %   (1, Inf)
     %
-    %
-    %
     % Iterations - The number of times to run the particle simulation. Each
     %   simulation will use a different set of initial positions. After
     %   running all iterations, the seed-points from each iteration will be
     %   clustered together. Using several iterations together with the
-    %   Minimum_Cluster_Size can result in more stable/reproducable
+    %   Minimum_Cluster_Size can result in more stable/reproducible
     %   seed-points.
     %   [0, Inf), integer
     %
@@ -162,10 +152,6 @@ classdef (ConstructOnLoad) seedPointOptions
     %   will be used that does not take up as much memory.
     %   [0, Inf], [Gb]
     %
-    %
-    % Use_GPU - Determines if a GPU will be used to speed up calculation.
-    %   logical
-    %
     % Use_Parallel - Determines if multiple CPUs will be sued to speed up
     %   calculation.
     %   logical
@@ -176,23 +162,18 @@ classdef (ConstructOnLoad) seedPointOptions
     % Debug - Output extra information about each iteration that may be
     %   helpful for debugging.
     %   logical
-
-
-    % NOT USED ===============================================================
-    % Curvature_Smoothing_Size - The standard deviation of the gaussians used
-    %   for smoothing the boundary and calculating the curvature.
-    %   [0, Inf) & integer , [pixels]
     %
-    % Curvature_Max_Radius - Loosely the maximum object radius. The value will
-    %   be used set a threshold for what is considered positive curvature
-    %   (regions of positive curvature are concave regions of the boundary).
-    %   The threshold will be set as 1/(2*Curvature_Max_Radius).
-    %   [0, Inf) , [pixels]
+    % seedPointOptions Methods:
+    %
+    % plotPotential - Plot the particle interaction potential and force.
+    %
+    % validateInteractionPotential - Confirm that the attractive extent,
+    %   depth, and center actually are where they are supposed to be.
 
     properties
 
         % Particle initialization
-        
+
         Point_Selection_Method       = 'r0set_uniformRandom';
         Wigner_Seitz_Radius          = 5;
         Wigner_Seitz_Radius_Space    = 'grid'
@@ -201,28 +182,28 @@ classdef (ConstructOnLoad) seedPointOptions
         Initial_Speed                = 0.01;
 
         % Particle interaction
-        
+
         Potential_Parameters         = [-1 2 15];
-        Potential_Parameters_Space   = 'data'; 
+        Potential_Parameters_Space   = 'data';
         Distance_Metric              = 'euclidean';
         Solver_Space_Attractive_Extent = 'Attractive_Extent';
 
         % Particle parameters
-        
+
         Mass                         = 1;
         Coupling_Constant            = 1;
         Charge_Normalization_Beta    = 1/3;
 
         % Confining potential parameters
-        
-        Potential_Type               = 'distance_transform'; 
+
+        Potential_Type               = 'distance_transform';
         Potential_Modifier           = [];
         Max_Distance_Transform       = NaN;
         Max_Potential_Force          = NaN;
         Potential_Padding_Size       = 5;
 
         % Solver parameters
-        
+
         Iterations                   = 1;
         Minimum_Cluster_Size         = 1;
         Particle_Damping_Rate        = 5e-4;
@@ -230,11 +211,11 @@ classdef (ConstructOnLoad) seedPointOptions
         Maximum_Memory               = 1;
 
         % Computation options
-        
+
         Use_Parallel                 = false;
 
         % Debug options
-        
+
         Verbose                      = false;
         Debug                        = false;
 
@@ -253,13 +234,20 @@ classdef (ConstructOnLoad) seedPointOptions
     end
 
     properties (Hidden)
+        % Use_GPU - Determines if a GPU will be used to speed up
+        % calculation.
         Use_GPU        = false;
+        
         Use_ConvexHull = true;
     end
 
     methods
         function options = seedPointOptions(varargin)
-            
+            % Input can be structure array or parameter value pairs.
+            % Options not set will be given default values. To see the
+            % default values, look at the output with no inputs:
+            % default = seedPointOptions();
+
             % Initialize the potentialParameters structure
             options.potentialParameters = computePotentialParameters(-1,2,15);
 
@@ -587,6 +575,16 @@ classdef (ConstructOnLoad) seedPointOptions
         end
 
         function out = plotPotential(obj,maxR)
+            % PLOTPOTENTIAL Plot the particle interaction potential and
+            % force.
+            %
+            % options.plotPotential()
+            % options.plotPotential(maxR)
+            % out = options.plotPotential(maxR)
+            %
+            % maxR is the maximum distance plotted
+            % out : a cell array with {r, V, rp, Vp} where Vp is the force
+            %   and rp is the positions for the force.
 
             if nargin < 2
                 maxR = 1.3;
@@ -629,10 +627,12 @@ classdef (ConstructOnLoad) seedPointOptions
         end
 
         function validateInteractionPotential(obj)
-            % Confirm that the attractive extent, depth, and center
-            % actually are where we set them to be. Not all combinations of
-            % parameters are possible (small center and large extent for
-            % example)
+            % VALIDATEINTERACTIONPOTENTIAL Confirm that the attractive
+            % extent, depth, and center actually are where they are
+            % supposed to be. Not all combinations of parameters are
+            % possible (small center and large extent for example)
+            %
+            % options.validateInteractionPotential()
 
             x = obj.InteractionOptions.params;
             Vint = @(r) 1./(r+0.2) - x(1)*exp(-(r-x(2)).^2/(2*x(3)^2));
@@ -669,7 +669,9 @@ classdef (ConstructOnLoad) seedPointOptions
 
     methods (Access = private)
         function obj = setPotentialParameter(obj,params)
-
+            % Set new potential parameters. first seach the cache to see if
+            % we have already computed these parameters, if not, then
+            % compute the new parameters and add them to the cache.
             depth = params(1);
             center = params(2);
             extent = params(3);
