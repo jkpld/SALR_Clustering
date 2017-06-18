@@ -105,10 +105,6 @@ end
 % Convert seedPoints from cell array to array, Nx3
 seedPoints = cat(1,seedPoints{:});
 
-if options.Use_GPU
-    gpuDevice([]);
-end
-
 if all(cellfun(@isempty, Info))
     Info = [];
 end
