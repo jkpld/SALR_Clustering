@@ -1,4 +1,4 @@
-classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
+classdef (ConstructOnLoad) seedPointOptions
     % SEEDPOINTOPTIONS  Set options needed for computing seed-point locations.
     %
     % Input can be structure array or parameter value pairs. Options not set
@@ -240,7 +240,7 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
 
     end
 
-    properties (SetAccess = private)%, Hidden)
+    properties (SetAccess = private, Hidden)
         ScaleInvarient_Potential_Extent = nan; % The problem will be scaled so that Potential_Extent is equal to this value and then it will be solved. This ensures the interaction potential has the same shape.
         ScaleInvarient_Potential_Minimum_Location
 
@@ -729,71 +729,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
             obj.potentialParameterIdx = [depth_idx, center_idx, extent_idx];
 
             validateInteractionPotential(obj)
-        end
-    end
-
-    methods (Access = protected)
-        function displayScalarObject(obj)
-            className = matlab.mixin.CustomDisplay.getClassNameForHeader(obj);
-            fprintf('\n%s\n',[className,' with properties:']);
-
-            propgroup = getPropertyGroups(obj);
-            matlab.mixin.CustomDisplay.displayPropertyGroups(obj,propgroup)
-            %          for i = 1:length(propgroup)
-            %              propgroup(i).Aligned = 0;
-            %              matlab.mixin.CustomDisplay.displayPropertyGroups(obj,propgroup(i))
-            %              fprintf('\n')
-            %          end
-
-
-        end
-
-        function propgrp = getPropertyGroups(obj)
-            if ~isscalar(obj)
-                propgrp = getPropertyGroups@matlab.mixin.CustomDisplay(obj);
-            else
-                % property groups for scalars
-                nGroups = 8;
-                %             gTitles = {'Particle initialization';
-                %                        'Particle interaction';
-                %                        'Particle parameters';
-                %                        'Confining potential parameters';
-                %                        'Solver parameters';
-                %                        '2D mask clean up';
-                %                        'Computation options';
-                %                        'Debug options'};
-                gTitles = repmat({' '},1,nGroups);
-
-                propLists = cell(1,nGroups);
-                propLists{1} = {'Point_Selection_Method';
-                    'Wigner_Seitz_Radius';
-                    'Maximum_Initial_Potential';
-                    'Minimum_Initial_Potential';
-                    'Initial_Speed'};
-                propLists{2} = {'Potential_Parameters';
-                    'Potential_Parameters_Space';
-                    'Distance_Metric';
-                    'Solver_Space_Attractive_Extent'};
-                propLists{3} = {'Mass';
-                    'Coupling_Constant';
-                    'Distance_Metric'};
-                propLists{4} = {'Max_Distance_Transform';
-                    'Max_Potential_Force';
-                    'Potential_Padding_Size'};
-                propLists{5} = {'Particle_Damping_Rate';
-                    'Solver_Time_Range';
-                    'Maximum_Memory'};
-                propLists{6} = {'Minimum_Hole_Size'};
-                propLists{7} = {'Use_GPU';
-                    'Use_Parallel'};
-                propLists{8} = {'Debug';
-                    'Object_Of_Interest'};
-
-
-                for i = nGroups:-1:1
-                    propgrp(i) = matlab.mixin.util.PropertyGroup(propLists{i},gTitles{i});
-                end
-            end
         end
     end
 end
