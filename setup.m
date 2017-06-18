@@ -57,17 +57,17 @@ end
 folder = fullfile(path,'utilities');
 d = dir(folder);
 names = {d.name};
-if ~any(strncmp('DN_pdistmex',names,11))
+if ~any(strncmp('salr_pdistmex',names,11))
     folder = fullfile(matlabroot,'toolbox','stats','stats','private');
     d = dir(folder);
     names = {d.name};
     nameIdx = strncmp('pdistmex',names,8);
 
     if ~any(nameIdx)
-        error('seed_point_detection:setup','File ''pdistmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''DN_pdistmex.%s''.',folder,mexext)
+        error('seed_point_detection:setup','File ''pdistmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''salr_pdistmex.%s''.',folder,mexext)
     end
 
-    copyfile(fullfile(folder,names{nameIdx}),fullfile(path,'utilities',['DN_' names{nameIdx}]))
+    copyfile(fullfile(folder,names{nameIdx}),fullfile(path,'utilities',['salr_' names{nameIdx}]))
 end
 fprintf('...Added pdistmex\n')
 

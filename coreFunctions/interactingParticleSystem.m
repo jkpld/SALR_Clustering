@@ -156,13 +156,13 @@ p = permute( reshape( p, [D, N, M] ), [2,1,3]); % NxDxM
 
 if M == 1
     % d = pdist(r);
-    d = DN_pdistmex(r',dist,dist_arg)';
+    d = salr_pdistmex(r',dist,dist_arg)';
 else
     d = zeros(N*(N-1)/2,1,M);
 
     for i = 1:M
         % d(:,1,i) = pdist(r(:,:,i));
-        d(:,1,i) = DN_pdistmex(r(:,:,i)',dist,dist_arg);
+        d(:,1,i) = salr_pdistmex(r(:,:,i)',dist,dist_arg);
     end
 end
 % Get the interaction force between the particles (which only depends on
