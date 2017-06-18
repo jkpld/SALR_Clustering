@@ -14,3 +14,25 @@
 % by Jøger Hansegård
 
 % James Kapaldo
+
+
+
+
+
+% If no compiler is available to compile interp2mex.c, then we would need
+% to include checks everywhere in the code to determine which interpolation
+% function to use. Instead of doing that, here, we simply overload the
+% interp2mex function. If the .mex function is available, then it will be
+% called; however, if it is not available, then the below code will run.
+function zi = interp2mex(Z, xi, yi)
+
+% 2D linear interpolation with linear extrapolation.
+% Note that the interp2mex.mex function uses nearest neighbor
+% extrapolation instead of linear.
+sz = size(Z);
+dx = {1:sz(1), 1:sz(2)};
+
+Z = griddedInterpolant(dx,Z);
+zi = Z(yi,xi);
+
+end
