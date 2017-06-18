@@ -18,9 +18,15 @@ if nargin < 2
 end
 
 % Documentation folder
-% out_folder = [filesep, 'docs', filesep, 'examples'];
-out_folder_img = 'K:\feeling-responsive-gh-pages\images';
-out_folder_file = ['K:\feeling-responsive-gh-pages\_posts\example\', datestr(now,29), '-'];
+fileLocation = mfilename('fullpath');
+path = fileparts(fileparts(fileLocation));
+
+out_folder_img = [path, filesep, 'docs', filesep, 'images'];
+out_folder_file = [path, filesep, 'docs', filesep, '_posts', filesep, 'example', filesep, datestr(now,29), '-'];
+
+
+% out_folder_img = 'K:\feeling-responsive-gh-pages\images';
+% out_folder_file = ['K:\feeling-responsive-gh-pages\_posts\example\', datestr(now,29), '-']
 
 % Parse file
 [sections, thumbNail] = parse_file(file);

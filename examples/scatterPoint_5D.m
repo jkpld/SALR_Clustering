@@ -31,7 +31,7 @@ nbins = 30;
 density_threshold = 20;
 smooth_data = true; % Gaussian filter: sigma=0.5, kernal_size=3
 
-[n, cents, sz, data_limits] = binData(dat, nbins, density_threshold, smooth_data, 1);
+[n, cents, sz, data_limits] = binData(dat, nbins, density_threshold, smooth_data, true);
 
 %% Explore/Visualize the data
 % Plot isosurfaces of the data density (count). Since the data is 5D, it
@@ -70,7 +70,7 @@ options = seedPointOptions();
 % volume equal to the volume of a hyper-sphere with radius
 % `Wigner_Seitz_Radius`. From each lattice cell, a point is then randomly
 % selected from the grid where the confining potential is between
-% `Minimum_Initial_Potential` and `Maximum_Initial_Potential`
+% `Minimum_Initial_Potential` and `Maximum_Initial_Potential`.
 options.Point_Selection_Method = 'uniformRandom';
 options.Wigner_Seitz_Radius = 5;
 options.Wigner_Seitz_Radius_Space = 'grid';
@@ -118,10 +118,10 @@ options.Minimum_Cluster_Size = 3;
 % expected time of completion.
 % * Debug will return extra information.
 % * Use_Parallel will determine if the iterations are run in parallel.
-% _Note_ each worker will needs its own copy of the data. So, a normal
-% computer with 4 cores needs 4 times as much memory. Unless you are
-% running many iterations, it is likely faster to not use parallel
-% computation due to overhead.
+% _Note_ each worker will need its own copy of the data. So, a computer
+% with 4 cores needs 4 times as much memory. Unless you are running many
+% iterations, it is likely faster to not use parallel computation due to
+% overhead.
 options.Verbose = true;
 options.Debug = true;
 options.Use_Parallel = false;
@@ -191,9 +191,6 @@ kmeans_options.UseParallel = false;
                         'Replicates',2);
 
 % Plot the results and compare with SALR particle clustering
-dimensions = [1,3,4];
-isoLevels = [20,150,500,2000];
-
 markers(2).dat = data_to_grid(c);
 markers(2).options = lineSpec('b','none','.',15);
 markers(2).project = true;
@@ -230,6 +227,7 @@ view([50,35])
 % _The images giving showing [DSB][1]s are not provided with the example
 % data of this work._
 % 
+% *[SALR]: short-range attractive long-range repulsive
 % *[DSB]: double-strand break
 % *[DNA]: Deoxyribonucleic acid
 % *[PCA]: Principal component analysis
