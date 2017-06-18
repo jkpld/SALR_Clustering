@@ -9,7 +9,7 @@
     - title: "computeNucleiCenters"
       teaser: "Find the nuclei centers in a binary image of nuclei."
       definitions: 
-      - def: "[seedPoints, Info] = computeNucleiCenters(BW,options)"
+      - def: "[seedPoints, Info] = computeNucleiCenters(BW, options)\n[seedPoints, Info] = computeNucleiCenters(BW, options, 'Minimum_Hole_Size', mhs, 'Object_Of_Interest', OoI)"
     - title: "computeObjectSeedPoints"
       teaser: "Compute the seed-points of an object."
       definitions: 
@@ -17,7 +17,7 @@
     - title: "seedPointOptions"
       teaser: "Set options needed for computing seed-point locations."
       definitions: 
-      - def: "defaultValues = seedPointOptions()"
+      - def: "options = seedPointOptions()"
     - title: "setup"
       teaser: "Add required files to the path and try to compile .c functions for increased speed."
       definitions: 
@@ -122,9 +122,9 @@
       definitions: 
       - def: "rs = getGridWignerSeitz(problem_scales, options)"
     - title: "getObjectOfInterest"
-      teaser: "Return the options.Object_Of_Interest elements of the input arrays."
+      teaser: "Return the Object_Of_Interest element of the input arrays."
       definitions: 
-      - def: "varargout = getObjectOfInterest(options, varargin)\n[A, B, C] = getObjectOfInterest(options, A_in, B_in, C_in)\nA = A_in(options.Object_Of_Interest)"
+      - def: "varargout = getObjectOfInterest(Object_Of_Interest, varargin)\n[A, B, C] = getObjectOfInterest(Object_Of_Interest, A_in, B_in, C_in)\nA = A_in(Object_Of_Interest)"
     - title: "getPdistInds"
       teaser: "Get the indices of the pairs formed by pdist()."
       definitions: 

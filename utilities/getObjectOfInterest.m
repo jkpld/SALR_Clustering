@@ -1,6 +1,6 @@
 function varargout = getObjectOfInterest(Object_Of_Interest,varargin)
-% GETOBJECTOFINTEREST  Return the options.Object_Of_Interest elements of
-% the input arrays.
+% GETOBJECTOFINTEREST  Return the Object_Of_Interest element of the input
+% arrays.
 %
 % varargout = getObjectOfInterest(Object_Of_Interest, varargin)
 % [A, B, C] = getObjectOfInterest(Object_Of_Interest, A_in, B_in, C_in)
