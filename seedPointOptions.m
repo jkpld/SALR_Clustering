@@ -192,25 +192,29 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
     properties
 
         % Particle initialization
+        
         Point_Selection_Method       = 'r0set_uniformRandom';
-        Wigner_Seitz_Radius          = 10;
+        Wigner_Seitz_Radius          = 5;
         Wigner_Seitz_Radius_Space    = 'grid'
         Maximum_Initial_Potential    = 1;
         Minimum_Initial_Potential    = -Inf;
         Initial_Speed                = 0.01;
 
         % Particle interaction
+        
         Potential_Parameters         = [-1 2 15];
         Potential_Parameters_Space   = 'data'; 
         Distance_Metric              = 'euclidean';
         Solver_Space_Attractive_Extent = 'Attractive_Extent';
 
         % Particle parameters
+        
         Mass                         = 1;
         Coupling_Constant            = 1;
         Charge_Normalization_Beta    = 1/3;
 
         % Confining potential parameters
+        
         Potential_Type               = 'distance_transform'; 
         Potential_Modifier           = [];
         Max_Distance_Transform       = NaN;
@@ -218,6 +222,7 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         Potential_Padding_Size       = 5;
 
         % Solver parameters
+        
         Iterations                   = 1;
         Minimum_Cluster_Size         = 1;
         Particle_Damping_Rate        = 5e-4;
@@ -225,10 +230,11 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         Maximum_Memory               = 1;
 
         % Computation options
-        Use_GPU                      = false;
+        
         Use_Parallel                 = false;
 
         % Debug options
+        
         Verbose                      = false;
         Debug                        = false;
 
@@ -246,24 +252,14 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         dist_arg = [];
     end
 
-    properties %(Hidden)
-
-        % These values can change for each object and are not global
-        % options
-        Scale_Factor = 1;
-        Object_Scale = 1;
-
+    properties (Hidden)
+        Use_GPU        = false;
         Use_ConvexHull = true;
-
-        % These next two parameters would make apearence in functions
-        % relating to computing boundary curvature.
-        Curvature_Smoothing_Size     = 2; % Not used
-        Curvature_Max_Radius         = 35; % Not used
     end
 
     methods
         function options = seedPointOptions(varargin)
-
+            
             % First get the potential paramters
             try
                 options.potentialParameters = load('potentialParameters.mat');
@@ -511,16 +507,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
 
         end
 
-        function obj = set.Curvature_Smoothing_Size(obj,value)
-            validateattributes(value,{'double'},{'scalar','nonnegative','integer','real','finite'})
-            obj.Curvature_Smoothing_Size = value;
-        end
-
-        function obj = set.Curvature_Max_Radius(obj,value)
-            validateattributes(value,{'double'},{'scalar','positive','real','finite'})
-            obj.Curvature_Max_Radius = value;
-        end
-
         function obj = set.Use_GPU(obj,value)
             if (value ~= 0) && (value ~= 1)
                 error('seedPointOptions:badInput','Expected input to be logical.')
@@ -581,11 +567,6 @@ classdef (ConstructOnLoad) seedPointOptions < matlab.mixin.CustomDisplay
         function obj = set.Charge_Normalization_Beta(obj,value)
             validateattributes(value,{'double'},{'scalar','real','finite'})
             obj.Charge_Normalization_Beta = value;
-        end
-
-        function obj = set.Scale_Factor(obj,value)
-            validateattributes(value,{'double'},{'scalar','real','finite','positive'})
-            obj.Scale_Factor = value;
         end
 
         function obj = set.Solver_Space_Attractive_Extent(obj, value)
