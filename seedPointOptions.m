@@ -260,12 +260,8 @@ classdef (ConstructOnLoad) seedPointOptions
     methods
         function options = seedPointOptions(varargin)
             
-            % First get the potential paramters
-            try
-                options.potentialParameters = load('potentialParameters.mat');
-            catch
-                error('seedPointOptions:missingPotentialParamters','The file potentialParameters.mat is missing or not on the path. This file is required for setting the potentialParamters. It may be created with the function computePotentialParamters if you do not have it.')
-            end
+            % Initialize the potentialParameters structure
+            options.potentialParameters = computePotentialParameters(-1,2,15);
 
             % Make sure the potential parameters are initialized correctly
             options.Solver_Space_Attractive_Extent = options.Solver_Space_Attractive_Extent;
