@@ -3,7 +3,8 @@ layout: code-example
 title: "Locating nuclei centers"
 subheadline: "SALR clustering"
 categories:
-   - example
+   - examples
+breadcrumb: true
 show_meta: true
 teaser: "This example will apply SALR clustering to locate the centers of ~7800 nuclei that are clumped together into ~2500 clumps of partially overlapping nuclei. At the end, the SALR clustering results will be compared against the true nuclei centers locations."
 image:

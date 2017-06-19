@@ -82,7 +82,7 @@ options = seedPointOptions();
 % volume equal to the volume of a hyper-sphere with radius
 % `Wigner_Seitz_Radius`. From each lattice cell, a point is then randomly
 % selected from the grid where the confining potential is less than
-% `Minimum_Initial_Potential`.
+% `Maximum_Initial_Potential`.
 options.Point_Selection_Method = 'uniformRandom';
 options.Wigner_Seitz_Radius = 2.5;
 options.Wigner_Seitz_Radius_Space = 'grid';
@@ -128,7 +128,7 @@ options.Use_Parallel = false;
 
 %% Compute seed points
 % The seed-points are simply computed by passing the binned data, the
-% `seedPointOptions`, and the data limits.
+% `seedPointOptions`, and the data limits to `computeObjectSeedPoints`.
 [seedPoints, Info] = computeObjectSeedPoints(Omega, options, 'data_limits', data_limits);
 
 %% Plot the results

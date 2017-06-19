@@ -3,7 +3,8 @@ layout: code-example
 title: "5D scatter-point data"
 subheadline: "SALR clustering"
 categories:
-   - example
+   - examples
+breadcrumb: true
 show_meta: true
 teaser: "This example works with a real 5D dataset that describes the amount of cell nuclei damage. The distance transform cannot be used to create the confining potential for this data set; so, the data density will be used and the confining force scaled. In addition, the distance metric when modeling the particles will be changed to a Minkowski distance and the solver space will be isotropically scaled. Finally, this example will compare the results of SALR clustering with k-means and show that SALR clustering produces seed-points that locate the region centers better."
 image:
@@ -184,7 +185,7 @@ markers = [];
 
 % Helper function to convert the seed points into grid space
 data_to_grid = @(t) Info.problem_scales.data_to_grid(t) - ...
-options.Potential_Padding_Size;
+    options.Potential_Padding_Size;
 
 lineSpec = @(col,ls,m,ms) struct('Color', col, ...
     'LineStyle', ls, 'Marker', m, 'MarkerSize', ms);
@@ -232,8 +233,8 @@ kmeans_options.MaxIter = 200;
 kmeans_options.UseParallel = false;
 
 [~,c] = kmeans(dat,K,'Start','plus',...
-    'Options',kmeans_options,...
-    'Replicates',2);
+                        'Options',kmeans_options,...
+                        'Replicates',2);
 
 % Plot the results and compare with SALR particle clustering
 markers(2).dat = data_to_grid(c);

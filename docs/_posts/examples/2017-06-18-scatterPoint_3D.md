@@ -3,7 +3,8 @@ layout: code-example
 title: "3D scatter-point data"
 subheadline: "SALR clustering"
 categories:
-   - example
+   - examples
+breadcrumb: true
 show_meta: true
 teaser: "This example uses a simple 3D data set, made to resemble 3D nuclei, for the purpose of validating the SALR particle clustering result with the k-means clustering result. The confining potential will be based on the distance transform, and all parameters for the SALR clustering, other than the particle's initial locations, will be exactly the same as those used for the 2D nuclei example."
 image:
@@ -115,7 +116,7 @@ options = seedPointOptions();
  volume equal to the volume of a hyper-sphere with radius
  `Wigner_Seitz_Radius`. From each lattice cell, a point is then randomly
  selected from the grid where the confining potential is less than
- `Minimum_Initial_Potential`.
+ `Maximum_Initial_Potential`.
  
 {% highlight matlab %}
 options.Point_Selection_Method = 'uniformRandom';
@@ -172,7 +173,7 @@ options.Use_Parallel = false;
  
 ## Compute seed points
  The seed-points are simply computed by passing the binned data, the
- `seedPointOptions`, and the data limits.
+ `seedPointOptions`, and the data limits to `computeObjectSeedPoints`.
  
 {% highlight matlab %}
 [seedPoints, Info] = computeObjectSeedPoints(Omega, options, 'data_limits', data_limits);
@@ -204,7 +205,7 @@ markers = [];
 
 % Helper function to convert are seed points into grid space
 data_to_grid = @(t) Info.problem_scales.data_to_grid(t) - ...
-options.Potential_Padding_Size;
+    options.Potential_Padding_Size;
 
 lineSpec = @(col,ls,m,ms) struct('Color', col, ...
     'LineStyle', ls, 'Marker', m, 'MarkerSize', ms);
@@ -243,7 +244,7 @@ Small black markers represent the seed-points calculated by each repetition. Lar
  * If the number of clusters used with [k-means][1] is changed, it can be
  found that using `K=7` clusters is the most stable (see the
  publication[^1]). That will be the number of clusters used here, and we
- will use two replications.
+ will use two replicates.
  * The [k-means][1] and SALR clustering results will be compared by
  plotting the [k-means][1] results as large blue dots with the SALR
  clustering results.
@@ -257,8 +258,8 @@ kmeans_options.MaxIter = 200;
 kmeans_options.UseParallel = false;
 
 [~,c] = kmeans(dat,K,'Start','plus',...
-    'Options',kmeans_options,...
-    'Replicates',2);
+                     'Options',kmeans_options,...
+                     'Replicates',2);
 
 % Plot the results and compare with SALR particle clustering
 markers(2).dat = data_to_grid(c);
@@ -280,7 +281,7 @@ view(220,31)
  
 <img src="\images\scatterPoint_3D_4.png">
 <figcaption class="text-right">
-Large red markers represent the final seed-points of SALR particle clustering. Large blue markers represent the results of k-means clustering. <b>SALR clustering is able to reproduce k-means clustering.</b>
+Large red markers represent the final seed-points of SALR particle clustering. Large blue markers represent the results of [k-means][1] clustering. <b>SALR clustering is able to reproduce k-means clustering.</b>
 </figcaption>
  
 </div>
