@@ -11,14 +11,13 @@
 title: 'SALR particle clustering'
 
 # The slogan describes your website and is used on homepage in <title> and other important places
-slogan: 'cool dood'
-    #'A seed-point detection and data clustering method'
+slogan: 'A seed-point detection and data clustering method'
 
 # The description is used on homepage and in the footer to quickly describe your website. Use a maximum of 150 characters for SEO-purposes.
 description: '»SALR particle clustering« is a data clustering method harnessing the power of physics to locate the centers of your overlapping convex objects & distributions.'
 
 # The credits show up in the includes/_footer.html – It would be nice of you to leave a link to Phlow or Feeling Responsive as a thank you :)
-credits: '<p>Created with &hearts; by <a href="http://phlow.de/">Phlow</a> with <a href="http://jekyllrb.com/" target="_blank">Jekyll</a> based on <a href="http://phlow.github.io/feeling-responsive/">Feeling Responsive</a>.</p>'
+credits: '<p>For God so loved the world that He gave His only begotten Son, that whosoever believes in Him shall not perish but have everlasting life. <a href="https://www.bible.com/">John 3:16</a>.</p>'
 
 # Main author of the website
 # See > authors.yml
