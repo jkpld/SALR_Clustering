@@ -114,7 +114,7 @@ The method of applying SALR clustering to scatter-point data is very similar to 
 </div><!-- /.row -->
 
 
-{% include next-prev next-text='Start using SALR clustering' next-url='/how-to-use/' prev-text='The theory' prev-url='/theory/' %}
+{% include next-prev next-text='Getting started' next-url='/quick-start/' prev-text='The theory' prev-url='/theory/' %}
 
 
 
@@ -137,7 +137,7 @@ The method of applying SALR clustering to scatter-point data is very similar to 
 *[gLoG]: Generalized Laplacian of Gaussian
 *[MSER]: Maximally stable extremal regions
 *[SBF]: Sliding-band filter
-<!-- *[SALR]: Short-range attractive long-range repulsive -->
+*[SALR]: Short-range attractive long-range repulsive
 
 
 [Minkowski]: https://en.wikipedia.org/wiki/Minkowski_distance

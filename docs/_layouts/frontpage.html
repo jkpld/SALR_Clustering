@@ -59,6 +59,7 @@ format: frontpage
 *
 {% endcomment %}
 
+{% comment %}
 {% unless site.posts == empty %}
     <div class="row t30 b20 homepage">
         <div class="small-12 columns">
@@ -74,7 +75,7 @@ format: frontpage
             </p>
             {% endif %}
             {% else post.image.homepage == NULL %}
-            <h2>{{ site.data.language.new_blog_entries }}</h2>
+            <h2>{{ site.data.language.latest_examples }}</h2>
             {% endif %}
             {% endfor %}
         </div><!-- /.small-12.columns -->
@@ -95,12 +96,12 @@ format: frontpage
 
 
         <div class="medium-6 columns">
-            <p><strong>{{ site.data.language.more_articles }}</strong></p>
+            <p><strong>{{ site.data.language.more_examples }}</strong></p>
             {% include list-posts entries='3' offset='1' %}
         </div><!-- /.medium-7.columns -->
     </div><!-- /.row -->
 {% endunless %}
-
+{% endcomment %}
 
 {% comment %}
 *

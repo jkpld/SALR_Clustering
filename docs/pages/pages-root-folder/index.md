@@ -8,21 +8,21 @@ layout: frontpage
 header:
   image_fullwidth: page_header.svg
   caption: "The content on this page summarizes work presented in <strong>J. Kapaldo et al., <em>Nature Methods</em> (submitted)</strong>."
-widget1:
-  title: "How SALR clustering works"
-  url: '/theory/'
-  image: animated2d.gif
-  text: 'Short-range attractive long-range repulsive (<em>SALR</em>) particle clustering is a method for detecting the centers of partially overlapping convex objects. Get an introduced to the method here.'
 widget2:
-  title: "What is SALR clustering?"
+  title: "Applications"
+  url: '/applications/'
+  image: applications_img_sm.gif
+  text: '<em>SALR particle clustering</em> can be applied to any problem where the center of overlapping objects or distributions needs to be found. This covers a broad range of fields, from unsupervised maching learning and data clustering to locating the centers of overlapping nuclei in biological images.'
+widget1:
+  title: "What is SALR particle clustering?"
   url: '/what-is-it/'
   image: img1.png
-  text: 'Data clustering is prevalent in almost all areas technology and science, from identifying documents that are similar to analyzing biological images. <em>SALR clustering</em> is a data clustering technique for locating the centers of partially overlapping objects or distributions.'
+  text: 'Data clustering is prevalent in almost all areas technology and science, from identifying documents that are similar to analyzing biological images. <em>SALR particle clustering</em> is a data clustering technique for locating the centers of partially overlapping objects or distributions.'
 widget3:
-  title: "Download Theme"
-  url: 'https://github.com/Phlow/feeling-responsive'
+  title: "Getting started"
+  url: '/getting-started'
   image: widget-github-303x182.jpg
-  text: '<em>Feeling Responsive</em> is free and licensed under a MIT License. Make it your own and start building. Grab the <a href="https://github.com/Phlow/feeling-responsive/tree/bare-bones-version">Bare-Bones-Version</a> for a fresh start or learn how to use it with the <a href="https://github.com/Phlow/feeling-responsive/tree/gh-pages">education-version</a> with sample posts and images. Then tell me via Twitter <a href="http://twitter.com/phlow">@phlow</a>.'
+  text: '<em>SALR particle clustering</em> is written in Matlab. Setup is as simple as downloading the <a href="https://github.com/jkpld/seed_point_detection">repository</a> and running the included setup functions. The code is fully documented with several examples to get you started using it quickly.'
 #
 # Use the call for action to show a button on the frontpage
 #
@@ -34,8 +34,8 @@ widget3:
 # To change colors see sass/_01_settings_colors.scss
 #
 callforaction:
-  url: https://tinyletter.com/feeling-responsive
-  text: Inform me about new updates and features ›
+  url: https://github.com/jkpld/seed_point_detection
+  text: View the original paper ›
   style: alert
 permalink: /index.html
 #
@@ -44,10 +44,3 @@ permalink: /index.html
 #
 homepage: true
 ---
-
-<div id="videoModal" class="reveal-modal large" data-reveal="">
-  <div class="flex-video widescreen vimeo" style="display: block;">
-    <iframe width="1280" height="720" src="https://www.youtube.com/embed/3b5zCFSmVvU" frameborder="0" allowfullscreen></iframe>
-  </div>
-  <a class="close-reveal-modal">&#215;</a>
-</div>
