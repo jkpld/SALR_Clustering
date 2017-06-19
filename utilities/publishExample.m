@@ -48,7 +48,7 @@ fileLocation = which(file);
 
 % Read in the file text
 fid = fopen(fileLocation);
-C = textscan(fid,'%s','Delimiter','\n');
+C = textscan(fid,'%s','Delimiter','\n','whitespace','');
 fclose(fid);
 C = C{1};
 
@@ -62,16 +62,18 @@ thumb_fig = startsWith(C,'% <INSERT FIGURE, THUMB'); % figure to use for thumbna
 % Captions
 caption_starts = find(startsWith(C,'% <CAPTION>'));
 caption_ends = find(startsWith(C,'% </CAPTION>'));
-
-if numel(caption_starts) ~= numel(caption_ends)
-    error('publishExample:BadCaption','The number of caption start tags <CAPTION>, %d, is not the same as the number of caption end tags </CAPTION>, %d.', numel(caption_starts), numel(caption_ends))
-end
-if caption_ends(1) < caption_starts(1)
-    error('publishExample:BadCaption','A caption end </CAPTION> appears before a caption start <CAPTION>.')
-end
 captions = false(numel(C),1);
-for ii = 1:numel(caption_starts)
-    captions(caption_starts(ii):caption_ends(ii)) = true;
+if ~isempty(caption_starts) && ~isempty(caption_ends)
+    if numel(caption_starts) ~= numel(caption_ends)
+        error('publishExample:BadCaption','The number of caption start tags <CAPTION>, %d, is not the same as the number of caption end tags </CAPTION>, %d.', numel(caption_starts), numel(caption_ends))
+    end
+    if caption_ends(1) < caption_starts(1)
+        error('publishExample:BadCaption','A caption end </CAPTION> appears before a caption start <CAPTION>.')
+    end
+    
+    for ii = 1:numel(caption_starts)
+        captions(caption_starts(ii):caption_ends(ii)) = true;
+    end
 end
 
 % Comments
