@@ -22,7 +22,18 @@ fileLocation = mfilename('fullpath');
 path = fileparts(fileparts(fileLocation));
 
 out_folder_img = [path, filesep, 'docs', filesep, 'images'];
-out_folder_file = [path, filesep, 'docs', filesep, '_posts', filesep, 'examples', filesep, datestr(now,29), '-'];
+
+out_folder = [path, filesep, 'docs', filesep, '_posts', filesep, 'examples', filesep];
+names = dir(out_folder);
+names = {names.name}';
+
+example_exists = names{contains(names,file)};
+
+if isempty(example_exists)
+    out_file = [path, filesep, 'docs', filesep, '_posts', filesep, 'examples', filesep, datestr(now,29), '-', file, '.md'];
+else
+    out_file = [path, filesep, 'docs', filesep, '_posts', filesep, 'examples', filesep, example_exists];
+end
 
 
 % out_folder_img = 'K:\feeling-responsive-gh-pages\images';
@@ -37,14 +48,14 @@ if reEvaluate
 end
 
 % Write example
-write_example(sections, thumbNail, file, out_folder_file)
+write_example(sections, thumbNail, out_file)
 
 end
 
 function [sections, image_thumbnail] = parse_file(file)
 
 % Get the path of the given file
-fileLocation = which(file);
+fileLocation = which(file)
 
 % Read in the file text
 fid = fopen(fileLocation);
@@ -225,8 +236,8 @@ if ~isempty(fig_locs)
 end
 end
 
-function write_example(sections, thumb_fig_name, file, output_folder)
-file_out = [output_folder, file, '.md'];
+function write_example(sections, thumb_fig_name, file_out)
+% file_out = [output_folder, file, '.md'];
 fid = fopen(file_out,'w');
 try
 

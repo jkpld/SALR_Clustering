@@ -10,7 +10,7 @@
 # Title of your website
 title: 'SALR particle clustering'
 
-# The slogan describes your website and is used on homepage in <title> and other important places
+# The slogan describes your website asnd is used on homepage in <title> and other important places
 slogan: 'A seed-point detection and data clustering method'
 
 # The description is used on homepage and in the footer to quickly describe your website. Use a maximum of 150 characters for SEO-purposes.
@@ -26,7 +26,7 @@ author: jkpld
 # This URL is the main address for absolute links. Don't include a slash at the end.
 #
 url: 'https://jkpld.github.io'
-baseurl: '/seed_point_detection'
+baseurl: '/SALR_Clustering'
 
 # This is for the editing function in _/includes/improve_content
 # Leave it empty if your site is not on GitHub/GitHub Pages

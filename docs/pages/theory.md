@@ -50,7 +50,7 @@ Equations (3) and (4) give a set of 2N differential equations that are modeled u
 ## How, why, and when SALR clustering works?
 
 The answer comes by analyzing the force on the particles in the simulation: the confining potential puts a force on the particles with a magnitude of |∇_V_| (which is the slope of the confining potential, like a ball rolling down a hill), and the particles repel each other with a force of about _r_<sub>a</sub><sup>-2</sup>. If the force from the confining potential is much larger than the repulsive force, |∇_V_|≫_r_<sub>a</sub><sup>-2</sup>, then the particles will only find the local minimum of the confining potential---this is what most/all other methods do in finding the local extrema of a voting landscape or finding the local maxima of the point density (mean-shift[^5]). Alternatively, if the repulsive force is much larger than the confining force, _r_<sub>a</sub><sup>-2</sup>≫|∇_V_|, then the particles will ignore the confining potential minima and spread out as far apart from each other as possible---this will result is clusters of particles, separated by at least a distance _r_<sub>a</sub>, that uniformly cover the region. In between these two regimes, when the two forces are approximately the same order of magnitude, |∇_V_|&#126;_r_<sub>a</sub><sup>-2</sup>, there is an interaction between the confining potential and the particle repulsion, and this is the regime that leads to SALR clustering's improved performance.
-<cite>J. Kapaldo et al., Nature Methods[^1]</cite>
+<cite>J. Kapaldo et al., **(submitted)**[^1]</cite>
 
 
 
@@ -61,7 +61,7 @@ The answer comes by analyzing the force on the particles in the simulation: the 
 
 [1]: https://en.wikipedia.org/wiki/Hamiltonian_mechanics
 
-[^1]: J. Kapaldo, X. Han, D. Mary, and S. Ptasinska. Nature Methods. (submitted)
+[^1]: J. Kapaldo, X. Han, and D. Mary. **(submitted)**
 [^2]: F. Bolton and U. Rössler, [Superlattices and Microstructures 13, 139 (1993)](http://dx.doi.org/10.1006/spmi.1993.1026).
 [^3]: S. Mossa, F. Sciortino, P. Tartaglia, and E. Zaccarelli, [Langmuir 20, 10756 (2004)](http://dx.doi.org/10.1021/la048554t).
 [^4]: F. Sciortino, S. Mossa, E. Zaccarelli, and P. Tartaglia, [Physical Review Letters 93, 5 (2004)](http://dx.doi.org/10.1103/PhysRevLett.93.055701).

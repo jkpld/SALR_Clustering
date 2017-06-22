@@ -161,6 +161,6 @@ setTheme(fig,'light')
 %
 % *[DAPI]: 4',6-diamidino-2-phenylindole
 % *[SALR]: short-range attractive long-range repulsive
-% [^1]: J. Kapaldo et al. Nature Methods (submitted)
+% [^1]: J. Kapaldo et al. **(submitted)**
 % [^Otsu]: N. Otsu, IEEE transactions on systems, man, and cybernetics 9, 62 (1979).
 % [1]: https://en.wikipedia.org/wiki/F1_score

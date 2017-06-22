@@ -7,7 +7,7 @@
 layout: frontpage
 header:
   image_fullwidth: page_header.svg
-  caption: "The content on this page summarizes work presented in <strong>J. Kapaldo et al., <em>Nature Methods</em> (submitted)</strong>."
+  caption: "The content on this site summarizes work presented in <strong>J. Kapaldo et al., (submitted)</strong>."
 widget2:
   title: "Applications"
   url: '/applications/'
@@ -22,7 +22,7 @@ widget3:
   title: "Getting started"
   url: '/getting-started'
   image: widget-github-303x182.jpg
-  text: '<em>SALR particle clustering</em> is written in Matlab. Setup is as simple as downloading the <a href="https://github.com/jkpld/seed_point_detection">repository</a> and running the included setup functions. The code is fully documented with several examples to get you started using it quickly.'
+  text: '<em>SALR particle clustering</em> is written in Matlab. Setup is as simple as downloading the <a href="https://github.com/jkpld/SALR_Clustering">repository</a> and running the included setup functions. The code is fully documented with several examples to get you started using it quickly.'
 #
 # Use the call for action to show a button on the frontpage
 #
@@ -34,7 +34,7 @@ widget3:
 # To change colors see sass/_01_settings_colors.scss
 #
 callforaction:
-  url: https://github.com/jkpld/seed_point_detection
+  url: 
   text: View the original paper ›
   style: alert
 permalink: /index.html

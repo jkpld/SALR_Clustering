@@ -79,7 +79,7 @@ There are three primary advantages of using SALR clustering over other clusterin
 * SALR clustering achieves an F1 score that is 8.1% higher than any other method when used for locating the centers of overlapping nuclei, and SALR clustering is able to better locate rare clusters without density maxima than k-means clustering.[^1]
 
 > SALR clustering can represent a significant improvement in locating the centers of overlapping convex objects: it locates the correct number of nuclei more often and the nuclei centers more accurately than standard and leading methods; it can significantly improve the performance of previous methods; and it is able to determine, not only the number of clusters, but the correct position of the cluster centers in data clustering while not required a cluster to have a local density maximum.
-<cite>J. Kapaldo et al., Nature Methods[^1]</cite>
+<cite>J. Kapaldo et al., **(submitted)**[^1]</cite>
 
 *[SALR]: short-range attractive long-range repulsive
 *[repulsive particles]: Particles that do not want to be near each other and push each other apart.
@@ -87,7 +87,7 @@ There are three primary advantages of using SALR clustering over other clusterin
 
 [^2]: D. Comaniciu and P. Meer, <a href='http://dx.doi.org/10.1109/34.1000236'>IEEE Transactions on Pattern Analysis and Machine Intelligence 24, 603 (2002).</a>
 [^3]: J. MacQueen, <a href="http://www-m9.ma.tum.de/foswiki/pub/WS2010/CombOptSem/kMeans.pdf">Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability 1, 281 (1967).</a>
-[^1]: J. Kapaldo, X. Han, D. Mary, and S. Ptasinska. Nature Methods.
+[^1]: J. Kapaldo, X. Han, and D. Mary. **(submitted)**
 
 
 
@@ -106,17 +106,3 @@ There are three primary advantages of using SALR clustering over other clusterin
 <a class="button small radius next" href="/quick-start/">Getting started &raquo;</a>
 </div>
 </div>
-
-<!-- <div class="row">
-<div class="small-12 text-center columns">
-<a class="button small radius prev" href="/theory/">How the particles are modeled and why it works&raquo;</a>
-</div>
-</div>
-{% comment %}
-TODO: add buttons to go to 'application to location nuclei centers', 'application to scatter-point data'
-{% endcomment %}
-<div class="row">
-<div class="small-12 text-center columns">
-<a class="button small radius prev" href="/example/scatterPoint_5D/">Example code: 5D scatter point data&raquo;</a>
-</div>
-</div> -->
