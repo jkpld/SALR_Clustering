@@ -3,7 +3,7 @@
 
 # SALR particle clustering
 ### A method for locating the centers of partially overlapping convex objects and distributions.
-_This project is apart of the manuscript **J. Kapaldo et al. Nature Methods (submitted)**._
+_This project is apart of the manuscript **J. Kapaldo et al. (submitted)**._
 
 
 SALR particle clustering is a simple technique for finding the centers of objects. It can be used to locate the centers of overlapping cell nuclei (see to the right), and it can be used to locate the cluster centers in scatter point data. Further details with examples can be seed at **website** and the manuscript.
@@ -38,4 +38,29 @@ SALR particle clustering is a simple technique for finding the centers of object
 
 ## Example use
 
-*[SALR]: short-range attractive long-range repulsive
+<table style="width:100%">
+  <tr>
+    <td valign="top" width="45%" align="left">
+```Matlab
+
+BW = imread('snowflake.tif');
+
+options = seedPointOptions();
+options.Wigner_Seitz_Radius = 4;
+options.Potential_Parameters = [-1,2,10];
+options.Iterations = 3;
+options.Minimum_Cluster_Size = 2;
+options.Debug = true;
+
+[seedPoints,Info] = computeObjectSeedPoints(logical(BW),options);
+
+figure
+imshow(BW)
+hold on
+plot(Info.r0(:,2),Info.r0(:,1),'.b','MarkerSize',3)
+plot(seedPoints(:,2),seedPoints(:,1),'.r','MarkerSize',12)
+```
+    </td>
+    <td valign="top" width="45.8%" align="center"><img src="docs/images/readme_img.png"></td>
+  </tr>
+</table>
