@@ -31,20 +31,18 @@ SALR particle clustering is a simple technique for finding the centers of object
 
 ## Requirements
 
-* Matlab version R2016b or higher. _The reason for this requirement is that R2016b is the first version that allows for implicit expansion, which is a feature heavily used in the code._
-* The Image Processing Toolbox. (?)
-* The Statistics and Machine Learning Toolbox. (?)
-* The Parallel Computing Toolbox - This toolbox is optional, but if you have it, then you will be able to run computations in parallel.
+* Matlab version R2016b or higher. _This is the first version that allows for implicit expansion, which is a feature heavily used in the code._
+* The Image Processing Toolbox.
+* The Statistics and Machine Learning Toolbox.
+* The Parallel Computing Toolbox - _This toolbox is optional, but if you have it, then you will be able to run computations in parallel._
 
 ## Example use
 
-<table style="width:100%">
-  <tr>
-    <td valign="top" width="45%" align="left">
-```Matlab
-
+```matlab
+% Load test image
 BW = imread('snowflake.tif');
 
+% Setup parameters
 options = seedPointOptions();
 options.Wigner_Seitz_Radius = 4;
 options.Potential_Parameters = [-1,2,10];
@@ -52,15 +50,13 @@ options.Iterations = 3;
 options.Minimum_Cluster_Size = 2;
 options.Debug = true;
 
+% Compute seed-points
 [seedPoints,Info] = computeObjectSeedPoints(logical(BW),options);
 
-figure
-imshow(BW)
-hold on
+% Overlay onto the image the initial positions of all three iterations 
+% as small blue dots and the final seed-point locations as large red dots.
+figure, imshow(BW), hold on;
 plot(Info.r0(:,2),Info.r0(:,1),'.b','MarkerSize',3)
 plot(seedPoints(:,2),seedPoints(:,1),'.r','MarkerSize',12)
 ```
-    </td>
-    <td valign="top" width="45.8%" align="center"><img src="docs/images/readme_img.png"></td>
-  </tr>
-</table>
+<img width="300" src="docs/images/readme_img.png"></td>
