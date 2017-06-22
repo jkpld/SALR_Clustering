@@ -174,7 +174,7 @@ classdef (ConstructOnLoad) seedPointOptions
 
         % Particle initialization
 
-        Point_Selection_Method       = 'r0set_uniformRandom';
+        Point_Selection_Method       = 'uniformRandom';
         Wigner_Seitz_Radius          = 5;
         Wigner_Seitz_Radius_Space    = 'grid'
         Maximum_Initial_Potential    = 1;
