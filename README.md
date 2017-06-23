@@ -53,7 +53,7 @@ options.Debug = true;
 % Compute seed-points
 [seedPoints,Info] = computeObjectSeedPoints(logical(BW),options);
 
-% Overlay onto the image the initial positions of all three iterations 
+% Overlay onto the image the initial positions of all three iterations
 % as small blue dots and the final seed-point locations as large red dots.
 figure, imshow(BW), hold on;
 plot(Info.r0(:,2),Info.r0(:,1),'.b','MarkerSize',3)
