@@ -1,5 +1,17 @@
 function visualizeNuclei(markers)
+% VISUALIZENUCLEI Display 9 random nuclei clumps from the 5 test images and
+% plot the true nuclei centers.
+%
+% visualizeNuclei()
+% visualizeNuclei(markers)
+%
+% Input parameters:
+% markers: (optional) A cell array with 5 elements giving the seed-points
+%   for each of the 5 test images (going '2','3','4','5','67'). The
+%   seed-points for the clumps displayed will also be plotted on the
+%   images.
 
+% James Kapaldo
 if nargin < 1
     markers = cell(1,5);
 end
