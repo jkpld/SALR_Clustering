@@ -21,7 +21,7 @@ header:
 3. Run `setup.m`. This function will
     * Add the necessary files to your Matlab path.
     * Attempt to compile two C functions that will increase the program speed. If a C compiler is not found on your computer, then the code will still run, but it could be slower.
-4. Start by browsing the examples located in the `examples/` folder. These same examples can also be seen [here](/examples/).
+4. Start by browsing the examples located in the `examples/` folder. These same examples can also be seen [here]({{ site.baseurl }}/examples/).
 
 
 #### Installation Notes
