@@ -25,15 +25,15 @@ A set of N interacting charge particles can be described by the [Hamiltonian](1)
 
 </div>
 <div class="medium-5 columns t30">
-<img src="/images/eq1.png">
-<img src="/images/eq2.png">
-<img src="/images/eq34.png">
+<img src="{{ site.urlimg }}eq1.png">
+<img src="{{ site.urlimg }}eq2.png">
+<img src="{{ site.urlimg }}eq34.png">
 </div>
 </div>
 
 <div class="row">
 <div class="medium-5 columns t30">
-<img src="/images/interactionPotential.png">
+<img src="{{ site.urlimg }}interactionPotential.png">
 </div>
 
 <div class="medium-7 columns t30" markdown="1">

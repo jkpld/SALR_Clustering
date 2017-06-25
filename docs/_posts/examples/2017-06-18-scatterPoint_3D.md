@@ -53,7 +53,7 @@ view(220,31)
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\scatterPoint_3D_1.png">
+<img src="{{ site.urlimg }}\scatterPoint_3D_1.png">
 <figcaption class="text-right">
 Note the scale difference between the object heights and lateral sizes.
 </figcaption>
@@ -84,7 +84,7 @@ view(220,31)
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\scatterPoint_3D_2.png">
+<img src="{{ site.urlimg }}\scatterPoint_3D_2.png">
 <figcaption class="text-right">
 Note the scale of the objects in all three dimensions is now about the same.
 </figcaption>
@@ -231,7 +231,7 @@ view(220,31)
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\scatterPoint_3D_3.png">
+<img src="{{ site.urlimg }}\scatterPoint_3D_3.png">
 <figcaption class="text-right">
 Small black markers represent the seed-points calculated by each repetition. Large red markers represent the final seed-points.
 </figcaption>
@@ -279,7 +279,7 @@ view(220,31)
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\scatterPoint_3D_4.png">
+<img src="{{ site.urlimg }}\scatterPoint_3D_4.png">
 <figcaption class="text-right">
 Large red markers represent the final seed-points of SALR particle clustering. Large blue markers represent the results of [k-means][1] clustering. <b>SALR clustering is able to reproduce k-means clustering.</b>
 </figcaption>

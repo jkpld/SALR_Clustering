@@ -28,7 +28,7 @@ header:
 	</div><!-- /.medium-7.columns -->
 
 	<div class="medium-5 columns t30">
-    <img src="/images/clustering1.png">
+    <img src="{{ site.urlimg }}clustering1.png">
     <figcaption class="text-right">
     A distribution of data where the center of seven clusters has been found. This image is looking down on a 3D point distribution.
     </figcaption>
@@ -40,7 +40,7 @@ header:
 
 <div class="row">
 	<div class="medium-5 columns t30">
-    <img src="/images/what_is_it.gif">
+    <img src="{{ site.urlimg }}what_is_it.gif">
     <figcaption class="text-right">
     » Data distribution » confining potential (dark blue: hill, light green: valley) » model SALR particles »  particle clusters used for <a href="https://en.wikipedia.org/wiki/Voronoi_diagram">Voronoi clustering</a> »
     </figcaption>
@@ -64,7 +64,7 @@ header:
 	</div><!-- /.medium-7.columns -->
 
 	<div class="medium-5 columns t30">
-    <img src="/images/theoryIntro.svg">
+    <img src="{{ site.urlimg }}theoryIntro.svg">
 	</div><!-- /.medium-5.columns -->
 </div><!-- /.row -->
 
@@ -93,16 +93,16 @@ There are three primary advantages of using SALR clustering over other clusterin
 
 <div d="post-nav" class="row">
 <div class="small-12 text-center columns">
-<a class="button small radius next" href="/theory/">The theory &raquo;</a>
+<a class="button small radius next" href="{{ site.baseurl }}/theory/">The theory &raquo;</a>
 </div>
 </div>
 <div d="post-nav" class="row">
 <div class="small-12 text-center columns">
-<a class="button small radius next" href="/applications/">Applications &raquo;</a>
+<a class="button small radius next" href="{{ site.baseurl }}/applications/">Applications &raquo;</a>
 </div>
 </div>
 <div d="post-nav" class="row">
 <div class="small-12 text-center columns">
-<a class="button small radius next" href="/quick-start/">Getting started &raquo;</a>
+<a class="button small radius next" href="{{ site.baseurl }}/quick-start/">Getting started &raquo;</a>
 </div>
 </div>

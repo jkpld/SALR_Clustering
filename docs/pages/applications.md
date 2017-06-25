@@ -26,7 +26,7 @@ When automatically analyzing a biological image it is necessary to separate the 
 
 </div><!-- /.medium-7.columns -->
 <div class="medium-4 columns t30">
-<img src="/images/nuclei.png">
+<img src="{{ site.urlimg }}nuclei.png">
 <figcaption class="text-right">
 Example of overlapping nuclei. Red points represent the manually labeled centers of the nuclei.
 </figcaption>
@@ -47,7 +47,7 @@ The results of the comparison are in the figure above; SALR clustering is 8.2% b
 
 </div><!-- /.medium-7.columns -->
 <div class="medium-5 columns t90">
-<img src="/images/resultsComparison.svg">
+<img src="{{ site.urlimg }}resultsComparison.svg">
 <figcaption class="text-right">
 Comparison of F<sub>1</sub> versus &delta;r. The truth data used in computing F<sub>1</sub> was created by manually labeling the center of each nuclei in the images (~7800 nuclei).
 </figcaption>
@@ -72,7 +72,7 @@ The steps of applying SALR clustering to locating the centers of cell nuclei are
 
 </div><!-- /.medium-7.columns -->
 <div class="medium-5 medium-pull-7 columns t90">
-<img src="/images/animated2d.gif">
+<img src="{{ site.urlimg }}animated2d.gif">
 </div><!-- /.medium-5.columns -->
 </div><!-- /.row -->
 
@@ -87,7 +87,7 @@ In unsupervised machine learning and data mining, data often comes in the form o
 
 </div><!-- /.medium-7.columns -->
 <div class="medium-4 columns t30">
-<img src="/images/data_binning.svg">
+<img src="{{ site.urlimg }}data_binning.svg">
 <figcaption class="text-right">
 Example of binning 2D data.
 </figcaption>
@@ -109,7 +109,7 @@ The method of applying SALR clustering to scatter-point data is very similar to 
 
 </div><!-- /.medium-7.columns -->
 <div class="medium-5 medium-pull-7 columns t90">
-<img src="/images/animated5d.gif">
+<img src="{{ site.urlimg }}animated5d.gif">
 </div><!-- /.medium-5.columns -->
 </div><!-- /.row -->
 

@@ -55,7 +55,7 @@ end
 function [sections, image_thumbnail] = parse_file(file)
 
 % Get the path of the given file
-fileLocation = which(file)
+fileLocation = which(file);
 
 % Read in the file text
 fid = fopen(fileLocation);
@@ -101,7 +101,7 @@ line_type(1:header_idx-1) = [];
 
 sections = struct('title',[],'info',[],'content',[],'figure',{});
 
-fig_name = @(ii) [filesep, 'images', filesep, file, sprintf('_%d.png', ii)];
+fig_name = @(ii) ['{{ site.urlimg }}', filesep, file, sprintf('_%d.png', ii)];
 
 section_counter = 1;
 figure_counter = 0;

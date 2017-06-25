@@ -24,7 +24,7 @@ The code is separated into four groups:
 
 
 
-[c]: /core-functions/
-[s]: /setup-functions/
-[u]: /utility-functions/
-[i]: /interface-functions/
+[c]: {{ site.baseurl }}/core-functions/
+[s]: {{ site.baseurl }}/setup-functions/
+[u]: {{ site.baseurl }}/utility-functions/
+[i]: {{ site.baseurl }}/interface-functions/

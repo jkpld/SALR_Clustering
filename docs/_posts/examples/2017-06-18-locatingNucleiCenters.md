@@ -30,7 +30,7 @@ visualizeNuclei();
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\locatingNucleiCenters_1.png">
+<img src="{{ site.urlimg }}\locatingNucleiCenters_1.png">
 <figcaption class="text-right">
 Example nuclei clumps. Red markers give the true location of the nuclei centers.
 </figcaption>
@@ -141,7 +141,7 @@ visualizeNuclei(nucleiCenters);
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\locatingNucleiCenters_2.png">
+<img src="{{ site.urlimg }}\locatingNucleiCenters_2.png">
 <figcaption class="text-right">
 Example nuclei clumps. Red markers give the true location of the nuclei centers, blue markers give the computed centers by SALR clustering.
 </figcaption>
@@ -188,7 +188,7 @@ setTheme(fig,'light')
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\locatingNucleiCenters_3.png">
+<img src="{{ site.urlimg }}\locatingNucleiCenters_3.png">
 <figcaption class="text-right">
 Results using SALR clustering to find nuclei centers. In ~92% of the clumps, the correct number of nuclei were found, and at `&delta;r=3` the F<sub>1</sub> score is ~0.915.
 </figcaption>

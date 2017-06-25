@@ -68,7 +68,7 @@ view([50,35])
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\scatterPoint_5D_1.png">
+<img src="{{ site.urlimg }}\scatterPoint_5D_1.png">
  
 </div>
 </div>
@@ -211,7 +211,7 @@ view([50,35])
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\scatterPoint_5D_2.png">
+<img src="{{ site.urlimg }}\scatterPoint_5D_2.png">
 <figcaption class="text-right">
 Small black markers represent the seed-points calculated by each repetition. Large red markers represent the final seed-points.
 </figcaption>
@@ -254,7 +254,7 @@ view([50,35])
 </div>
 <div class="medium-5 columns t30">
  
-<img src="\images\scatterPoint_5D_3.png">
+<img src="{{ site.urlimg }}\scatterPoint_5D_3.png">
 <figcaption class="text-right">
 Large red markers represent the final seed-points of SALR particle clustering. Large blue markers represent the results of k-means clustering. <b>SALR clustering better locates region centers.</b>
 </figcaption>

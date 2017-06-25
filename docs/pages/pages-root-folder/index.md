@@ -20,7 +20,7 @@ widget1:
   text: 'Data clustering is prevalent in almost all areas technology and science, from identifying documents that are similar to analyzing biological images. <em>SALR particle clustering</em> is a data clustering technique for locating the centers of partially overlapping objects or distributions.'
 widget3:
   title: "Getting started"
-  url: '/getting-started'
+  url: '/quick-start'
   image: widget-github-303x182.jpg
   text: '<em>SALR particle clustering</em> is written in Matlab. Setup is as simple as downloading the <a href="https://github.com/jkpld/SALR_Clustering">repository</a> and running the included setup functions. The code is fully documented with several examples to get you started using it quickly.'
 #
@@ -34,7 +34,7 @@ widget3:
 # To change colors see sass/_01_settings_colors.scss
 #
 callforaction:
-  url: 
+  url: /
   text: View the original paper ›
   style: alert
 permalink: /index.html
