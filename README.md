@@ -6,7 +6,7 @@
 _This project is apart of the manuscript **J. Kapaldo et al. (submitted)**._
 
 
-SALR particle clustering is a simple technique for finding the centers of objects. It can be used to locate the centers of overlapping cell nuclei (see to the right), and it can be used to locate the cluster centers in scatter point data. Further details with examples can be seed at **website** and the manuscript.
+SALR particle clustering is a simple technique for finding the centers of objects. It can be used to locate the centers of overlapping cell nuclei (see to the right), and it can be used to locate the cluster centers in scatter point data. Further details with examples can be seed at the [project website](https://jkpld.github.io/SALR_Clustering/) and the manuscript.
 
 <table style="width:100%">
   <tr>
@@ -22,7 +22,7 @@ SALR particle clustering is a simple technique for finding the centers of object
 3. Run `setup.m`. This function will
     * Add the necessary files to your Matlab path.
     * Attempt to compile two C functions that will increase the program speed. If a C compiler is not found on your computer, then the code will still run, but it could be slower.
-4. Start by browsing the examples located in the `examples/` folder. These same examples can also be seed on this website >here<.
+4. Start by browsing the examples located in the `examples/` folder. These same examples can also be seed on the project website under >>[examples](https://jkpld.github.io/SALR_Clustering/examples/)<<.
 
 
 #### Installation Notes
