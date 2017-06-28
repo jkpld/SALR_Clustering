@@ -1,5 +1,19 @@
-# Data Description
-This document provides a description of the data files included as well as the format of the truth data provided.
+---
+layout: documentation
+sidebar: left
+title:  "Data documentation"
+subheadline:  "How is the data stored?"
+teaser: "This page provides a description of the data files included as well as the format of the truth data provided."
+categories:
+    - information
+tags:
+    - documentation
+permalink: /data-documentation/
+header:
+    image_fullwidth: syd-wachs-120737sm.jpg
+---
+
+_The data files discussed here can be found in the [example data](https://github.com/jkpld/SALR_Clustering/tree/master/exampleImages) folder of the [GitHub repository](https://github.com/jkpld/SALR_Clustering), or in the **Supplemental Data** of the manuscript[^1]._
 
 ## Images
 The images provided with this work are composite images formed by combining many nuclei clumps from a full-slide image. The image names follow the following convention
@@ -16,7 +30,7 @@ Example:
 
 | testImage_image_LD2P24.tif | testImage_mask_LD2P24.tif | testImage_image_LD2P24_normalized.tif |
 | :-------------: | :--: | :--: |
-| ![image](/docs/images/testImage_image_LD2P24.png) | ![mask](/docs/images/testImage_mask_LD2P24.png) | ![normalized image](/docs/images/testImage_image_LD2P24_normalized.png) |
+| ![image]({{ site.urlimg }}testImage_image_LD2P24.png) | ![mask]({{ site.urlimg }}testImage_mask_LD2P24.png) | ![normalized image]({{ site.urlimg }}testImage_image_LD2P24_normalized.png) |
 
 
 ## Truth data
@@ -28,7 +42,7 @@ where `clumpSize` is the same as above. Each `.mat` file contains a single `Nx3`
 
 Here is an example of the object numbering and format of the truth data:
 
-![truth example](/docs/images/truth_example.png)
+![truth example]({{ site.urlimg }}truth_example.png)
 
 | Obj # | y | x |
 | :---- | :-: | :-: |
@@ -44,3 +58,5 @@ Here is an example of the object numbering and format of the truth data:
 
 ## 5D data set
 The 5-dimensional data set used in the manuscript is located in the Matlab file, `damage_data_5D.mat`. This file contains a single `Nx5` array where each row is a new point and each column is a dimension. This data file is approximately 100 MB.
+
+[^1]: J. Kapaldo et al. **(submitted)**.

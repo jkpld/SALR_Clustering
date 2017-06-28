@@ -192,8 +192,10 @@
       definitions: 
       - def: "out = sizeof(in)"
     - title: "visualizeNuclei"
-      teaser: "Display 9 random nuclei clumps from the 5 test imgaes and plot the true nuclei centers."
+      teaser: "Display 9 random nuclei clumps from the 5 test images and plot the true nuclei centers."
       definitions: 
       - def: "visualizeNuclei()\nvisualizeNuclei(markers)"
 - title: "Examples"
   url: "/examples/"
+- title: "Data description"
+  url: "/data-description/"
