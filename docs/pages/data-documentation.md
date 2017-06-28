@@ -27,18 +27,17 @@ where
 * The optional flag `_normalized` at the end gives the images of the nuclei clumps after intensity normalization. _These are the images used with the previous methods we compared to in the manuscript._
 
 Example:
-
 <div class="row">
 	<div class="medium-4 columns t30">
-        <h4>testImage_image_LD2P24.tif</h4>
+        <strong>testImage_image_LD2P24.tif</strong>
         <img src="{{ site.urlimg }}testImage_image_LD2P24.png">
     </div>
     <div class="medium-4 columns t30">
-        <h4>testImage_mask_LD2P24.tif</h4>
+        <strong>testImage_mask_LD2P24.tif</strong>
         <img src="{{ site.urlimg }}testImage_mask_LD2P24.png">
     </div>
     <div class="medium-4 columns t30">
-        <h4>testImage_image_LD2P24_normalized.tif</h4>
+        <strong>testImage_image_LD2P24_normalized.tif</strong>
         <img src="{{ site.urlimg }}testImage_image_LD2P24_normalized.png">
     </div>
 </div>
@@ -53,10 +52,11 @@ where `clumpSize` is the same as above. Each `.mat` file contains a single `Nx3`
 Here is an example of the object numbering and format of the truth data:
 
 <div class="row">
-	<div class="medium-6 columns t30">
-        <img src="{{ site.urlimg }}truth_example.png">
-    </div>
-    <div class="medium-4 columns t30" markdown="1">
+<div class="medium-6 columns t30">
+    <img src="{{ site.urlimg }}truth_example.png">
+</div>
+<div class="medium-6 columns t30" markdown="1">
+
 | Obj # | y | x |
 | :---- | :-: | :-: |
 | 1 | 27 | 18 |
@@ -68,7 +68,8 @@ Here is an example of the object numbering and format of the truth data:
 | 8 | 69 | 130 |
 | 9 | 127 | 132 |
 | 9 | 123 | 118 |
-    </div>
+
+</div>
 </div>
 
 ## 5D data set
