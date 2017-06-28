@@ -45,8 +45,8 @@ try
     writeLine(fid, 'title', 'Examples', 0);
     writeLine(fid, 'url', '/examples/', 0);
     
-    writeLine(fid, 'title', 'Data description', 0);
-    writeLine(fid, 'url', '/data-description/', 0);
+    writeLine(fid, 'title', 'Data documentation', 0);
+    writeLine(fid, 'url', '/data-documentation/', 0);
 
 
 catch ME

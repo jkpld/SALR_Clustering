@@ -28,10 +28,20 @@ where
 
 Example:
 
-| testImage_image_LD2P24.tif | testImage_mask_LD2P24.tif | testImage_image_LD2P24_normalized.tif |
-| :-------------: | :--: | :--: |
-| ![image]({{ site.urlimg }}testImage_image_LD2P24.png) | ![mask]({{ site.urlimg }}testImage_mask_LD2P24.png) | ![normalized image]({{ site.urlimg }}testImage_image_LD2P24_normalized.png) |
-
+<div class="row">
+	<div class="medium-4 columns t30">
+        <h4>testImage_image_LD2P24.tif</h4>
+        <img src="{{ site.urlimg }}testImage_image_LD2P24.png">
+    </div>
+    <div class="medium-4 columns t30">
+        <h4>testImage_mask_LD2P24.tif</h4>
+        <img src="{{ site.urlimg }}testImage_mask_LD2P24.png">
+    </div>
+    <div class="medium-4 columns t30">
+        <h4>testImage_image_LD2P24_normalized.tif</h4>
+        <img src="{{ site.urlimg }}testImage_image_LD2P24_normalized.png">
+    </div>
+</div>
 
 ## Truth data
 Each nucleus from the `testImage`s has been labeled. The data is stored in the five matlab files
@@ -42,8 +52,11 @@ where `clumpSize` is the same as above. Each `.mat` file contains a single `Nx3`
 
 Here is an example of the object numbering and format of the truth data:
 
-![truth example]({{ site.urlimg }}truth_example.png)
-
+<div class="row">
+	<div class="medium-6 columns t30">
+        <img src="{{ site.urlimg }}truth_example.png">
+    </div>
+    <div class="medium-4 columns t30" markdown="1">
 | Obj # | y | x |
 | :---- | :-: | :-: |
 | 1 | 27 | 18 |
@@ -55,6 +68,8 @@ Here is an example of the object numbering and format of the truth data:
 | 8 | 69 | 130 |
 | 9 | 127 | 132 |
 | 9 | 123 | 118 |
+    </div>
+</div>
 
 ## 5D data set
 The 5-dimensional data set used in the manuscript is located in the Matlab file, `damage_data_5D.mat`. This file contains a single `Nx5` array where each row is a new point and each column is a dimension. This data file is approximately 100 MB.

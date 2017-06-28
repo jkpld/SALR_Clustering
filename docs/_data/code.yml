@@ -197,5 +197,5 @@
       - def: "visualizeNuclei()\nvisualizeNuclei(markers)"
 - title: "Examples"
   url: "/examples/"
-- title: "Data description"
-  url: "/data-description/"
+- title: "Data documentation"
+  url: "/data-documentation/"
