@@ -15,8 +15,8 @@ where
 As an example
 
 | testImage_image_LD2P24.tif | testImage_mask_LD2P24.tif | testImage_image_LD2P24_normalized.tif |
-| --------------- |
-| ![image](testImage_image_LD2P24.tif) | ![mask](testImage_mask_LD2P24.tif) | ![normalized image](testImage_image_LD2P24_normalized.tif)
+| --------------- | ---- | ---- |
+| ![image](/docs/images/testImage_image_LD2P24.png) | ![mask](/docs/images/testImage_mask_LD2P24.png) | ![normalized image](/docs/images/testImage_image_LD2P24_normalized.png) |
 
 
 ## Truth data
@@ -31,7 +31,7 @@ As an example of the object numbering and format of the truth data, please see t
 ![truth example](/docs/images/truth_example.png)
 
 | Obj # | y | x |
-| ------------- |
+| :---- | :-: | :-: |
 | 1 | 27 | 18 |
 | 1 | 23 | 32 |
 | 2 | 79 | 19 |
