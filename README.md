@@ -59,4 +59,4 @@ figure, imshow(BW), hold on;
 plot(Info.r0(:,2),Info.r0(:,1),'.b','MarkerSize',3)
 plot(seedPoints(:,2),seedPoints(:,1),'.r','MarkerSize',12)
 ```
-<img width="300" src="docs/images/readme_img.png"></td>
+<img width="300" src="docs/images/readme_img.png">
