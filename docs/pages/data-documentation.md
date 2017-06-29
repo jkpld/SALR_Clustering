@@ -2,7 +2,7 @@
 layout: documentation
 sidebar: left
 title:  "Data documentation"
-subheadline:  "How is the data stored?"
+subheadline:  "Example data"
 teaser: "This page provides a description of the data files included as well as the format of the truth data provided."
 categories:
     - information
