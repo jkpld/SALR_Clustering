@@ -4,7 +4,7 @@ This document provides a description of the data files included as well as the f
 ## Images
 The images provided with this work are composite images formed by combining many nuclei clumps from a full-slide image. The image names follow the following convention
 
-`testImage_(image|mask)_LD(clumpSize)P24[_normalized].tif`
+`(image|mask)_(clumpSize)[_normalized].tif`
 
 where
 * The `image` files contain the actual images of the nuclei clumps without modification.
@@ -14,15 +14,15 @@ where
 
 Example:
 
-| testImage_image_LD2P24.tif | testImage_mask_LD2P24.tif | testImage_image_LD2P24_normalized.tif |
+| image_2.tif | mask_2.tif | image_2_normalized.tif |
 | :-------------: | :--: | :--: |
-| ![image](/docs/images/testImage_image_LD2P24.png) | ![mask](/docs/images/testImage_mask_LD2P24.png) | ![normalized image](/docs/images/testImage_image_LD2P24_normalized.png) |
+| ![image](/docs/images/image_2.png) | ![mask](/docs/images/mask_2.png) | ![normalized image](/docs/images/image_2_normalized.png) |
 
 
 ## Truth data
 Each nucleus from the `testImage`s has been labeled. The data is stored in the five matlab files
 
-`markedCenters_LD(clumpSize)P24.mat`
+`markedCenters_(clumpSize).mat`
 
 where `clumpSize` is the same as above. Each `.mat` file contains a single `Nx3` array. Each row in the array corresponds to a labeled nuclei center. The first column gives the object number to which the nuclei belongs, the second column gives the y-coordinate (vertical axis), and the third column gives the x-coordinate (horizontal axis). The objects are numbered starting from in the upper left corner of the image and increasing down the columns. _This is the same numbering as obtained using Matlab's `bwlabel()`, or a similar function._
 

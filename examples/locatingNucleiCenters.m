@@ -7,7 +7,7 @@
 %% Create helpers and visualize nuclei clumps
 
 % Helper function for reading in mask images.
-load_mask = @(n) imread(['exampleImages\testImage_mask_LD' n 'P24.tif']);
+load_mask = @(n) imread(['exampleImages\mask_' n '.tif']);
 
 % Names of the trials - number corresponds to the normalized integrated
 % brightness of the nuclei clump.

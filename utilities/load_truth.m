@@ -20,7 +20,7 @@ function [truth, nuclei_per_object] = load_truth(trial_str)
         error('load_truth:unknownTrial','Unknown trial. Allowed trials are ''2'', ''3'', ''4'', ''5'', or ''67''.')
     end
     
-    truth = load(['exampleImages\markedCenters_LD' trial_str 'P24']);
+    truth = load(['exampleImages\markedCenters_' trial_str '']);
     truth_fields = fieldnames(truth);
     truth = truth.(truth_fields{1});
     

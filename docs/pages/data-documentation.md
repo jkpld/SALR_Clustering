@@ -18,7 +18,7 @@ _The data files discussed here can be found in the [example data](https://github
 ## Images
 The images provided with this work are composite images formed by combining many nuclei clumps from a full-slide image. The image names follow the following convention
 
-`testImage_(image|mask)_LD(clumpSize)P24[_normalized].tif`
+`(image|mask)_(clumpSize)[_normalized].tif`
 
 where
 * The `image` files contain the actual images of the nuclei clumps without modification.
@@ -29,23 +29,23 @@ where
 Example:
 <div class="row">
 	<div class="medium-4 columns t30">
-        <strong>testImage_image_LD2P24.tif</strong>
-        <img src="{{ site.urlimg }}testImage_image_LD2P24.png">
+        <strong>image_2.tif</strong>
+        <img src="{{ site.urlimg }}image_2.png">
     </div>
     <div class="medium-4 columns t30">
-        <strong>testImage_mask_LD2P24.tif</strong>
-        <img src="{{ site.urlimg }}testImage_mask_LD2P24.png">
+        <strong>mask_2.tif</strong>
+        <img src="{{ site.urlimg }}mask_2.png">
     </div>
     <div class="medium-4 columns t30">
-        <strong>testImage_image_LD2P24_normalized.tif</strong>
-        <img src="{{ site.urlimg }}testImage_image_LD2P24_normalized.png">
+        <strong>image_2_normalized.tif</strong>
+        <img src="{{ site.urlimg }}image_2_normalized.png">
     </div>
 </div>
 
 ## Truth data
 Each nucleus from the `testImage`s has been labeled. The data is stored in the five matlab files
 
-`markedCenters_LD(clumpSize)P24.mat`
+`markedCenters_(clumpSize).mat`
 
 where `clumpSize` is the same as above. Each `.mat` file contains a single `Nx3` array. Each row in the array corresponds to a labeled nuclei center. The first column gives the object number to which the nuclei belongs, the second column gives the y-coordinate (vertical axis), and the third column gives the x-coordinate (horizontal axis). The objects are numbered starting from in the upper left corner of the image and increasing down the columns. _This is the same numbering as obtained using Matlab's `bwlabel()`, or a similar function._
 
