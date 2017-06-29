@@ -10,7 +10,7 @@
 
 %% Load data
 
-dat = load('exampleImages\damage_data_5D.mat');
+dat = load('exampleData\damage_data_5D.mat');
 dat = dat.dat;
 
 % Scale by stddev

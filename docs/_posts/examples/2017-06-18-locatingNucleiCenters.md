@@ -17,7 +17,7 @@ image:
  
 {% highlight matlab %}
 % Helper function for reading in mask images.
-load_mask = @(n) imread(['exampleImages\mask_' n '.tif']);
+load_mask = @(n) imread(['exampleData\mask_' n '.tif']);
 
 % Names of the trials - number corresponds to the normalized integrated
 % brightness of the nuclei clump.

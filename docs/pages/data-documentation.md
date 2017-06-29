@@ -13,7 +13,7 @@ header:
     image_fullwidth: syd-wachs-120737sm.jpg
 ---
 
-_The data files discussed here can be found in the [example data](https://github.com/jkpld/SALR_Clustering/tree/master/exampleImages) folder of the [GitHub repository](https://github.com/jkpld/SALR_Clustering), or in the **Supplemental Data** of the manuscript[^1]._
+_The data files discussed here can be found in the [example data](https://github.com/jkpld/SALR_Clustering/tree/master/exampleData) folder of the [GitHub repository](https://github.com/jkpld/SALR_Clustering), or in the **Supplemental Data** of the manuscript[^1]._
 
 ## Images
 The images provided with this work are composite images formed by combining many nuclei clumps from a full-slide image. The image names follow the following convention

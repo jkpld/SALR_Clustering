@@ -103,7 +103,7 @@ end
 function [im, truth, markers] = getTestObject(n,num, markers)
 
 
-load_img = @(n) imread(['exampleImages\image_' n '.tif']);
+load_img = @(n) imread(['exampleData\image_' n '.tif']);
 truth = load_truth(n);
 I = load_img(n);
 

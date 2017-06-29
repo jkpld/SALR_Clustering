@@ -18,7 +18,7 @@ end
 
 % Read in image ----------------------------------------------------------
 
-pth = 'exampleImages\';
+pth = 'exampleData\';
 I = imread([pth, 'testNuclei_image.tif']);
 BW = imread([pth, 'testNuclei_mask.tif']);
 declumpedBW = imread([pth, 'testNuclei_segmentedMask.tif']);
