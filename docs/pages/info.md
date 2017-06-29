@@ -16,7 +16,7 @@ For more details about SALR particle clustering please see the original paper
 [**J. Kapaldo, X. Han, and D. Mery, (submitted)**][4]
 
 
-[1]: /what-is-it/
-[2]: /code/
-[3]: /examples/
+[1]: {{ site.baseurl }}/what-is-it/
+[2]: {{ site.baseurl }}/code/
+[3]: {{ site.baseurl }}/examples/
 [4]: #
