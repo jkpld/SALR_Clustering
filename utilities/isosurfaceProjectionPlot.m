@@ -264,7 +264,8 @@ sz = size(n);
 
 % Compute ticks and tick labels.
 for i = 3:-1:1
-    c = cents{i};
+    c = double(cents{i});
+    
     c1 = fix(c(1));
     c2 = fix(c(end));
 
