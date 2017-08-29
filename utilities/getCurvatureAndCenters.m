@@ -66,15 +66,18 @@ G = G(:);
 dG = dG(:);
 ddG = ddG(:);
 
+bndry(end,:) = [];
+bndry = padarray(bndry,[filtSize,0],'circular');
+removePad = @(x) x( (filtSize+1) : (size(x,1)-filtSize), :);
 
 % Get boundary curvature
-bndrys = imfilter(bndry,G,'circular','conv','same');
-d_bndry = imfilter(bndrys,dG,'circular','conv','same');
-dd_bndry = imfilter(bndrys,ddG,'circular','conv','same');
+bndrys = imfilter(bndry,G,'conv');
+d_bndry = imfilter(bndrys,dG,'conv');
+dd_bndry = imfilter(bndrys,ddG,'conv');
 
-bndry(end,:) = [];
-d_bndry(end,:) = [];
-dd_bndry(end,:) = [];
+bndry = removePad(bndry);
+d_bndry = removePad(d_bndry);
+dd_bndry = removePad(dd_bndry);
 
 kappa = (d_bndry(:,1).*dd_bndry(:,2) - d_bndry(:,2).*dd_bndry(:,1))./(sum(d_bndry.^2,2).^(3/2));
 
