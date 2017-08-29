@@ -25,7 +25,7 @@ if ~isempty(Object_Of_Interest)
         if isempty(varargin{i})
             varargout{i} = [];
         else
-            varargout{i} = varargin{i}(options.Object_Of_Interest);
+            varargout{i} = varargin{i}(Object_Of_Interest);
         end
     end
 else
