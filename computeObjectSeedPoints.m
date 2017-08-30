@@ -333,7 +333,7 @@ function [binned_data, D, data_limits, r0set, modifier, useCentroid, objNumber, 
 
     % Get call stack to see if calling function is computNucleiCenters
     st = dbstack;
-    if currently_in_parallel || any(contains({st.name},'computeNucleiCenters'))
+    if currently_in_parallel || any(contains({st.name},'nuclei','IgnoreCase',true))
         verbose = false;
     end
     
