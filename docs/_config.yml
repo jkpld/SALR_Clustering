@@ -214,7 +214,7 @@ socialmedia:
 #
 # used in _includes/comments
 
-disqus_shortname: feelingresponsive
+disqus_shortname:
 
 
 #      _____
