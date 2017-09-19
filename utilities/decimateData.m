@@ -1,4 +1,4 @@
-function dcmt = decimateData(x,y,z,varargin)
+function [dcmt, options] = decimateData(x,y,z,varargin)
 % DECIMATEDATA  Bin 2D spatial data and return a single value for each bin.
 %
 % dcmt = decimateData(x,y,z)
@@ -34,8 +34,8 @@ function dcmt = decimateData(x,y,z,varargin)
 % Default is 'rectangular'.
 %
 % reductionMethod - The method of reducing all data in one spatial bin to a
-% single point. Available methods are 'mean', 'median', 'mode',
-% 'percentile', 'std', 'mad', 'density', or a custom function handle that
+% single point. Available methods are 'min','max','mean','median','mode',
+% 'percentile','std','mad','density', or a custom function handle that
 % takes in an array and outputs a single number. If mode is selected, then
 % the data is first rounded to the nearest MAD/50, where MAD ('mad') is the
 % median absolute deviation. If percentile is selected then,
@@ -43,14 +43,17 @@ function dcmt = decimateData(x,y,z,varargin)
 % parameter 'percentValue'. If density is selected then the z array is not
 % used and the density of the x, y data is computed. Default is median.
 %
-% cleanHexagonData - boolean, only applicable if 'gridType' is 'hexagonal'.
-%                    If true, then hexagons without any data points inside
-%                    will be removed. Default is false.
+% defaultValue - The default value when a grid element does not have any
+% points in it. Default is 0 when reductionMethod is 'density' and NaN
+% otherwise. 
 %
-%                    This option is only given for hexagonal, since the
-%                    data will need to be interpolated with a scattered
-%                    interpolant anyway. In rectangular grids, you cannot
-%                    remove points and still use a griddedInterpolant.
+% cleanHexagonData - logical, only applicable if 'gridType' is 'hexagonal'.
+% If true, then hexagons without any data points inside will be removed.
+% Default is false.
+%
+%    This option is only given for hexagonal, since the data will need to
+%    be interpolated with a scattered interpolant anyway. In rectangular
+%    grids, you cannot remove points and still use a griddedInterpolant.
 %
 % generatePlots - boolean. If true, then the decimated data will be
 % plotted. Default is false.
@@ -99,13 +102,17 @@ z = double(z);
 % Get input values
 p = inputParser;
 p.FunctionName = 'decimateData';
+p.KeepUnmatched = 1;
+
+tmp = rand(1);
 
 addParameter(p,'binSize',0.25,@(t) numel(t) <= 2 && all(t > 0));
-addParameter(p,'reductionMethod','median',@(x) any(strcmpi(x,{'mean','median','mode','percentile','std','mad','density'})) || isa(x,'function_handle'))
+addParameter(p,'reductionMethod','median',@(x) any(strcmpi(x,{'min','max','mean','median','mode','percentile','std','mad','density'})) || isa(x,'function_handle'))
 addParameter(p,'generatePlots',false,@(t) islogical(t) || (t==0 || t == 1) );
 addParameter(p,'percentValue',50,@(t) numel(t) == 1 && t >= 0 && t <= 100 );
 addParameter(p,'gridType','rectangular',@(x) any(strcmpi(x,{'rectangular','hexagonal'})));
 addParameter(p,'cleanHexagonData',false, @(x) (x==1 || x==0));
+addParameter(p,'defaultValue',tmp);
 
 parse(p,varargin{:})
 
@@ -115,6 +122,19 @@ generatePlots = p.Results.generatePlots;
 percentValue = p.Results.percentValue;
 gridType = lower(p.Results.gridType);
 cleanHexagonData = p.Results.cleanHexagonData;
+defaultValue = p.Results.defaultValue;
+
+if isequal(defaultValue,tmp)
+    if strcmp(reductionMethod,'density')
+        defaultValue = 0;
+    else
+        defaultValue = nan;
+    end
+end
+
+if nargout > 1
+    options = p.Results;
+end
 
 switch gridType
     case 'rectangular'
@@ -140,7 +160,7 @@ switch gridType
         end
 
         hx = cart2hex([x,y],voxelSizes(1),voxelSizes(2));
-
+        
         xEdges = min(hx(:,1))-0.5:max(hx(:,1))+0.5;
         yEdges = min(hx(:,2))-0.5:max(hx(:,2))+0.5;
         xCents = xEdges(1:end-1) + diff(xEdges)/2;
@@ -157,24 +177,28 @@ end
 
 if ischar(reductionMethod)
     switch reductionMethod
+        case 'min'
+            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@min,defaultValue);
+        case 'max'
+            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@max,defaultValue);
         case 'median'
-            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@median,nan);
+            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@median,defaultValue);
         case 'mode'
             MAD = mad(z,1)/50;
-            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@(x) mode(round(x/MAD)*MAD),nan);
+            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@(x) mode(round(x/MAD)*MAD),defaultValue);
         case 'mean'
-            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@mean,nan);
+            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@mean,defaultValue);
         case 'percentile'
-            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@(x) prctile(x,percentValue),nan);
+            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@(x) prctile(x,percentValue),defaultValue);
         case 'std'
-            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@std,nan);
+            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@std,defaultValue);
         case 'mad'
-            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@(x) mad(x,1),nan);
+            Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),@(x) mad(x,1),defaultValue);
         case 'density'
-            Z = accumarray(bin(all(bin>0,2),:),1,size(X),[],0);
+            Z = accumarray(bin(all(bin>0,2),:),1,size(X),[],defaultValue);
     end
 else
-    Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),reductionMethod,nan);
+    Z = accumarray(bin(all(bin>0,2),:),z(all(bin>0,2)),size(X),reductionMethod,defaultValue);
 end
 
 switch gridType
@@ -187,15 +211,28 @@ switch gridType
     case 'hexagonal'
 
         Z = Z(:);
-        sizeX = size(X);
         [X,Y] = hex2cart([X(:),Y(:)],voxelSizes(1),voxelSizes(2));
 
-
+        % remove grid elements outside of data range
+        toRemove = X < min(x) - 1.5*voxelSizes(1) | X > max(x) + 1.5*voxelSizes(1) | ...
+            Y < min(y) - 1.5*prod(voxelSizes) | Y > max(y) + 1.5*prod(voxelSizes);
+        Z(toRemove) = [];
+        X(toRemove) = [];
+        Y(toRemove) = [];
+        
         if cleanHexagonData
             if strcmp(reductionMethod,'density')
                 toRemove = ~Z;
             else
-                toRemove = isnan(Z);
+                if iscell(Z)
+                    toRemove = cellfun(@isempty, Z);
+                else
+                    if isnan(defaultValue)
+                        toRemove = isnan(Z);
+                    else
+                        toRemove = Z == defaultValue;
+                    end
+                end
                 toRemove = toRemove(:);
 %                 n = accumarray(bin(all(bin>0,2),:),1,sizeX,[],0);
 %                 toRemove = ~n(:);
@@ -204,7 +241,6 @@ switch gridType
             Y(toRemove) = [];
             Z(toRemove) = [];
         end
-
 end
 
 dcmt.X = X;
@@ -217,7 +253,7 @@ if generatePlots
             figure
             surface(X,Y,Z)
         case 'hexagonal'
-            hexplot([X,Y],voxelSizes(1),voxelSizes(2),'colorData',Z,'sizeData','sameAsColor','colorScale','linear','sizeScale','none','maxHexSize',1);
+            hexplot([X,Y],voxelSizes(1),voxelSizes(2),'colorData',Z,'sizeData','sameAsColor','colorScale','log','sizeScale','none','maxHexSize',1);
     end
 
     if ischar(reductionMethod)
