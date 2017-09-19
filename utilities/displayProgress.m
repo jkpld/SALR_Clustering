@@ -12,6 +12,7 @@ classdef displayProgress < handle
         active = true
         is_parallel = false
         number_of_iterations
+        name
     end
 
     properties (SetAccess = private)
@@ -36,12 +37,14 @@ classdef displayProgress < handle
             addOptional(p,'number_of_displays', 5, @(t) validateattributes(t,{'numeric'},{'integer','scalar','positive'}))
             addOptional(p,'active', obj.active, @(t) t==0 || t==1)
             addOptional(p,'is_parallel', obj.is_parallel, @(t) t==0 || t==1)
+            addParameter(p,'name','Iteration',@(t) ischar(t))
             parse(p,varargin{:})
 
             N = p.Results.number_of_iterations;
             K = p.Results.number_of_displays;
             active = p.Results.active;
             is_parallel = p.Results.is_parallel;
+            obj.name = p.Results.name;
 
             obj.number_of_iterations = N;
             obj.iteration = 0;
@@ -111,7 +114,7 @@ classdef displayProgress < handle
             expectedTime = currentTime * obj.number_of_iterations / obj.iteration;
 
             if any(obj.iteration == obj.generate_display_at)
-                str = sprintf('%s >> Iteration %d/%d (%0.2f/%0.2f)...\n',datestr(now,31),obj.iteration,obj.number_of_iterations,currentTime,expectedTime);
+                str = sprintf('%s >> %s %d/%d (%0.2f/%0.2f)...\n',datestr(now,31),obj.name,obj.iteration,obj.number_of_iterations,currentTime,expectedTime);
 %                 fprintf('%s', str);
                 
                 % Comment out the above fprintf statement and uncomment the
