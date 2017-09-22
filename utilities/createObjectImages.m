@@ -47,7 +47,7 @@ for i = 1:numel(varargin)
     if isempty(varargin{i})
         varargout{i} = [];
     else
-        tmp = zeros(maxR);
+        tmp = zeros(maxR,'like',varargin{i});
         tmp(inds) = varargin{i};
         varargout{i} = tmp;
     end
