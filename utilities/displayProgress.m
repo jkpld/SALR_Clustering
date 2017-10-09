@@ -55,7 +55,7 @@ classdef displayProgress < handle
             end
             
             obj.generate_display_at = showAt;
-            obj.active = active;
+            obj.active = logical(active);
             obj.is_parallel = is_parallel;
         end
         
