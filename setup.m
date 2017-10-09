@@ -39,13 +39,13 @@ end
 
 if have_compiler
     try
-        if ~exist(fullfile(path,'utilities',['interp2mex.' mexext]),'file')
+%         if ~exist(fullfile(path,'utilities',['interp2mex.' mexext]),'file')
             mex(fullfile(path,'utilities','interp2mex.c'),'-outdir',fullfile(path,'utilities'),'-silent')
-        end
+%         end
         fprintf('...Compiled interp2mex.c\n')
-        if ~exist(fullfile(path,'utilities',['nakeinterp1.' mexext]),'file')
+%         if ~exist(fullfile(path,'utilities',['nakeinterp1.' mexext]),'file')
             mex(fullfile(path,'utilities','nakeinterp1.c'),'-outdir',fullfile(path,'utilities'),'-silent')
-        end
+%         end
         fprintf('...Compiled nakeinterp1.c\n')
     catch % ME
     %     rethrow(ME)
@@ -57,7 +57,7 @@ end
 folder = fullfile(path,'utilities');
 d = dir(folder);
 names = {d.name};
-if ~any(strncmp('salr_pdistmex',names,11))
+% if ~any(strncmp('salr_pdistmex',names,11))
     folder = fullfile(matlabroot,'toolbox','stats','stats','private');
     d = dir(folder);
     names = {d.name};
@@ -68,7 +68,7 @@ if ~any(strncmp('salr_pdistmex',names,11))
     end
 
     copyfile(fullfile(folder,names{nameIdx}),fullfile(path,'utilities',['salr_' names{nameIdx}]))
-end
+% end
 fprintf('...Added pdistmex\n')
 
 % Add subfolders of current location to path -----------------------------
