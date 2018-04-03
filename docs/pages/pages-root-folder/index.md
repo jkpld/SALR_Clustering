@@ -34,7 +34,7 @@ widget3:
 # To change colors see sass/_01_settings_colors.scss
 #
 callforaction:
-  url: /
+  url: '/images/manuscript.pdf'
   text: View the original paper ›
   style: alert
 permalink: /index.html
