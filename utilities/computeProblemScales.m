@@ -84,3 +84,10 @@ problem_scales = struct('grid_spacing', grid_spacing, ...
                         'grid_to_solver', grid_to_solver);
 
 end
+
+
+%-%
+%-% For God so loved the world that he gave his one and only Son, that
+%-% whoever believes in him shall not perish but have eternal life. (John
+%-% 3:16)
+%-%

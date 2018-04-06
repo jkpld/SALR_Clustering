@@ -59,3 +59,10 @@ end
 % 2016-10-29 : changed name to createObjectImages, renamed some inputs.
 % 2017-01-19 : rewrote to include arbitrary number of pixel value lists
 % using varargin
+
+
+%-%
+%-% For God so loved the world that he gave his one and only Son, that
+%-% whoever believes in him shall not perish but have eternal life. (John
+%-% 3:16)
+%-%

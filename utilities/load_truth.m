@@ -26,3 +26,9 @@ function [truth, nuclei_per_object] = load_truth(trial_str)
     
     nuclei_per_object = accumarray(truth(:,1),1,[],[],0);
 end
+
+
+%-%
+%-% This is love: not that we loved God, but that he loved us and sent his
+%-% Son as an atoning sacrifice for our sins. (1 John 4:10)
+%-%

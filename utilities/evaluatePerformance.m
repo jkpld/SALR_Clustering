@@ -59,3 +59,8 @@ R = TP./TPplusFN; % recall
 F1 = 2*P.*R./(P+R); % F1 score
 
 end
+
+%-%
+%-% This is love: not that we loved God, but that he loved us and sent his
+%-% Son as an atoning sacrifice for our sins. (1 John 4:10)
+%-%

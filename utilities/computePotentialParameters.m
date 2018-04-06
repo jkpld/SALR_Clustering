@@ -67,3 +67,9 @@ Vint = 1./(r+0.2) - x(1)*exp(-(r-x(2)).^2/(2*x(3)^2));
 f = sum((([minV,r(minVind),r(extentInd+minVind-1)] - y)./y).^2,2);
 
 end
+
+%-%
+%-% But he was pierced for our transgressions, he was crushed for our
+%-% iniquities; the punishment that brought us peace was on him, and by
+%-% his wounds we are healed. (Isaiah 53:5)
+%-%

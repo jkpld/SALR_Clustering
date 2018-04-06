@@ -734,3 +734,10 @@ end
 function out = encodePotentialIdx(depth_idx,center_idx,extent_idx)
 out = uint32(depth_idx + bitshift(center_idx,8) + bitshift(extent_idx,16));
 end
+
+
+%-%
+%-% But he was pierced for our transgressions, he was crushed for our
+%-% iniquities; the punishment that brought us peace was on him, and by
+%-% his wounds we are healed. (Isaiah 53:5)
+%-%

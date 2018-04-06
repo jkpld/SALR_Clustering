@@ -78,3 +78,8 @@ dat = [X(nIdx),Y(nIdx),Z(nIdx)];
 dat = dat + 0.2*randn(N,3).*std(dat);
 
 end
+
+%-%
+%-% This is love: not that we loved God, but that he loved us and sent his
+%-% Son as an atoning sacrifice for our sins. (1 John 4:10)
+%-%

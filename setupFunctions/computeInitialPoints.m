@@ -453,3 +453,9 @@ function [r0_set, varargout] = r0set_uniformRandom(r0set, sz, lattice_constant, 
         varargout{1} = Info;
     end
 end
+
+
+%-%
+%-% This is love: not that we loved God, but that he loved us and sent his
+%-% Son as an atoning sacrifice for our sins. (1 John 4:10)
+%-%
