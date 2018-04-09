@@ -8,15 +8,15 @@ function setup
 
 % Check dependancies -----------------------------------------------------
 if verLessThan('matlab','9.1')
-    error('seed_point_detection:setup','The seed_point_detection code requires at least Matlab 2016b because implicit expansion is heavily used.')
+    error('SALR_Clustering:setup','The SALR_Clustering code requires at least Matlab 2016b because implicit expansion is heavily used.')
 end
 verImg = ver('images');
 if isempty(verImg)
-    error('seed_point_detection:setup','The Image Processing Toolbox is required but not found.')
+    error('SALR_Clustering:setup','The Image Processing Toolbox is required but not found.')
 end
 verStats = ver('stats');
 if isempty(verStats)
-    error('seed_point_detection:setup','The Statistics and Machine Learning Toolbox is required but not found.')
+    error('SALR_Clustering:setup','The Statistics and Machine Learning Toolbox is required but not found.')
 end
 
 fprintf('Setting up...\n')
@@ -33,7 +33,7 @@ try
     evalc('mex(''-setup'',''c'')');
 catch % ME
     have_compiler = false;
-    warning('seed_point_detection:setup','There is no supported C compiler installed.\nThe code will still run; however, it could be slower for 2D data without the compiled mex functions.')
+    warning('SALR_Clustering:setup','There is no supported C compiler installed.\nThe code will still run; however, it could be slower for 2D data without the compiled mex functions.')
 %     rethrow(ME)
 end
 
@@ -49,7 +49,7 @@ if have_compiler
         fprintf('...Compiled nakeinterp1.c\n')
     catch % ME
     %     rethrow(ME)
-        warning('seed_point_detection:setup','There was an error compiling the required C functions ''interp2mex.c'' and ''nakeinterp1.c''. Make sure that the function ''mex'' is coorectly setup to compile C code.\nThe code will still run; however, it could be slower for 2D data without the compiled mex functions.')
+        warning('SALR_Clustering:setup','There was an error compiling the required C functions ''interp2mex.c'' and ''nakeinterp1.c''. Make sure that the function ''mex'' is coorectly setup to compile C code.\nThe code will still run; however, it could be slower for 2D data without the compiled mex functions.')
     end
 end
 
@@ -64,7 +64,7 @@ names = {d.name};
     nameIdx = strncmp('pdistmex',names,8);
 
     if ~any(nameIdx)
-        error('seed_point_detection:setup','File ''pdistmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''salr_pdistmex.%s''.',folder,mexext)
+        error('SALR_Clustering:setup','File ''pdistmex'' was not found in\n %s\nThis file is required. Try manually locating it; if found copy into the utilities folder and rename it to ''salr_pdistmex.%s''.',folder,mexext)
     end
 
     copyfile(fullfile(folder,names{nameIdx}),fullfile(path,'utilities',['salr_' names{nameIdx}]))
