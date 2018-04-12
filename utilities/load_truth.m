@@ -1,3 +1,4 @@
+
 function [truth, nuclei_per_object] = load_truth(trial_str)
 % LOAD_TRUTH Load truth data about the nuclei center locations.
 %

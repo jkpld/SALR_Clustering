@@ -7,7 +7,7 @@
 layout: frontpage
 header:
   image_fullwidth: page_header.svg
-  caption: "The content on this site summarizes work presented in <strong>J. Kapaldo et al., (submitted)</strong>."
+  caption: "The content on this site summarizes work presented in <a href="https://arxiv.org/abs/1804.04071"><strong>J. Kapaldo et al., (submitted)</strong></a>."
 widget2:
   title: "Applications"
   url: '/applications/'
@@ -34,7 +34,7 @@ widget3:
 # To change colors see sass/_01_settings_colors.scss
 #
 callforaction:
-  url: '/images/manuscript.pdf'
+  url: 'https://arxiv.org/abs/1804.04071'
   text: View the original paper ›
   style: alert
 permalink: /index.html

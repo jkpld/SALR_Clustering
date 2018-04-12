@@ -19,4 +19,4 @@ For more details about SALR particle clustering please see the original paper
 [1]: {{ site.baseurl }}/what-is-it/
 [2]: {{ site.baseurl }}/code/
 [3]: {{ site.baseurl }}/examples/
-[4]: {{ site.baseurl }}/images/manuscript.pdf
+[4]: https://arxiv.org/abs/1804.04071
