@@ -6,7 +6,7 @@
 _This project is apart of the manuscript **[J. Kapaldo et al. (submitted)](https://arxiv.org/abs/1804.04071)**._
 
 
-SALR particle clustering is a simple technique for finding the centers of objects. It can be used to locate the centers of overlapping cell nuclei (see to the right), and it can be used to locate the cluster centers in scatter point data. Further details with examples can be seed at the [project website](https://jkpld.github.io/SALR_Clustering/) and the [manuscript](https://arxiv.org/abs/1804.04071).
+SALR particle clustering is a simple technique for finding the centers of objects. It can be used to locate the centers of overlapping cell nuclei (see to the right), and it can be used to locate the cluster centers in scatter point data. Further details with examples can be seed at the **[project website](https://jkpld.github.io/SALR_Clustering/)** and the [manuscript](https://arxiv.org/abs/1804.04071).
 
 <table style="width:100%">
   <tr>
