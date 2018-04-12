@@ -61,7 +61,7 @@ The answer comes by analyzing the force on the particles in the simulation: the 
 
 [1]: https://en.wikipedia.org/wiki/Hamiltonian_mechanics
 
-[^1]: J. Kapaldo, X. Han, and D. Mary. **(submitted)**
+[^1]: J. Kapaldo, X. Han, and D. Mary, **[(submitted)](https://arxiv.org/abs/1804.04071)**
 [^2]: F. Bolton and U. Rössler, [Superlattices and Microstructures 13, 139 (1993)](http://dx.doi.org/10.1006/spmi.1993.1026).
 [^3]: S. Mossa, F. Sciortino, P. Tartaglia, and E. Zaccarelli, [Langmuir 20, 10756 (2004)](http://dx.doi.org/10.1021/la048554t).
 [^4]: F. Sciortino, S. Mossa, E. Zaccarelli, and P. Tartaglia, [Physical Review Letters 93, 5 (2004)](http://dx.doi.org/10.1103/PhysRevLett.93.055701).

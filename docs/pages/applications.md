@@ -119,7 +119,7 @@ The method of applying SALR clustering to scatter-point data is very similar to 
 
 
 
-[^1]: J. Kapaldo, X. Han, and D. Mary. **(submitted)**.
+[^1]: J. Kapaldo, X. Han, and D. Mary, **[(submitted)](https://arxiv.org/abs/1804.04071)**.
 [^Qi]:  X. Qi, F. Xing, D. J. Foran, and L. Yang, [IEEE Transactions on Biomedical Engineering 59, 754 (2012)](http://dx.doi.org/ 10.1109/TBME.2011.2179298).
 [^Zhang]: X. Zhang, H. Su, L. Yang, and S. Zhang, [Proceedings of the IEEE Computer Society Conference on Computer Vision and Pattern Recognition 07-12-June, 5361 (2015)](http://dx.doi.org/ 10.1109/CVPR.2015.7299174).
 [^Parvin]: B. Parvin, Q. Yang, J. Han, H. Chang, B. Rydberg, and M. H. Barcellos-Hoff, [IEEE Transactions on Image Processing 16, 615 (2007)](http://dx.doi.org/ 10.1109/TIP.2007.891154).

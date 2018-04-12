@@ -75,4 +75,4 @@ Here is an example of the object numbering and format of the truth data:
 ## 5D data set
 The 5-dimensional data set used in the manuscript is located in the Matlab file, `damage_data_5D.mat`. This file contains a single `Nx5` array where each row is a new point and each column is a dimension. This data file is approximately 100 MB.
 
-[^1]: J. Kapaldo et al. **(submitted)**.
+[^1]: J. Kapaldo et al., **[(submitted)](https://arxiv.org/abs/1804.04071)**.

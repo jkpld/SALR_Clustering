@@ -87,7 +87,7 @@ There are three primary advantages of using SALR clustering over other clusterin
 
 [^2]: D. Comaniciu and P. Meer, <a href='http://dx.doi.org/10.1109/34.1000236'>IEEE Transactions on Pattern Analysis and Machine Intelligence 24, 603 (2002).</a>
 [^3]: J. MacQueen, <a href="http://www-m9.ma.tum.de/foswiki/pub/WS2010/CombOptSem/kMeans.pdf">Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability 1, 281 (1967).</a>
-[^1]: J. Kapaldo, X. Han, and D. Mary. **(submitted)**
+[^1]: J. Kapaldo, X. Han, and D. Mary, **[(submitted)](https://arxiv.org/abs/1804.04071)**
 
 
 
